@@ -1,4 +1,3 @@
-import { authenticatedFetch } from "./auth.mjs";
 import { onPageChange, getCurrentPageId } from "./navigation.js";
 import { analyticalStatusDisplayLabel } from "../lib/analytics/analytical-cancellation.mjs";
 import {
@@ -17,6 +16,8 @@ import { donut, escapeHtml, hBars } from "./general-charts.mjs";
 import { resolvePeriod } from "../lib/analytics/filters/period.mjs";
 import { resolveVisibleFilterFields } from "../lib/analytics/filters/page-contracts.mjs";
 import { createFilterChangeHandler } from "../lib/analytics/filters/filter-state.mjs";
+import { normalizeProgramFilter, programSelectOptions } from "../lib/analytics/filters/program.mjs";
+import { createPageRefresh } from "./components/page-refresh.js";
 import {
   bindFilterBar,
   bindTableExport,
@@ -26,6 +27,7 @@ import {
 } from "./components/filters/filter-bar.js";
 import { mountPageFilters } from "./components/filters/filter-shell.js";
 import { exportFilteredTable } from "./utils/page-table-export.js";
+import { fetchPageJson, mapLoadError } from "./utils/page-load.js";
 
 const fmt = new Intl.NumberFormat("pt-BR");
 
@@ -45,12 +47,14 @@ const state = {
 let eventsBound = false;
 let unbindFilters = () => {};
 let unbindFilterMount = () => {};
+let pageRefresh = null;
 
 const FILTER_FIELDS = [
   { kind: "search", id: "obSearch", key: "search" },
   { kind: "period", id: "obPeriod", fromId: "obFrom", toId: "obTo" },
   { kind: "select", id: "obStatusFilter", key: "status", label: "Status", options: STATUS_FILTER_OPTIONS },
   { kind: "select", id: "obEngineer", key: "engineer", label: "EP", dynamic: true, allLabel: "Todos" },
+  { kind: "select", id: "obProgram", key: "program", label: "Programa", dynamic: true, allLabel: "Todos" },
   { kind: "select", id: "obCompletion", key: "completion", label: "Conclusão", options: COMPLETION_FILTER_OPTIONS },
 ];
 
@@ -70,6 +74,7 @@ function filtersFromForm() {
     to: $("obTo")?.value || "",
     status: $("obStatusFilter")?.value || DEFAULT_STATUS_FILTER,
     engineer: $("obEngineer")?.value || "all",
+    program: normalizeProgramFilter($("obProgram")?.value || "all"),
     completion: $("obCompletion")?.value || "all",
   };
 }
@@ -140,6 +145,7 @@ function fillSelect(select, values, allLabel) {
 function populateFilterOptions() {
   const clients = state.payload?.clients || [];
   fillDynamicSelect($("obEngineer"), uniqueSorted(clients.map((c) => c.engineer)), "Todos", state.filters.engineer);
+  fillDynamicSelect($("obProgram"), programSelectOptions(clients), "Todos", state.filters.program);
 }
 
 function renderSuccess() {
@@ -331,6 +337,7 @@ function renderFilters() {
     onBodyReady: (body) => {
       if (state.payload) populateFilterOptions();
       $("obEngineer") && ($("obEngineer").value = state.filters.engineer);
+      $("obProgram") && ($("obProgram").value = state.filters.program);
       $("obCompletion") && ($("obCompletion").value = state.filters.completion);
       unbindFilters = bindFilterBar({
         host: body,
@@ -407,57 +414,58 @@ const onFilterChange = createFilterChangeHandler({
   renderSuccess,
 });
 
-function setActions(enabled) {
-  const host = $("page-actions");
-  if (!host) return;
-  host.innerHTML = `<button class="btn btn-secondary" type="button" id="obRefresh" ${enabled ? "" : "disabled"}>Atualizar</button>`;
-  $("obRefresh")?.addEventListener("click", () => {
-    void loadOnboarding({ force: true });
+function ensurePageRefresh() {
+  if (pageRefresh) return pageRefresh;
+  pageRefresh = createPageRefresh({
+    buttonId: "obRefresh",
+    onRefresh: () => loadOnboarding({ force: true }),
   });
+  return pageRefresh;
+}
+
+function setActions(enabled) {
+  ensurePageRefresh().setEnabled(enabled);
+  ensurePageRefresh().render();
 }
 
 async function loadOnboarding({ force = false } = {}) {
-  if (state.loading) {
+  if (state.loading && !force) {
     renderFilters();
     renderStateView();
+    setActions(true);
     return;
   }
   if (state.payload && !force) {
     renderFilters();
     renderStateView();
+    setActions(true);
     return;
   }
   state.loading = true;
   state.error = null;
   state.errorCode = null;
   if (force) state.payload = null;
+  ensurePageRefresh().setLoading(true);
   renderFilters();
   renderStateView();
-  const startedAt = Date.now();
   try {
-    console.info("[Jornada] GET /api/onboarding");
-    const response = await authenticatedFetch("/api/onboarding");
-    const payload = await response.json().catch(() => ({}));
-    console.info("[Jornada] resposta", response.status, `${Date.now() - startedAt}ms`);
-    if (!response.ok) {
-      const err = new Error(payload.error || "Não foi possível carregar os dados.");
-      err.code = payload.code || String(response.status);
-      throw err;
-    }
-    state.payload = payload;
+    state.payload = await fetchPageJson("/api/onboarding", { force });
     state.filters = {
       ...defaultOnboardingFilters(),
       ...state.filters,
       status: state.filters.status || DEFAULT_STATUS_FILTER,
     };
+    ensurePageRefresh().markSuccess();
   } catch (error) {
-    console.error("[Jornada] falha", error?.code || error?.message || error);
-    state.errorCode = error?.code || "error";
-    state.error =
-      error?.code === "AUTH_REQUIRED"
-        ? "Sessão expirada."
-        : error?.message || "Não foi possível carregar os dados.";
-    state.payload = null;
+    const mapped = mapLoadError(error);
+    state.errorCode = mapped.errorCode;
+    state.error = mapped.error;
+    if (force && state.payload) {
+      ensurePageRefresh().markError(state.error);
+    } else {
+      state.payload = null;
+      ensurePageRefresh().render();
+    }
   } finally {
     state.loading = false;
     setActions(true);

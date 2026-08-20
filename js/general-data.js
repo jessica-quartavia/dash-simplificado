@@ -1,4 +1,3 @@
-import { authenticatedFetch } from "./auth.mjs";
 import { onPageChange, getCurrentPageId } from "./navigation.js";
 import {
   DEFAULT_STATUS_FILTER,
@@ -21,7 +20,9 @@ import {
   renderTableToolbar,
 } from "./components/filters/filter-bar.js";
 import { mountPageFilters } from "./components/filters/filter-shell.js";
+import { createPageRefresh } from "./components/page-refresh.js";
 import { exportFilteredTable } from "./utils/page-table-export.js";
+import { fetchPageJson, mapLoadError } from "./utils/page-load.js";
 import {
   STAY_RANGES,
   summarizeGeneralRows,
@@ -58,6 +59,7 @@ const state = {
 let eventsBound = false;
 let unbindFilters = () => {};
 let unbindFilterMount = () => {};
+let pageRefresh = null;
 
 const FILTER_FIELDS = [
   { kind: "search", id: "gSearch", key: "search" },
@@ -639,60 +641,57 @@ function bindFilterEvents() {
   /* eventos da barra são ligados em renderFilters */
 }
 
-function setActions(enabled) {
-  const host = $("page-actions");
-  if (!host) return;
-  host.innerHTML = `<button class="btn btn-secondary" type="button" id="gRefresh" ${enabled ? "" : "disabled"}>Atualizar</button>`;
-  $("gRefresh")?.addEventListener("click", () => {
-    void loadGeneral({ force: true });
+function ensurePageRefresh() {
+  if (pageRefresh) return pageRefresh;
+  pageRefresh = createPageRefresh({
+    buttonId: "gRefresh",
+    onRefresh: () => loadGeneral({ force: true }),
   });
+  return pageRefresh;
+}
+
+function setActions(enabled) {
+  ensurePageRefresh().setEnabled(enabled);
+  ensurePageRefresh().render();
 }
 
 async function loadGeneral({ force = false } = {}) {
-  if (state.loading) {
+  if (state.loading && !force) {
     renderFilters();
     bindFilterEvents();
     renderStateView();
+    setActions(true);
     return;
   }
   if (state.payload && !force) {
     renderFilters();
     bindFilterEvents();
     renderStateView();
+    setActions(true);
     return;
   }
   state.loading = true;
   state.error = null;
   state.errorCode = null;
   if (force) state.payload = null;
+  ensurePageRefresh().setLoading(true);
   renderFilters();
   bindFilterEvents();
   renderStateView();
-  const startedAt = Date.now();
   try {
-    console.info("[Dados Gerais] GET /api/general-data");
-    const response = await authenticatedFetch("/api/general-data");
-    const payload = await response.json().catch(() => ({}));
-    console.info(
-      "[Dados Gerais] resposta",
-      response.status,
-      `${Date.now() - startedAt}ms`,
-    );
-    if (!response.ok) {
-      const err = new Error(payload.error || "Não foi possível carregar os dados.");
-      err.code = payload.code || String(response.status);
-      throw err;
-    }
-    state.payload = payload;
+    state.payload = await fetchPageJson("/api/general-data", { force });
     state.filters = { ...defaultGeneralFilters(), ...state.filters, status: state.filters.status || DEFAULT_STATUS_FILTER };
+    ensurePageRefresh().markSuccess();
   } catch (error) {
-    console.error("[Dados Gerais] falha", error?.code || error?.message || error);
-    state.errorCode = error?.code || "error";
-    state.error =
-      error?.code === "AUTH_REQUIRED"
-        ? "Sessão expirada."
-        : error?.message || "Não foi possível carregar os dados.";
-    state.payload = null;
+    const mapped = mapLoadError(error);
+    state.errorCode = mapped.errorCode;
+    state.error = mapped.error;
+    if (force && state.payload) {
+      ensurePageRefresh().markError(state.error);
+    } else {
+      state.payload = null;
+      ensurePageRefresh().render();
+    }
   } finally {
     state.loading = false;
     setActions(true);

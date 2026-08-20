@@ -1,9 +1,10 @@
-import { authenticatedFetch } from "./auth.mjs";
 import { onPageChange, getCurrentPageId } from "./navigation.js";
 import { escapeHtml } from "./general-charts.mjs";
 import { resolvePeriod } from "../lib/analytics/filters/period.mjs";
 import { resolveVisibleFilterFields } from "../lib/analytics/filters/page-contracts.mjs";
 import { createFilterChangeHandler } from "../lib/analytics/filters/filter-state.mjs";
+import { normalizeProgramFilter, programSelectOptions } from "../lib/analytics/filters/program.mjs";
+import { createPageRefresh } from "./components/page-refresh.js";
 import {
   defaultPlanFilters,
   filterPlanClients,
@@ -18,6 +19,7 @@ import {
 } from "./components/filters/filter-bar.js";
 import { mountPageFilters } from "./components/filters/filter-shell.js";
 import { exportFilteredTable } from "./utils/page-table-export.js";
+import { fetchPageJson, mapLoadError } from "./utils/page-load.js";
 
 const fmt = new Intl.NumberFormat("pt-BR");
 
@@ -37,11 +39,13 @@ const state = {
 let eventsBound = false;
 let unbindFilters = () => {};
 let unbindFilterMount = () => {};
+let pageRefresh = null;
 
 const FILTER_FIELDS = [
   { kind: "search", id: "ppSearch", key: "search" },
   { kind: "period", id: "ppPeriod", fromId: "ppFrom", toId: "ppTo" },
   { kind: "select", id: "ppEngineer", key: "engineer", label: "EP", dynamic: true, allLabel: "Todos" },
+  { kind: "select", id: "ppProgram", key: "program", label: "Programa", dynamic: true, allLabel: "Todos" },
 ];
 
 function $(id) {
@@ -59,6 +63,7 @@ function filtersFromForm() {
     from: $("ppFrom")?.value || "",
     to: $("ppTo")?.value || "",
     engineer: $("ppEngineer")?.value || "all",
+    program: normalizeProgramFilter($("ppProgram")?.value || "all"),
   };
 }
 
@@ -99,6 +104,7 @@ function coverageLine(approval) {
 function populateFilterOptions() {
   const clients = state.payload?.clients || [];
   fillDynamicSelect($("ppEngineer"), uniqueSorted(clients.map((c) => c.engineer)), "Todos", state.filters.engineer);
+  fillDynamicSelect($("ppProgram"), programSelectOptions(clients), "Todos", state.filters.program);
 }
 
 function renderSuccess() {
@@ -225,6 +231,7 @@ function renderFilters() {
     onBodyReady: (body) => {
       if (state.payload) populateFilterOptions();
       $("ppEngineer") && ($("ppEngineer").value = state.filters.engineer);
+      $("ppProgram") && ($("ppProgram").value = state.filters.program);
       unbindFilters = bindFilterBar({
         host: body,
         fields,
@@ -300,53 +307,54 @@ const onFilterChange = createFilterChangeHandler({
   renderSuccess,
 });
 
-function setActions(enabled) {
-  const host = $("page-actions");
-  if (!host) return;
-  host.innerHTML = `<button class="btn btn-secondary" type="button" id="ppRefresh" ${enabled ? "" : "disabled"}>Atualizar</button>`;
-  $("ppRefresh")?.addEventListener("click", () => {
-    void loadPatrimonialPlan({ force: true });
+function ensurePageRefresh() {
+  if (pageRefresh) return pageRefresh;
+  pageRefresh = createPageRefresh({
+    buttonId: "ppRefresh",
+    onRefresh: () => loadPatrimonialPlan({ force: true }),
   });
+  return pageRefresh;
+}
+
+function setActions(enabled) {
+  ensurePageRefresh().setEnabled(enabled);
+  ensurePageRefresh().render();
 }
 
 async function loadPatrimonialPlan({ force = false } = {}) {
-  if (state.loading) {
+  if (state.loading && !force) {
     renderFilters();
     renderStateView();
+    setActions(true);
     return;
   }
   if (state.payload && !force) {
     renderFilters();
     renderStateView();
+    setActions(true);
     return;
   }
   state.loading = true;
   state.error = null;
   state.errorCode = null;
   if (force) state.payload = null;
+  ensurePageRefresh().setLoading(true);
   renderFilters();
   renderStateView();
-  const startedAt = Date.now();
   try {
-    console.info("[Plano] GET /api/patrimonial-plan");
-    const response = await authenticatedFetch("/api/patrimonial-plan");
-    const payload = await response.json().catch(() => ({}));
-    console.info("[Plano] resposta", response.status, `${Date.now() - startedAt}ms`);
-    if (!response.ok) {
-      const err = new Error(payload.error || "Não foi possível carregar os dados.");
-      err.code = payload.code || String(response.status);
-      throw err;
-    }
-    state.payload = payload;
+    state.payload = await fetchPageJson("/api/patrimonial-plan", { force });
     state.filters = { ...defaultPlanFilters(), ...state.filters };
+    ensurePageRefresh().markSuccess();
   } catch (error) {
-    console.error("[Plano] falha", error?.code || error?.message || error);
-    state.errorCode = error?.code || "error";
-    state.error =
-      error?.code === "AUTH_REQUIRED"
-        ? "Sessão expirada."
-        : error?.message || "Não foi possível carregar os dados.";
-    state.payload = null;
+    const mapped = mapLoadError(error);
+    state.errorCode = mapped.errorCode;
+    state.error = mapped.error;
+    if (force && state.payload) {
+      ensurePageRefresh().markError(state.error);
+    } else {
+      state.payload = null;
+      ensurePageRefresh().render();
+    }
   } finally {
     state.loading = false;
     setActions(true);

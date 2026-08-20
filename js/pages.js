@@ -40,6 +40,17 @@ export const PAGES = [
     implemented: true,
   },
   {
+    id: "reports",
+    hash: "reports",
+    aliases: ["relatorios", "relatórios"],
+    group: "overview",
+    navLabel: "Relatórios",
+    title: "Relatórios",
+    eyebrow: "Visão geral",
+    description: "Relatórios e análises publicados pelo time de Inteligência da QuartaVia.",
+    implemented: true,
+  },
+  {
     id: "journey",
     hash: "journey",
     aliases: ["onboarding", "jornada"],
@@ -106,6 +117,7 @@ export const PAGES = [
     title: "Atualização Financeira",
     eyebrow: "Jornada",
     description: "Cobertura e recência das atualizações financeiras.",
+    implemented: true,
   },
   {
     id: "support",
@@ -126,6 +138,7 @@ export const PAGES = [
     title: "Pesquisa de Satisfação",
     eyebrow: "Jornada",
     description: "NPS, CSAT e cobertura da pesquisa junto aos clientes.",
+    implemented: true,
   },
   {
     id: "cancellations",
@@ -136,6 +149,7 @@ export const PAGES = [
     title: "Cancelamento",
     eyebrow: "Retenção",
     description: "Processo, motivos e churn confirmado.",
+    implemented: true,
   },
   {
     id: "renewal",
@@ -146,6 +160,7 @@ export const PAGES = [
     title: "Renovação",
     eyebrow: "Retenção",
     description: "Elegíveis, renovação e ciclos da carteira.",
+    implemented: true,
   },
   {
     id: "ep_performance",

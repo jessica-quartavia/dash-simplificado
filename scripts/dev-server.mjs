@@ -8,10 +8,15 @@ import meetingsHandler from "../api/meetings.js";
 import onboardingHandler from "../api/onboarding.js";
 import patrimonialPlanHandler from "../api/patrimonial-plan.js";
 import mechanismsHandler from "../api/mechanisms.js";
+import financialUpdatesHandler from "../api/financial-updates.js";
+import satisfactionHandler from "../api/satisfaction.js";
+import cancellationsHandler from "../api/cancellations.js";
+import renewalHandler from "../api/renewal.js";
 import catalogHandler from "../api/analytics/catalog.js";
 import snapshotHandler from "../api/analytics/snapshot.js";
 import snapshotRefreshHandler from "../api/analytics/snapshot/refresh.js";
 import assistantHandler from "../api/assistant.js";
+import reportsHandler from "../api/reports.js";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const PORT = Number(process.env.PORT || 3000);
@@ -97,12 +102,19 @@ function safeFilePath(urlPath) {
   return resolved;
 }
 
+function normalizeApiPath(pathname) {
+  const base = String(pathname || "/");
+  if (base.length > 1 && base.endsWith("/")) return base.slice(0, -1);
+  return base;
+}
+
 loadLocalEnv();
 
 const server = createServer((req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+  const apiPath = normalizeApiPath(url.pathname);
 
-  if (url.pathname === "/api/auth-config") {
+  if (apiPath === "/api/auth-config") {
     loadLocalEnv();
     if (req.method !== "GET" && req.method !== "HEAD") {
       sendJson(res, 405, { error: "Método não permitido.", code: "METHOD_NOT_ALLOWED" }, {
@@ -115,7 +127,7 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (url.pathname === "/api/general-data") {
+  if (apiPath === "/api/general-data") {
     loadLocalEnv();
     void generalDataHandler(req, res).catch((error) => {
       console.error("[dev] /api/general-data", error);
@@ -129,7 +141,7 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (url.pathname === "/api/meetings") {
+  if (apiPath === "/api/meetings") {
     loadLocalEnv();
     void meetingsHandler(req, res).catch((error) => {
       console.error("[dev] /api/meetings", error);
@@ -143,7 +155,7 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (url.pathname === "/api/onboarding") {
+  if (apiPath === "/api/onboarding") {
     loadLocalEnv();
     void onboardingHandler(req, res).catch((error) => {
       console.error("[dev] /api/onboarding", error);
@@ -157,7 +169,7 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (url.pathname === "/api/patrimonial-plan") {
+  if (apiPath === "/api/patrimonial-plan") {
     loadLocalEnv();
     void patrimonialPlanHandler(req, res).catch((error) => {
       console.error("[dev] /api/patrimonial-plan", error);
@@ -171,7 +183,7 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (url.pathname === "/api/mechanisms") {
+  if (apiPath === "/api/mechanisms") {
     loadLocalEnv();
     void mechanismsHandler(req, res).catch((error) => {
       console.error("[dev] /api/mechanisms", error);
@@ -185,7 +197,51 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (url.pathname === "/api/analytics/snapshot/refresh") {
+  if (apiPath === "/api/financial-updates") {
+    loadLocalEnv();
+    void financialUpdatesHandler(req, res).catch((error) => {
+      console.error("[dev] /api/financial-updates", error);
+      if (!res.headersSent) {
+        sendJson(res, 500, { error: "Não foi possível consultar a atualização financeira.", code: "data_query_failed" });
+      }
+    });
+    return;
+  }
+
+  if (apiPath === "/api/satisfaction") {
+    loadLocalEnv();
+    void satisfactionHandler(req, res).catch((error) => {
+      console.error("[dev] /api/satisfaction", error);
+      if (!res.headersSent) {
+        sendJson(res, 500, { error: "Não foi possível consultar a pesquisa de satisfação.", code: "data_query_failed" });
+      }
+    });
+    return;
+  }
+
+  if (apiPath === "/api/cancellations") {
+    loadLocalEnv();
+    void cancellationsHandler(req, res).catch((error) => {
+      console.error("[dev] /api/cancellations", error);
+      if (!res.headersSent) {
+        sendJson(res, 500, { error: "Não foi possível consultar cancelamentos.", code: "data_query_failed" });
+      }
+    });
+    return;
+  }
+
+  if (apiPath === "/api/renewal") {
+    loadLocalEnv();
+    void renewalHandler(req, res).catch((error) => {
+      console.error("[dev] /api/renewal", error);
+      if (!res.headersSent) {
+        sendJson(res, 500, { error: "Não foi possível consultar renovação.", code: "data_query_failed" });
+      }
+    });
+    return;
+  }
+
+  if (apiPath === "/api/analytics/snapshot/refresh") {
     loadLocalEnv();
     void snapshotRefreshHandler(req, res).catch((error) => {
       console.error("[dev] /api/analytics/snapshot/refresh", error);
@@ -199,7 +255,7 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (url.pathname === "/api/analytics/snapshot") {
+  if (apiPath === "/api/analytics/snapshot") {
     loadLocalEnv();
     void snapshotHandler(req, res).catch((error) => {
       console.error("[dev] /api/analytics/snapshot", error);
@@ -213,7 +269,7 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (url.pathname === "/api/analytics/catalog") {
+  if (apiPath === "/api/analytics/catalog") {
     loadLocalEnv();
     void catalogHandler(req, res).catch((error) => {
       console.error("[dev] /api/analytics/catalog", error);
@@ -227,7 +283,7 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (url.pathname === "/api/assistant") {
+  if (apiPath === "/api/assistant") {
     loadLocalEnv();
     void assistantHandler(req, res).catch((error) => {
       console.error("[dev] /api/assistant", error);
@@ -241,8 +297,26 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (url.pathname.startsWith("/api/")) {
-    sendJson(res, 404, { error: "API não disponível neste servidor local." });
+  if (apiPath === "/api/reports") {
+    loadLocalEnv();
+    void reportsHandler(req, res).catch((error) => {
+      console.error("[dev] /api/reports", error);
+      if (!res.headersSent) {
+        sendJson(res, 500, {
+          error: "Não foi possível processar a solicitação de relatórios.",
+          code: "reports_failed",
+        });
+      }
+    });
+    return;
+  }
+
+  if (apiPath.startsWith("/api/")) {
+    const code = apiPath.startsWith("/api/reports") ? "reports_api_unavailable" : "local_api_unavailable";
+    sendJson(res, 404, {
+      error: "API não disponível neste servidor local.",
+      code,
+    }, { "Cache-Control": "no-store" });
     return;
   }
 
@@ -260,6 +334,6 @@ server.listen(PORT, () => {
   const loaded = loadLocalEnv();
   console.log(`Analytics QuartaVia V2 em http://localhost:${PORT}`);
   console.log(
-    `[env] .env=${loaded.envFile ? "sim" : "não"} .env.local=${loaded.envLocalFile ? "sim" : "não"} AUTH=${loaded.authUrl && loaded.authAnonKey ? "ok" : "ausente"} DATA=${loaded.dataUrl && loaded.dataKey ? "ok" : "ausente"}`,
+    `[env] .env=${loaded.envFile ? "sim" : "não"} .env.local=${loaded.envLocalFile ? "sim" : "não"} AUTH=${loaded.authUrl && loaded.authAnonKey ? "ok" : "ausente"} DATA=${loaded.dataUrl && loaded.dataKey ? "ok" : "ausente"} REPORTS=/api/reports`,
   );
 });

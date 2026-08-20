@@ -1,6 +1,7 @@
 import { escapeHtml } from "../../general-charts.mjs";
 import { debounce } from "../../../lib/analytics/filters/search.mjs";
 import { bindDateRangePicker, renderDateRangePicker } from "./date-range-picker.js";
+import { bindMultiSelectFilter, renderMultiSelectFilter } from "./multi-select-filter.js";
 
 function optionHtml(options, selected) {
   return (options || [])
@@ -24,6 +25,9 @@ export function renderFilterBar({
     }
     if (field.kind === "period") {
       return renderDateRangePicker({ field, filters, label: "Período" });
+    }
+    if (field.kind === "multiselect") {
+      return renderMultiSelectFilter({ field, filters, label: field.label });
     }
     if (field.kind === "select") {
       const options = field.dynamic
@@ -79,6 +83,17 @@ export function bindFilterBar({
           field,
           filters,
           onApply: (next) => onChange?.(next),
+        }),
+      );
+      continue;
+    }
+    if (field.kind === "multiselect") {
+      cleanups.push(
+        bindMultiSelectFilter({
+          host,
+          field,
+          filters,
+          onChange: () => onChange?.(),
         }),
       );
       continue;

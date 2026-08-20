@@ -108,6 +108,13 @@ test("H — botão assistente alinhado ao V2, sem gold", () => {
   assert.match(css, /border-left:\s*3px solid var\(--primary\)/);
 });
 
+test("H2 — botão assistente com shimmer sutil e reduced motion", () => {
+  const css = readFileSync(resolve(root, "css/assistant.css"), "utf8");
+  assert.match(css, /assistant-fab::before/);
+  assert.match(css, /assistant-fab-shimmer/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+});
+
 test("I — botão Topo aparece após scroll", () => {
   const source = readFileSync(resolve(root, "js/components/scroll-to-top.js"), "utf8");
   assert.match(source, /SHOW_AFTER_PX/);

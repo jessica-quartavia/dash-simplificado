@@ -222,6 +222,39 @@ body[data-auth="authenticated"] #auth-root {
 .page-actions {
   min-height: 40px;
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.page-refresh {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.page-refresh-meta {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.page-refresh-meta--empty {
+  min-height: 0;
+}
+
+.page-refresh-error {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-destructive);
+  line-height: 1.3;
+}
+
+.page-refresh-error[hidden] {
+  display: none;
 }
 
 .page-description {

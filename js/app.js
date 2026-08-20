@@ -5,6 +5,11 @@ import { bootMeetings } from "./meetings.js";
 import { bootOnboarding } from "./onboarding.js";
 import { bootPatrimonialPlan } from "./patrimonial-plan.js";
 import { bootMechanisms } from "./mechanisms.js";
+import { bootFinancialUpdates } from "./financial-updates.js";
+import { bootSatisfaction } from "./satisfaction.js";
+import { bootCancellations } from "./cancellations.js";
+import { bootRenewal } from "./renewal.js";
+import { bootReports } from "./reports.js";
 import { bootScrollToTop } from "./components/scroll-to-top.js";
 
 let navigationReady = false;
@@ -49,6 +54,11 @@ function startPortal() {
   safeBoot("onboarding", bootOnboarding);
   safeBoot("patrimonial-plan", bootPatrimonialPlan);
   safeBoot("mechanisms", bootMechanisms);
+  safeBoot("financial-updates", bootFinancialUpdates);
+  safeBoot("satisfaction", bootSatisfaction);
+  safeBoot("cancellations", bootCancellations);
+  safeBoot("renewal", bootRenewal);
+  safeBoot("reports", bootReports);
   document.getElementById("app")?.setAttribute("data-ready", "true");
   bootLog("shell mounted");
   safeBoot("scroll-top", bootScrollToTop);

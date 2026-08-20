@@ -21,10 +21,13 @@ import { donut, dualColumns, escapeHtml, hBars } from "./general-charts.mjs";
 import { mergePeriodApply } from "../lib/analytics/filters/filter-state.mjs";
 import { debounce } from "../lib/analytics/filters/search.mjs";
 import { resolvePeriod } from "../lib/analytics/filters/period.mjs";
+import { normalizeProgramFilter, programSelectOptions } from "../lib/analytics/filters/program.mjs";
+import { createPageRefresh } from "./components/page-refresh.js";
 import { bindTableExport, renderTableToolbar } from "./components/filters/filter-bar.js";
 import { bindDateRangePicker, renderDateRangePicker } from "./components/filters/date-range-picker.js";
 import { mountPageFilters } from "./components/filters/filter-shell.js";
 import { exportFilteredTable } from "./utils/page-table-export.js";
+import { fetchPageJson, mapLoadError } from "./utils/page-load.js";
 
 const PERIOD_FIELD = { kind: "period", id: "mPeriod", fromId: "mFrom", toId: "mTo" };
 
@@ -55,6 +58,7 @@ let eventsBound = false;
 let unbindPeriodPicker = () => {};
 let unbindFilterEvents = () => {};
 let unbindFilterMount = () => {};
+let pageRefresh = null;
 
 function $(id) {
   return document.getElementById(id);
@@ -96,6 +100,7 @@ function filtersFromForm() {
     search: $("mSearch")?.value || "",
     status: $("mStatusFilter")?.value || DEFAULT_STATUS_FILTER,
     engineer: $("mEngineer")?.value || "all",
+    program: normalizeProgramFilter($("mProgram")?.value || "all"),
     period: $("mPeriod")?.value || "all",
     from: $("mFrom")?.value || "",
     to: $("mTo")?.value || "",
@@ -126,6 +131,7 @@ function fillSelect(select, values, allLabel, current) {
 function populateFilterOptions() {
   const clients = state.payload?.clients || [];
   fillSelect($("mEngineer"), uniqueSorted(clients.map((c) => c.engineer)), "Todos", state.filters.engineer);
+  fillSelect($("mProgram"), programSelectOptions(clients), "Todos", state.filters.program);
   fillSelect($("mFreq"), FREQ_BANDS, "Todas", state.filters.freq);
 }
 
@@ -562,6 +568,7 @@ function renderFilters() {
       <label class="filter-search">Busca<input id="mSearch" type="search" placeholder="Nome, código ou ID" value="${escapeHtml(state.filters.search)}" /></label>
       <label>Status<select id="mStatusFilter">${statusOptions}</select></label>
       <label>EP<select id="mEngineer"><option value="all">Todos</option></select></label>
+      <label>Programa<select id="mProgram"><option value="all">Todos</option></select></label>
       ${renderDateRangePicker({ field: PERIOD_FIELD, filters: state.filters, label: "Período" })}
       <label>Presença<select id="mAttendance">
         <option value="all">Todas</option>
@@ -603,6 +610,7 @@ function renderFilters() {
       $("mAbsence").value = state.filters.absence;
       $("mReschedule").value = state.filters.reschedule;
       if (state.payload) populateFilterOptions();
+      $("mProgram") && ($("mProgram").value = state.filters.program);
       unbindPeriodPicker = bindDateRangePicker({
         host: body,
         field: PERIOD_FIELD,
@@ -673,7 +681,7 @@ function onFilterChange(periodApply) {
 function bindFilterEvents() {
   unbindFilterEvents();
   const cleanups = [];
-  ["mSearch", "mStatusFilter", "mEngineer", "mAttendance", "mFreq", "mFirst", "mAbsence", "mReschedule"]
+  ["mSearch", "mStatusFilter", "mEngineer", "mProgram", "mAttendance", "mFreq", "mFirst", "mAbsence", "mReschedule"]
     .forEach((id) => {
       const el = $(id);
       if (!el) return;
@@ -697,26 +705,33 @@ function bindFilterEvents() {
   unbindFilterEvents = () => cleanups.forEach((fn) => fn());
 }
 
-function setActions(enabled) {
-  const host = $("page-actions");
-  if (!host) return;
-  host.innerHTML = `<button class="btn btn-secondary" type="button" id="mRefresh" ${enabled ? "" : "disabled"}>Atualizar</button>`;
-  $("mRefresh")?.addEventListener("click", () => {
-    void loadMeetings({ force: true });
+function ensurePageRefresh() {
+  if (pageRefresh) return pageRefresh;
+  pageRefresh = createPageRefresh({
+    buttonId: "mRefresh",
+    onRefresh: () => loadMeetings({ force: true }),
   });
+  return pageRefresh;
+}
+
+function setActions(enabled) {
+  ensurePageRefresh().setEnabled(enabled);
+  ensurePageRefresh().render();
 }
 
 async function loadMeetings({ force = false } = {}) {
-  if (state.loading) {
+  if (state.loading && !force) {
     renderFilters();
     bindFilterEvents();
     renderStateView();
+    setActions(true);
     return;
   }
   if (state.payload && !force) {
     renderFilters();
     bindFilterEvents();
     renderStateView();
+    setActions(true);
     return;
   }
   state.loading = true;
@@ -726,34 +741,28 @@ async function loadMeetings({ force = false } = {}) {
     state.payload = null;
     state.detailById = {};
   }
+  ensurePageRefresh().setLoading(true);
   renderFilters();
   bindFilterEvents();
   renderStateView();
-  const startedAt = Date.now();
   try {
-    console.info("[Reuniões] GET /api/meetings");
-    const response = await authenticatedFetch("/api/meetings");
-    const payload = await response.json().catch(() => ({}));
-    console.info("[Reuniões] resposta", response.status, `${Date.now() - startedAt}ms`);
-    if (!response.ok) {
-      const err = new Error(payload.error || "Não foi possível carregar as reuniões.");
-      err.code = payload.code || String(response.status);
-      throw err;
-    }
-    state.payload = payload;
+    state.payload = await fetchPageJson("/api/meetings", { force });
     state.filters = {
       ...defaultMeetingFilters(),
       ...state.filters,
       status: state.filters.status || DEFAULT_STATUS_FILTER,
     };
+    ensurePageRefresh().markSuccess();
   } catch (error) {
-    console.error("[Reuniões] falha", error?.code || error?.message || error);
-    state.errorCode = error?.code || "error";
-    state.error =
-      error?.code === "AUTH_REQUIRED"
-        ? "Sessão expirada."
-        : error?.message || "Não foi possível carregar as reuniões.";
-    state.payload = null;
+    const mapped = mapLoadError(error);
+    state.errorCode = mapped.errorCode;
+    state.error = mapped.error;
+    if (force && state.payload) {
+      ensurePageRefresh().markError(state.error);
+    } else {
+      state.payload = null;
+      ensurePageRefresh().render();
+    }
   } finally {
     state.loading = false;
     setActions(true);

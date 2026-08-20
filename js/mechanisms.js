@@ -1,11 +1,9 @@
-import { authenticatedFetch } from "./auth.mjs";
 import { onPageChange, getCurrentPageId } from "./navigation.js";
 import { analyticalStatusDisplayLabel } from "../lib/analytics/analytical-cancellation.mjs";
 import {
   COUNT_FILTER_OPTIONS,
   DEFAULT_STATUS_FILTER,
   MECH_STATUS_FILTER_OPTIONS,
-  PCT_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
   YES_NO_FILTER_OPTIONS,
   defaultMechanismFilters,
@@ -19,6 +17,10 @@ import { donut, escapeHtml, hBars } from "./general-charts.mjs";
 import { resolvePeriod } from "../lib/analytics/filters/period.mjs";
 import { resolveVisibleFilterFields } from "../lib/analytics/filters/page-contracts.mjs";
 import { createFilterChangeHandler } from "../lib/analytics/filters/filter-state.mjs";
+import { parseMultiSelectValue } from "../lib/analytics/filters/multiselect.mjs";
+import { normalizeProgramFilter, programSelectOptions } from "../lib/analytics/filters/program.mjs";
+import { createPageRefresh } from "./components/page-refresh.js";
+import { fetchPageJson, mapLoadError } from "./utils/page-load.js";
 import {
   bindFilterBar,
   bindTableExport,
@@ -26,6 +28,7 @@ import {
   renderFilterBar,
   renderTableToolbar,
 } from "./components/filters/filter-bar.js";
+import { fillMultiSelectOptions } from "./components/filters/multi-select-filter.js";
 import { mountPageFilters } from "./components/filters/filter-shell.js";
 import { exportFilteredTable } from "./utils/page-table-export.js";
 
@@ -47,6 +50,7 @@ const state = {
 let eventsBound = false;
 let unbindFilters = () => {};
 let unbindFilterMount = () => {};
+let pageRefresh = null;
 
 const FILTER_FIELDS = [
   { kind: "search", id: "mkSearch", key: "search" },
@@ -54,13 +58,19 @@ const FILTER_FIELDS = [
   { kind: "select", id: "mkStatus", key: "status", label: "Status", options: STATUS_FILTER_OPTIONS },
   { kind: "select", id: "mkEngineer", key: "engineer", label: "EP", dynamic: true, allLabel: "Todos" },
   { kind: "select", id: "mkSegment", key: "segment", label: "Segmento", dynamic: true, allLabel: "Todos" },
+  { kind: "select", id: "mkProgram", key: "program", label: "Programa", dynamic: true, allLabel: "Todos" },
   { kind: "select", id: "mkMechStatus", key: "mechStatus", label: "Status do vínculo", options: MECH_STATUS_FILTER_OPTIONS },
-  { kind: "select", id: "mkMechanism", key: "mechanism", label: "Mecanismo", dynamic: true, allLabel: "Todos" },
+  {
+    kind: "multiselect",
+    id: "mkMechanism",
+    key: "mechanism",
+    label: "Mecanismo",
+    dynamic: true,
+    allLabel: "Todos",
+  },
   { kind: "select", id: "mkCategory", key: "category", label: "Categoria", dynamic: true, allLabel: "Todas" },
   { kind: "select", id: "mkCount", key: "countBand", label: "Quantidade", options: COUNT_FILTER_OPTIONS },
   { kind: "select", id: "mkHasImpl", key: "hasImpl", label: "Implementado", options: YES_NO_FILTER_OPTIONS },
-  { kind: "select", id: "mkRecent", key: "recent", label: "Recente", options: YES_NO_FILTER_OPTIONS },
-  { kind: "select", id: "mkPct", key: "pctRange", label: "% implementado", options: PCT_FILTER_OPTIONS },
 ];
 
 function $(id) {
@@ -80,13 +90,12 @@ function filtersFromForm() {
     status: $("mkStatus")?.value || DEFAULT_STATUS_FILTER,
     engineer: $("mkEngineer")?.value || "all",
     segment: $("mkSegment")?.value || "all",
+    program: normalizeProgramFilter($("mkProgram")?.value || "all"),
     mechStatus: $("mkMechStatus")?.value || "all",
-    mechanism: $("mkMechanism")?.value || "all",
+    mechanism: parseMultiSelectValue($("mkMechanism")?.value || ""),
     category: $("mkCategory")?.value || "all",
     countBand: $("mkCount")?.value || "all",
     hasImpl: $("mkHasImpl")?.value || "all",
-    recent: $("mkRecent")?.value || "all",
-    pctRange: $("mkPct")?.value || "all",
   };
 }
 
@@ -158,24 +167,19 @@ function fillSelect(select, values, allLabel) {
   select.value = [...select.options].some((o) => o.value === current) ? current : "all";
 }
 
-function populateFilterOptions() {
+function populateFilterOptions(host) {
   const clients = state.payload?.clients || [];
   const catalog = state.payload?.catalog || [];
   fillSelect($("mkEngineer"), uniqueSorted(clients.map((c) => c.engineer)), "Todos");
   fillSelect($("mkSegment"), uniqueSorted(clients.map((c) => c.segment)), "Todos");
+  fillDynamicSelect($("mkProgram"), programSelectOptions(clients), "Todos", state.filters.program);
   fillSelect($("mkCategory"), uniqueSorted(clients.flatMap((c) => (c.mechanisms || []).map((m) => m.dimension))), "Todas");
-  const mechanismSelect = $("mkMechanism");
-  if (mechanismSelect) {
-    const current = mechanismSelect.value || "all";
-    mechanismSelect.innerHTML =
-      `<option value="all">Todos</option>` +
-      catalog
-        .slice()
-        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
-        .map((m) => `<option value="${escapeHtml(m.id)}">${escapeHtml(m.name)}</option>`)
-        .join("");
-    mechanismSelect.value = [...mechanismSelect.options].some((o) => o.value === current) ? current : "all";
-  }
+  const mechanismField = FILTER_FIELDS.find((field) => field.key === "mechanism");
+  const mechanismOptions = catalog
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
+    .map((m) => ({ value: m.id, label: m.name }));
+  fillMultiSelectOptions(host, mechanismField, mechanismOptions, state.filters.mechanism);
 }
 
 function renderSuccess() {
@@ -189,6 +193,7 @@ function renderSuccess() {
   const retro = state.payload?.metadata?.retroactiveNote || "";
 
   content.innerHTML = `
+    ${state.error ? `<p class="page-inline-error">${escapeHtml(state.error)}</p>` : ""}
     <section class="section-block">
       <h2>Visão da implementação</h2>
       <p>Vínculos únicos cliente × mecanismo na BASE QV, no recorte filtrado. O padrão é clientes ativos.</p>
@@ -333,8 +338,6 @@ function renderSuccess() {
         Categoria: state.filters.category,
         Quantidade: state.filters.countBand,
         Implementado: state.filters.hasImpl,
-        Recente: state.filters.recent,
-        "% implementado": state.filters.pctRange,
       },
     });
   });
@@ -354,12 +357,13 @@ function renderFilters() {
       fields,
       filters: state.filters,
       periodInvalid: period.invalid,
+      note: "Mecanismo multiselect: OR entre opções; AND com demais filtros.",
     }),
     onBodyReady: (body) => {
-      if (state.payload) populateFilterOptions();
+      if (state.payload) populateFilterOptions(body);
       $("mkEngineer") && ($("mkEngineer").value = state.filters.engineer);
       $("mkSegment") && ($("mkSegment").value = state.filters.segment);
-      $("mkMechanism") && ($("mkMechanism").value = state.filters.mechanism);
+      $("mkProgram") && ($("mkProgram").value = state.filters.program);
       $("mkCategory") && ($("mkCategory").value = state.filters.category);
       unbindFilters = bindFilterBar({
         host: body,
@@ -430,50 +434,53 @@ const onFilterChange = createFilterChangeHandler({
   renderSuccess,
 });
 
-function setActions(enabled) {
-  const host = $("page-actions");
-  if (!host) return;
-  host.innerHTML = `<button class="btn btn-secondary" type="button" id="mkRefresh" ${enabled ? "" : "disabled"}>Atualizar</button>`;
-  $("mkRefresh")?.addEventListener("click", () => {
-    void loadMechanisms({ force: true });
+function ensurePageRefresh() {
+  if (pageRefresh) return pageRefresh;
+  pageRefresh = createPageRefresh({
+    buttonId: "mkRefresh",
+    onRefresh: () => loadMechanisms({ force: true }),
   });
+  return pageRefresh;
+}
+
+function setActions(enabled) {
+  ensurePageRefresh().setEnabled(enabled);
+  ensurePageRefresh().render();
 }
 
 async function loadMechanisms({ force = false } = {}) {
-  if (state.loading) {
+  if (state.loading && !force) {
     renderFilters();
     renderStateView();
+    setActions(true);
     return;
   }
   if (state.payload && !force) {
     renderFilters();
     renderStateView();
+    setActions(true);
     return;
   }
   state.loading = true;
   state.error = null;
   state.errorCode = null;
-  if (force) state.payload = null;
+  ensurePageRefresh().setLoading(true);
   renderFilters();
   renderStateView();
-  const startedAt = Date.now();
   try {
-    console.info("[Mecanismos] GET /api/mechanisms");
-    const response = await authenticatedFetch("/api/mechanisms");
-    const payload = await response.json().catch(() => ({}));
-    console.info("[Mecanismos] resposta", response.status, `${Date.now() - startedAt}ms`);
-    if (!response.ok) {
-      const err = new Error(payload.error || "Não foi possível carregar os dados.");
-      err.code = payload.code || String(response.status);
-      throw err;
-    }
-    state.payload = payload;
+    state.payload = await fetchPageJson("/api/mechanisms", { force });
     state.filters = { ...defaultMechanismFilters(), ...state.filters, status: state.filters.status || DEFAULT_STATUS_FILTER };
+    ensurePageRefresh().markSuccess();
   } catch (error) {
-    console.error("[Mecanismos] falha", error?.code || error?.message || error);
-    state.errorCode = error?.code || "error";
-    state.error = error?.code === "AUTH_REQUIRED" ? "Sessão expirada." : error?.message || "Não foi possível carregar os dados.";
-    state.payload = null;
+    const mapped = mapLoadError(error);
+    state.errorCode = mapped.errorCode;
+    state.error = mapped.error;
+    if (force && state.payload) {
+      ensurePageRefresh().markError(state.error);
+    } else {
+      state.payload = null;
+      ensurePageRefresh().render();
+    }
   } finally {
     state.loading = false;
     setActions(true);
