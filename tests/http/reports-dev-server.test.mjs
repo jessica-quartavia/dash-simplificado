@@ -22,11 +22,13 @@ function mockReq({ method = "GET", url = "/api/reports", headers = {}, body = nu
   return req;
 }
 
-test("dev-server registra GET e POST /api/reports", () => {
+test("dev-server registra rotas consolidadas dashboard/analytics/reports", () => {
   const source = readFileSync(resolve(root, "scripts/dev-server.mjs"), "utf8");
-  assert.match(source, /apiPath === "\/api\/reports"/);
+  assert.match(source, /handleDashboardApi/);
+  assert.match(source, /handleAnalyticsApi/);
   assert.match(source, /reportsHandler/);
-  assert.doesNotMatch(source, /\/api\/reports\/upload/);
+  assert.doesNotMatch(source, /generalDataHandler/);
+  assert.doesNotMatch(source, /catalogHandler/);
 });
 
 test("404 de API local inclui code reports_api_unavailable", () => {

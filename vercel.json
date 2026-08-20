@@ -1,4 +1,18 @@
 {
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/api/general-data", "destination": "/api/dashboard?page=general" },
+    { "source": "/api/onboarding", "destination": "/api/dashboard?page=journey" },
+    { "source": "/api/meetings", "destination": "/api/dashboard?page=meetings" },
+    { "source": "/api/patrimonial-plan", "destination": "/api/dashboard?page=patrimonial_plan" },
+    { "source": "/api/mechanisms", "destination": "/api/dashboard?page=mechanisms" },
+    { "source": "/api/financial-updates", "destination": "/api/dashboard?page=financial_updates" },
+    { "source": "/api/satisfaction", "destination": "/api/dashboard?page=satisfaction" },
+    { "source": "/api/cancellations", "destination": "/api/dashboard?page=cancellations" },
+    { "source": "/api/renewal", "destination": "/api/dashboard?page=renewal" },
+    { "source": "/api/analytics/catalog", "destination": "/api/analytics?action=catalog" },
+    { "source": "/api/analytics/snapshot/refresh", "destination": "/api/analytics?action=refresh" },
+    { "source": "/api/analytics/snapshot", "destination": "/api/analytics?action=snapshot" }
+  ]
 }

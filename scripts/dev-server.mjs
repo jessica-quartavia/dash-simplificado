@@ -3,18 +3,14 @@ import { readFileSync, existsSync, statSync } from "node:fs";
 import { extname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildAuthConfigResult } from "../lib/env.mjs";
-import generalDataHandler from "../api/general-data.js";
-import meetingsHandler from "../api/meetings.js";
-import onboardingHandler from "../api/onboarding.js";
-import patrimonialPlanHandler from "../api/patrimonial-plan.js";
-import mechanismsHandler from "../api/mechanisms.js";
-import financialUpdatesHandler from "../api/financial-updates.js";
-import satisfactionHandler from "../api/satisfaction.js";
-import cancellationsHandler from "../api/cancellations.js";
-import renewalHandler from "../api/renewal.js";
-import catalogHandler from "../api/analytics/catalog.js";
-import snapshotHandler from "../api/analytics/snapshot.js";
-import snapshotRefreshHandler from "../api/analytics/snapshot/refresh.js";
+import {
+  DASHBOARD_LEGACY_PATHS,
+  handleDashboardApi,
+} from "../lib/api/dashboard-router.mjs";
+import {
+  ANALYTICS_LEGACY_PATHS,
+  handleAnalyticsApi,
+} from "../lib/api/analytics-router.mjs";
 import assistantHandler from "../api/assistant.js";
 import reportsHandler from "../api/reports.js";
 
@@ -108,6 +104,24 @@ function normalizeApiPath(pathname) {
   return base;
 }
 
+function isDashboardRoute(apiPath) {
+  return apiPath === "/api/dashboard" || apiPath in DASHBOARD_LEGACY_PATHS;
+}
+
+function isAnalyticsRoute(apiPath) {
+  return apiPath === "/api/analytics" || apiPath in ANALYTICS_LEGACY_PATHS;
+}
+
+function invokeHandler(label, handler, req, res, fallbackCode, fallbackMessage) {
+  loadLocalEnv();
+  void handler(req, res).catch((error) => {
+    console.error(`[dev] ${label}`, error);
+    if (!res.headersSent) {
+      sendJson(res, 500, { error: fallbackMessage, code: fallbackCode });
+    }
+  });
+}
+
 loadLocalEnv();
 
 const server = createServer((req, res) => {
@@ -127,187 +141,23 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (apiPath === "/api/general-data") {
-    loadLocalEnv();
-    void generalDataHandler(req, res).catch((error) => {
-      console.error("[dev] /api/general-data", error);
-      if (!res.headersSent) {
-        sendJson(res, 500, {
-          error: "Não foi possível consultar a base de dados.",
-          code: "data_query_failed",
-        });
-      }
-    });
+  if (isDashboardRoute(apiPath)) {
+    invokeHandler(apiPath, handleDashboardApi, req, res, "data_query_failed", "Não foi possível consultar o dashboard.");
     return;
   }
 
-  if (apiPath === "/api/meetings") {
-    loadLocalEnv();
-    void meetingsHandler(req, res).catch((error) => {
-      console.error("[dev] /api/meetings", error);
-      if (!res.headersSent) {
-        sendJson(res, 500, {
-          error: "Não foi possível consultar as reuniões.",
-          code: "data_query_failed",
-        });
-      }
-    });
-    return;
-  }
-
-  if (apiPath === "/api/onboarding") {
-    loadLocalEnv();
-    void onboardingHandler(req, res).catch((error) => {
-      console.error("[dev] /api/onboarding", error);
-      if (!res.headersSent) {
-        sendJson(res, 500, {
-          error: "Não foi possível consultar a jornada e o onboarding.",
-          code: "data_query_failed",
-        });
-      }
-    });
-    return;
-  }
-
-  if (apiPath === "/api/patrimonial-plan") {
-    loadLocalEnv();
-    void patrimonialPlanHandler(req, res).catch((error) => {
-      console.error("[dev] /api/patrimonial-plan", error);
-      if (!res.headersSent) {
-        sendJson(res, 500, {
-          error: "Não foi possível consultar o plano patrimonial.",
-          code: "data_query_failed",
-        });
-      }
-    });
-    return;
-  }
-
-  if (apiPath === "/api/mechanisms") {
-    loadLocalEnv();
-    void mechanismsHandler(req, res).catch((error) => {
-      console.error("[dev] /api/mechanisms", error);
-      if (!res.headersSent) {
-        sendJson(res, 500, {
-          error: "Não foi possível consultar os mecanismos.",
-          code: "data_query_failed",
-        });
-      }
-    });
-    return;
-  }
-
-  if (apiPath === "/api/financial-updates") {
-    loadLocalEnv();
-    void financialUpdatesHandler(req, res).catch((error) => {
-      console.error("[dev] /api/financial-updates", error);
-      if (!res.headersSent) {
-        sendJson(res, 500, { error: "Não foi possível consultar a atualização financeira.", code: "data_query_failed" });
-      }
-    });
-    return;
-  }
-
-  if (apiPath === "/api/satisfaction") {
-    loadLocalEnv();
-    void satisfactionHandler(req, res).catch((error) => {
-      console.error("[dev] /api/satisfaction", error);
-      if (!res.headersSent) {
-        sendJson(res, 500, { error: "Não foi possível consultar a pesquisa de satisfação.", code: "data_query_failed" });
-      }
-    });
-    return;
-  }
-
-  if (apiPath === "/api/cancellations") {
-    loadLocalEnv();
-    void cancellationsHandler(req, res).catch((error) => {
-      console.error("[dev] /api/cancellations", error);
-      if (!res.headersSent) {
-        sendJson(res, 500, { error: "Não foi possível consultar cancelamentos.", code: "data_query_failed" });
-      }
-    });
-    return;
-  }
-
-  if (apiPath === "/api/renewal") {
-    loadLocalEnv();
-    void renewalHandler(req, res).catch((error) => {
-      console.error("[dev] /api/renewal", error);
-      if (!res.headersSent) {
-        sendJson(res, 500, { error: "Não foi possível consultar renovação.", code: "data_query_failed" });
-      }
-    });
-    return;
-  }
-
-  if (apiPath === "/api/analytics/snapshot/refresh") {
-    loadLocalEnv();
-    void snapshotRefreshHandler(req, res).catch((error) => {
-      console.error("[dev] /api/analytics/snapshot/refresh", error);
-      if (!res.headersSent) {
-        sendJson(res, 500, {
-          error: "Não foi possível atualizar o snapshot analítico.",
-          code: "snapshot_refresh_failed",
-        });
-      }
-    });
-    return;
-  }
-
-  if (apiPath === "/api/analytics/snapshot") {
-    loadLocalEnv();
-    void snapshotHandler(req, res).catch((error) => {
-      console.error("[dev] /api/analytics/snapshot", error);
-      if (!res.headersSent) {
-        sendJson(res, 500, {
-          error: "Não foi possível ler o snapshot analítico.",
-          code: "snapshot_query_failed",
-        });
-      }
-    });
-    return;
-  }
-
-  if (apiPath === "/api/analytics/catalog") {
-    loadLocalEnv();
-    void catalogHandler(req, res).catch((error) => {
-      console.error("[dev] /api/analytics/catalog", error);
-      if (!res.headersSent) {
-        sendJson(res, 500, {
-          error: "Não foi possível ler o catálogo analítico.",
-          code: "catalog_query_failed",
-        });
-      }
-    });
+  if (isAnalyticsRoute(apiPath)) {
+    invokeHandler(apiPath, handleAnalyticsApi, req, res, "analytics_query_failed", "Não foi possível consultar analytics.");
     return;
   }
 
   if (apiPath === "/api/assistant") {
-    loadLocalEnv();
-    void assistantHandler(req, res).catch((error) => {
-      console.error("[dev] /api/assistant", error);
-      if (!res.headersSent) {
-        sendJson(res, 500, {
-          error: "Não foi possível processar a pergunta agora.",
-          code: "assistant_failed",
-        });
-      }
-    });
+    invokeHandler(apiPath, assistantHandler, req, res, "assistant_failed", "Não foi possível processar a pergunta agora.");
     return;
   }
 
   if (apiPath === "/api/reports") {
-    loadLocalEnv();
-    void reportsHandler(req, res).catch((error) => {
-      console.error("[dev] /api/reports", error);
-      if (!res.headersSent) {
-        sendJson(res, 500, {
-          error: "Não foi possível processar a solicitação de relatórios.",
-          code: "reports_failed",
-        });
-      }
-    });
+    invokeHandler(apiPath, reportsHandler, req, res, "reports_failed", "Não foi possível processar a solicitação de relatórios.");
     return;
   }
 
@@ -332,8 +182,9 @@ const server = createServer((req, res) => {
 
 server.listen(PORT, () => {
   const loaded = loadLocalEnv();
+  const fnCount = 5;
   console.log(`Analytics QuartaVia V2 em http://localhost:${PORT}`);
   console.log(
-    `[env] .env=${loaded.envFile ? "sim" : "não"} .env.local=${loaded.envLocalFile ? "sim" : "não"} AUTH=${loaded.authUrl && loaded.authAnonKey ? "ok" : "ausente"} DATA=${loaded.dataUrl && loaded.dataKey ? "ok" : "ausente"} REPORTS=/api/reports`,
+    `[env] .env=${loaded.envFile ? "sim" : "não"} .env.local=${loaded.envLocalFile ? "sim" : "não"} AUTH=${loaded.authUrl && loaded.authAnonKey ? "ok" : "ausente"} DATA=${loaded.dataUrl && loaded.dataKey ? "ok" : "ausente"} API_FUNCTIONS=${fnCount}`,
   );
 });
