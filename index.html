@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analytics QuartaVia</title>
+    <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Carme&family=Ubuntu:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/assistant.css" />
+  </head>
+  <body data-auth="loading">
+    <div id="auth-root" aria-live="polite">
+      <section class="auth-card">
+        <p class="eyebrow">Analytics QuartaVia</p>
+        <div id="auth-loading">
+          <p class="auth-lead">Verificando acesso</p>
+        </div>
+        <div id="auth-login" hidden>
+          <h1>Inteligência para decisões mais claras.</h1>
+          <p class="auth-lead">
+            Acesse com sua conta corporativa da QuartaVia.
+          </p>
+          <button class="btn btn-google" id="auth-google" type="button" disabled aria-disabled="true">
+            <span class="auth-google-icon" aria-hidden="true"></span>
+            Continuar com Google
+          </button>
+          <p class="auth-hint">Use sua conta @quartavia.com.br</p>
+          <p id="auth-message" class="auth-msg" hidden></p>
+        </div>
+      </section>
+    </div>
+
+    <div id="portal-root" hidden>
+      <div class="nav-backdrop" id="nav-backdrop"></div>
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <strong>Analytics QuartaVia</strong>
+          <span>Jornada do Cliente</span>
+        </div>
+        <nav id="sidebar-nav" class="sidebar-nav" aria-label="Navegação principal"></nav>
+      </aside>
+
+      <div class="portal-main">
+        <header class="topbar">
+          <button
+            type="button"
+            class="nav-toggle"
+            id="nav-toggle"
+            aria-label="Abrir navegação"
+            aria-controls="sidebar"
+            aria-expanded="false"
+          >
+            Menu
+          </button>
+          <div class="topbar-user">
+            <img id="auth-user-avatar" alt="" width="32" height="32" hidden />
+            <div class="topbar-user-meta">
+              <strong id="auth-user-name" hidden></strong>
+              <span id="auth-user-email"></span>
+            </div>
+            <button class="btn btn-secondary" id="auth-sign-out" type="button">Sair</button>
+          </div>
+        </header>
+
+        <main class="page" id="app">
+          <article class="page-view" id="page-view" data-page="">
+            <header class="page-header">
+              <p class="eyebrow" id="page-eyebrow"></p>
+              <div class="page-header-row">
+                <h1 id="page-title"></h1>
+                <div class="page-actions" id="page-actions"></div>
+              </div>
+              <p class="page-description text-muted" id="page-description"></p>
+              <p class="page-construction-notice" id="page-construction-notice" hidden></p>
+            </header>
+
+            <section class="page-filters" id="page-filters" aria-label="Filtros">
+              <p class="placeholder-note">Os filtros desta página serão migrados na próxima etapa.</p>
+            </section>
+
+            <section class="page-content" id="page-content" aria-label="Conteúdo">
+              <p class="placeholder-note">
+                O conteúdo desta página será migrado posteriormente, sem dados simulados.
+              </p>
+            </section>
+          </article>
+        </main>
+      </div>
+
+      <div class="assistant-slot" id="assistant-slot" aria-hidden="true"></div>
+    </div>
+
+    <div id="overlay-root" class="overlay-root" aria-hidden="true"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
