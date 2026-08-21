@@ -1,0 +1,83 @@
+{
+  "generatedAt": "2026-08-21T15:45:00.000Z",
+  "phase": "individual-pages-performance",
+  "pages": {
+    "quality": {
+      "cold_before_ms": 12418,
+      "cold_after_ms": 8899,
+      "warm_after_ms": null,
+      "requests_before": 33,
+      "requests_after": 33,
+      "payload_bytes_before": 38528,
+      "payload_bytes_after": 38530,
+      "changes": [
+        "computeQualityCore() + preloadQualityFieldRows()",
+        "Auditorias reutilizam rowsByTable (sem re-fetch clients/cancellations/meetings)",
+        "Removido fetchClientStatuses() bypass REST (4 páginas duplicadas)",
+        "Support + Pharus em paralelo com scan"
+      ]
+    },
+    "ep_performance": {
+      "cold_before_ms": 6094,
+      "cold_after_ms": 10547,
+      "payload_bytes_before": 9861120,
+      "payload_bytes_after_public": 806912,
+      "payload_bytes_after_internal": 9834496,
+      "requests_before": 27,
+      "requests_after": 35,
+      "lazy_loaded": [
+        "renewalClients → GET /api/ep-performance/details?section=renewalClients",
+        "mechanismsMatrix → GET /api/ep-performance/details?section=mechanismsMatrix"
+      ],
+      "removed_from_public": [
+        "byAdvisor (duplicata de engineers)",
+        "rows (duplicata de engineers)",
+        "renewalClients (~1 MB)",
+        "mechanismsMatrix",
+        "engineers[].clients reduzidos a campos de filtro/recompute"
+      ],
+      "changes": [
+        "preloadExecutiveSharedBundle + computeGeneralCore/MeetingsCore/MechanismsCore",
+        "toPublicEpPerformancePayload() slim"
+      ]
+    },
+    "temporal_indicators": {
+      "cold_before_ms": null,
+      "cold_after_ms": 5779,
+      "payload_bytes_before": 23377920,
+      "payload_bytes_after_public": 2605056,
+      "payload_bytes_after_internal": 23377920,
+      "requests_after": 26,
+      "removed_from_public": [
+        "clients (~20 MB matriz mensal) → lazy GET /api/temporal-indicators/details",
+        "email em activityRecency"
+      ],
+      "lazy_detail": "GET /api/temporal-indicators/details → { clients } (slim rows, hidratados via activityRecency no filtro)",
+      "golden_activeRisk_signal_distribution": {
+        "1 sinal": 674,
+        "2 sinais": 575,
+        "3 sinais": 167,
+        "4 ou mais sinais": 110,
+        "preserved": true
+      }
+    },
+    "cancellations": {
+      "cold_before_ms": 5089,
+      "cold_after_ms": 4506,
+      "payload_bytes_before": 2398208,
+      "payload_bytes_after": 2398208,
+      "requests_before": 24,
+      "requests_after": 35,
+      "changes": [
+        "preloadExecutiveSharedBundle + buildPayload (computeCancellationCore path)",
+        "clients[] mantido (tabela/filtros dependem — export 685 linhas)"
+      ],
+      "fidelity": "54/56 targeted PASS (cancelamento motivos preservados)"
+    }
+  },
+  "fidelity": {
+    "targeted_pass": 54,
+    "targeted_total": 56,
+    "divergent": 0
+  }
+}

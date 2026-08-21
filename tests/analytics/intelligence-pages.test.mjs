@@ -137,9 +137,11 @@ test("dashboard router registra novas páginas", () => {
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/ep-performance"], "ep_performance");
 });
 
-test("page contracts sem período global", () => {
+test("page contracts — EP com período; temporal/statistical sem período global", () => {
+  assert.equal(pageShowsPeriodUi("ep_performance"), true);
+  assert.equal(pageShowsPeriodUi("temporal_indicators"), false);
+  assert.equal(pageShowsPeriodUi("statistical_crosses"), false);
   for (const pageId of ["ep_performance", "temporal_indicators", "statistical_crosses"]) {
-    assert.equal(pageShowsPeriodUi(pageId), false, pageId);
     assert.ok(getPageFilterContract(pageId));
   }
   assert.ok(implementedPageIds().includes("ep_performance"));

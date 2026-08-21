@@ -13,7 +13,7 @@ import {
   portfolioSize,
 } from "../lib/analytics/mechanism-filters.mjs";
 import { summarizeEngineerBars, summarizeMechanismRows } from "../lib/analytics/mechanism-metrics.mjs";
-import { donut, escapeHtml, hBars } from "./general-charts.mjs";
+import { donut, escapeHtml, hBars, mechanismTypeDualBars } from "./general-charts.mjs";
 import { resolvePeriod } from "../lib/analytics/filters/period.mjs";
 import { resolveVisibleFilterFields } from "../lib/analytics/filters/page-contracts.mjs";
 import { createFilterChangeHandler } from "../lib/analytics/filters/filter-state.mjs";
@@ -45,6 +45,7 @@ const state = {
   sortDir: "asc",
   page: 1,
   pageSize: 25,
+  showAllTypes: false,
 };
 
 let eventsBound = false;
@@ -117,10 +118,14 @@ function filteredRows() {
 function currentSummary() {
   const rows = filteredRows();
   const portfolio = filterPortfolio(state.payload?.portfolio || [], state.filters);
+  const meta = state.payload?.metadata || {};
   const summary = summarizeMechanismRows(rows, {
     catalog: state.payload?.catalog || [],
+    portfolio,
     portfolioCount: portfolioSize(portfolio),
-    consolidationQuality: state.payload?.metadata?.consolidationQuality || null,
+    consolidationQuality: meta.consolidationQuality || null,
+    filters: state.filters,
+    pharusAvailable: !pharusSourceUnavailable(meta),
   });
   summary.months = filterMechanismMonthSeries(state.payload?.clients || [], state.filters);
   summary.byEngineer = summarizeEngineerBars(rows, portfolio);
@@ -191,7 +196,6 @@ function pharusSourceUnavailable(metadata = {}) {
 function mechanismSourceLegend(quality, metadata = {}) {
   const clients = quality?.clients || {};
   const baseQv = clients.qvClientsWithMechanisms ?? clients.baseQv ?? 0;
-  const matched = clients.matchedInBoth ?? clients.presentInBothSources ?? 0;
   if (pharusSourceUnavailable(metadata)) {
     return {
       line: `BASE QV ${fmt.format(baseQv)} · Parcial — App Pharus indisponível`,
@@ -201,9 +205,9 @@ function mechanismSourceLegend(quality, metadata = {}) {
   }
   const appPharus = clients.pharusUsersWithMechanisms ?? 0;
   return {
-    line: `BASE QV ${fmt.format(baseQv)} · App Pharus ${fmt.format(appPharus)} · correspondência ${fmt.format(matched)}`,
+    line: `BASE QV ${fmt.format(baseQv)} · App Pharus ${fmt.format(appPharus)} · total exibido ${fmt.format((baseQv || 0) + appPharus)}`,
     tooltip:
-      "Clientes presentes nas duas fontes são contados uma única vez. Clientes Pharus sem correspondência segura permanecem no consolidado; matches ambíguos não são fundidos.",
+      "Total exibido = BASE QV no recorte + App Pharus (sem deduplicar entre fontes). consolidatedUniquePeople permanece apenas no painel de qualidade.",
   };
 }
 
@@ -265,22 +269,23 @@ function renderSuccess() {
   const retro = state.payload?.metadata?.retroactiveNote || "";
   const meta = state.payload?.metadata || {};
   const quality = meta.consolidationQuality;
-  const percentScope = quality?.implementationPercentScope?.primaryLabel || "";
   const temporalNote = quality?.temporalScope?.note || "";
   const sourceTip = consolidatedTooltip(meta);
   const sourceLegend = mechanismSourceLegend(quality, meta);
+  const totalNote = pharusSourceUnavailable(meta)
+    ? `${fmt.format(summary.baseQvDisplayed)} BASE QV · App Pharus indisponível`
+    : `${fmt.format(summary.baseQvDisplayed)} BASE QV + ${fmt.format(summary.appPharusDisplayed)} App Pharus`;
 
   content.innerHTML = `
     ${state.error ? `<p class="page-inline-error">${escapeHtml(state.error)}</p>` : ""}
     <section class="section-block">
       <h2>Implementação de Mecanismos</h2>
-      <p>Visão consolidada — BASE QV + App Pharus. Vínculos deduplicados por cliente e mecanismo canônico.</p>
+      <p>Visão consolidada — BASE QV + App Pharus. Total exibido = soma das fontes no recorte (sem deduplicação cross-fonte).</p>
       <div class="kpi-row kpi-row-primary">
-        ${kpiCard(clientsWithMechanismsLabel(summary, quality, meta), fmt.format(summary.clientsWithMechanisms), `${sourceLegend.line}${coverageLine(summary.coverage) ? ` · ${coverageLine(summary.coverage)}` : ""}`, { highlight: true, featured: true, title: `${sourceTip}\n${sourceLegend.tooltip}` })}
-        ${kpiCard("Clientes com mecanismo implementado", fmt.format(summary.clientsWithImplementedMechanism), `${pctLabel(summary.implementationPercent)} do recorte`, { highlight: true, title: sourceTip })}
+        ${kpiCard(clientsWithMechanismsLabel(summary, quality, meta), fmt.format(summary.displayedCombinedTotal), `${totalNote}${coverageLine(summary.coverage) ? ` · ${coverageLine(summary.coverage)}` : ""}`, { highlight: true, featured: true, title: `${sourceTip}\n${sourceLegend.tooltip}` })}
+        ${kpiCard("Clientes com mecanismo implementado", fmt.format(summary.clientsWithImplementedMechanism), `${pctLabel(summary.mechanismImplementationRate)} do recorte`, { highlight: true, title: sourceTip })}
         ${kpiCard("Mecanismos implementados", fmt.format(summary.implementedMechanisms), "Vínculos distintos (cliente + mecanismo)", { title: sourceTip })}
         ${kpiCard("Em andamento", fmt.format(summary.inProgressMechanisms), "Somente status consolidável", { title: sourceTip })}
-        ${kpiCard("Implementações recentes", fmt.format(summary.recentClients), temporalNote || "Últimos 30 dias (BASE QV — implemented_at)", { title: sourceTip })}
       </div>
     </section>
 
@@ -290,7 +295,7 @@ function renderSuccess() {
         ${kpiCard("Tipos de mecanismos", fmt.format(summary.catalogSize), `${fmt.format(summary.typesUsed)} tipos utilizados`, { title: "Catálogo consolidado entre BASE QV e App Pharus." })}
         ${kpiCard("Tipos sem utilização", fmt.format(summary.typesUnused), `${fmt.format(summary.typesUnused)} de ${fmt.format(summary.catalogSize)} tipos`, { compact: true })}
         ${kpiCard("Mecanismo mais utilizado", escapeHtml(summary.topMechanismName), `${fmt.format(summary.topMechanismClients)} clientes distintos`, { compact: true, title: sourceTip })}
-        ${kpiCard("Percentual implementado", pctLabel(summary.implementationPercent), `${fmt.format(summary.clientsWithImplementedMechanism)} de ${fmt.format(summary.clientsWithMechanisms)} clientes · ${percentScope}`, { compact: true, title: sourceTip })}
+        ${kpiCard("% com mecanismo implantado", pctLabel(summary.mechanismImplementationRate), `${fmt.format(summary.clientsWithImplementedMechanism)} / ${fmt.format(summary.clientsWithLinkedMechanisms)} clientes`, { compact: true, title: `${sourceTip}\nClientes distintos com ≥1 mecanismo implantado ÷ clientes distintos com ≥1 mecanismo vinculado.` })}
       </div>
     </section>
 
@@ -362,7 +367,7 @@ function renderSuccess() {
   if ($("mkChartStatus")) $("mkChartStatus").innerHTML = donut(summary.statusDist.filter((i) => i.count > 0));
   if ($("mkChartCount")) $("mkChartCount").innerHTML = hBars(summary.countDist.filter((i) => i.count > 0));
   if ($("mkChartCatalog")) $("mkChartCatalog").innerHTML = donut(summary.catalogDist);
-  if ($("mkChartTypes")) $("mkChartTypes").innerHTML = hBars(summary.typeUsage);
+  if ($("mkChartTypes")) $("mkChartTypes").innerHTML = mechanismTypeDualBars(summary.typeUsage, { expanded: state.showAllTypes });
   if ($("mkChartMonths")) $("mkChartMonths").innerHTML = hBars(summary.months);
   if ($("mkChartSegment")) $("mkChartSegment").innerHTML = hBars(summary.bySegment);
   if ($("mkChartEp")) $("mkChartEp").innerHTML = hBars(summary.byEngineer.map((i) => ({ ...i, label: `${i.label} · ${i.percent}%` })));
@@ -385,6 +390,11 @@ function renderSuccess() {
         .join("")
       : `<tr><td colspan="7">Nenhum cliente encontrado para os filtros selecionados.</td></tr>`;
   }
+
+  $("mkChartTypes")?.querySelector("[data-mk-types-expand]")?.addEventListener("click", () => {
+    state.showAllTypes = !state.showAllTypes;
+    renderSuccess();
+  });
 
   $("mkPrev")?.addEventListener("click", () => {
     state.page -= 1;

@@ -1,5 +1,6 @@
 import { escapeHtml } from "../../general-charts.mjs";
 import { debounce } from "../../../lib/analytics/filters/search.mjs";
+import { sortLabelsUnknownLast } from "../../../lib/analytics/filters/sort-categories.mjs";
 import { bindDateRangePicker, renderDateRangePicker } from "./date-range-picker.js";
 import { bindMultiSelectFilter, renderMultiSelectFilter } from "./multi-select-filter.js";
 import { bindSelectFilter, renderSelectFilterFromField, updateSelectFilterField } from "./select-filter.js";
@@ -171,9 +172,10 @@ export function bindTableExport(root, handler) {
 export function fillDynamicSelect(select, values, allLabel, current) {
   if (!select) return;
   const keep = current ?? select.value ?? "all";
+  const sorted = sortLabelsUnknownLast(values);
   select.innerHTML =
     `<option value="all">${escapeHtml(allLabel)}</option>` +
-    values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("");
+    sorted.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("");
   select.value = [...select.options].some((opt) => opt.value === keep) ? keep : "all";
 }
 

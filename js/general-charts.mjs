@@ -1,3 +1,5 @@
+import { sortDistributionUnknownLast, sortUnknownLast } from "../lib/analytics/filters/sort-categories.mjs";
+
 const STATUS_COLORS = {
   Ativo: "#0a0a0a",
   Congelado: "#d18426",
@@ -71,10 +73,10 @@ export function chartColorForLabel(label, index = 0) {
   return colorForLabel(label, index);
 }
 
-/** Botão padrão Ver mais / Ver menos para gráficos densos. */
-export function chartExpandButton(chartId, { expanded = false, hidden = false } = {}) {
+/** Botão padrão Ver todos / Ver menos para gráficos densos. */
+export function chartExpandButton(chartId, { expanded = false, hidden = false, expandLabel = "Ver todos" } = {}) {
   if (hidden) return "";
-  return `<button type="button" class="btn btn-chart btn-chart-expand" data-chart-expand="${escapeHtml(chartId)}" aria-expanded="${expanded ? "true" : "false"}">${expanded ? "Ver menos" : "Ver mais"}</button>`;
+  return `<button type="button" class="btn btn-chart btn-chart-expand" data-chart-expand="${escapeHtml(chartId)}" aria-expanded="${expanded ? "true" : "false"}">${expanded ? "Ver menos" : escapeHtml(expandLabel)}</button>`;
 }
 
 /** Renderiza hBars com limite inicial e metadados para expansão. */
@@ -90,6 +92,34 @@ export function hBarsExpandable(items, chartId, { limit = 8, expanded = false, c
     chartId,
     buttonHtml: chartExpandButton(chartId, { expanded, hidden: !canExpand }),
   };
+}
+
+/** Distribuição de mecanismos — nome, barra e métrica na mesma linha (referência V1). */
+export function mechanismDistributionBars(items, { limit = 8, expanded = false, chartId = "mech-dist" } = {}) {
+  const sorted = sortDistributionUnknownLast(
+    (Array.isArray(items) ? items : []).map((item) => ({
+      label: item.label,
+      count: item.count ?? item.clients ?? item.linkedCount ?? 0,
+      percent: item.percent ?? 0,
+    })),
+  );
+  if (!sorted.length) return `<p class="placeholder-note">Sem dados</p>`;
+  const canExpand = sorted.length > limit;
+  const visible = expanded || !canExpand ? sorted : sorted.slice(0, limit);
+  const max = Math.max(...visible.map((i) => i.count), 1);
+  const rows = visible
+    .map((item) => {
+      const metric = `${item.count.toLocaleString("pt-BR")} · ${Number(item.percent).toLocaleString("pt-BR")}%`;
+      const width = (item.count / max) * 100;
+      return `<div class="mech-dist-row" title="${escapeHtml(item.label)}: ${escapeHtml(metric)}">
+        <div class="mech-dist-label" title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</div>
+        <div class="mech-dist-track"><span style="width:${width}%"></span></div>
+        <div class="mech-dist-val">${escapeHtml(metric)}</div>
+      </div>`;
+    })
+    .join("");
+  const button = chartExpandButton(chartId, { expanded, hidden: !canExpand });
+  return `<div class="mech-dist-list">${rows}</div>${button}`;
 }
 
 export function hBars(items, limitOrOptions) {
@@ -112,6 +142,32 @@ export function hBars(items, limitOrOptions) {
       </div>`;
     })
     .join("")}</div>`;
+}
+
+/** Barras verticais categóricas — mesma linguagem visual de acquisitionColumns / dualColumns. */
+export function vBars(items, options = {}) {
+  const list = Array.isArray(items) ? items.filter((item) => (item?.count || 0) > 0) : [];
+  if (!list.length) return `<p class="placeholder-note">Sem dados</p>`;
+  const plotH = options.height ?? 180;
+  const max = Math.max(...list.map((item) => item.count), 1);
+  return `<div class="acq-chart-scroll"><div class="acq-chart-grid vbar-chart" data-cols="${list.length}">${list
+    .map((item, index) => {
+      const count = Number(item.count) || 0;
+      const percent = item.percent != null ? Number(item.percent) : null;
+      const barPx = count > 0 ? Math.max(Math.round((count / max) * plotH), 6) : 0;
+      const color = colorForLabel(item.label, index);
+      const metric =
+        percent != null && Number.isFinite(percent)
+          ? `${count.toLocaleString("pt-BR")} · ${percent.toLocaleString("pt-BR")}%`
+          : count.toLocaleString("pt-BR");
+      return `<div class="acq-col vbar-col" title="${escapeHtml(item.label)}: ${escapeHtml(metric)}">
+        <div class="acq-col-value">${count.toLocaleString("pt-BR")}</div>
+        ${percent != null && Number.isFinite(percent) ? `<div class="acq-col-sub">${percent.toLocaleString("pt-BR")}%</div>` : ""}
+        <div class="vbar-track"><div class="acq-col-bar" style="height:${barPx}px;background:${color}"></div></div>
+        <div class="acq-col-label">${escapeHtml(item.label)}</div>
+      </div>`;
+    })
+    .join("")}</div></div>`;
 }
 
 export function rankedBars(items, { limit = 3, note = "" } = {}) {
@@ -189,28 +245,115 @@ export function acquisitionColumns(series, limit) {
     .join("")}</div></div>`;
 }
 
-export function dualColumns(series, limit = 6) {
+function dualGroupedColumns(series, {
+  limit = 12,
+  primaryKey = "scheduled",
+  secondaryKey = "completed",
+  primaryLabel = "Agend.",
+  secondaryLabel = "Real.",
+  primaryClass = "scheduled",
+  secondaryClass = "completed",
+  legendPrimary = "Agendadas",
+  legendSecondary = "Realizadas",
+  emptyNote = "Sem meses históricos para exibir.",
+} = {}) {
   if (!series.length) {
-    return `<p class="placeholder-note">Sem meses históricos para exibir.</p>`;
+    return `<p class="placeholder-note">${escapeHtml(emptyNote)}</p>`;
   }
-  const historical = [...series].sort((a, b) => b.month.localeCompare(a.month));
-  const visible = historical.slice(0, limit).reverse();
-  const maxValue = Math.max(...visible.flatMap((i) => [i.scheduled || 0, i.completed || 0]), 0);
+  const visible = series.slice(-limit);
+  const maxValue = Math.max(...visible.flatMap((i) => [i[primaryKey] || 0, i[secondaryKey] || 0]), 0);
   const plotH = 180;
   const long = Number(limit) >= 12;
-  return `<div class="acq-chart-scroll"><div class="acq-chart-grid dual-chart" data-cols="${visible.length}">${visible
+  const minCol = 56;
+  return `<div class="acq-chart-scroll"><div class="acq-chart-grid dual-chart" style="min-width:${visible.length * minCol}px" data-cols="${visible.length}">${visible
     .map((i) => {
-      const scheduledPx = maxValue > 0 && i.scheduled ? Math.max(Math.round((i.scheduled / maxValue) * plotH), 6) : 0;
-      const completedPx = maxValue > 0 && i.completed ? Math.max(Math.round((i.completed / maxValue) * plotH), 6) : 0;
-      return `<div class="acq-col dual-col" title="${escapeHtml(i.month)}: ${i.scheduled} agendadas · ${i.completed} realizadas">
-        <div class="acq-col-value">${Number(i.scheduled || 0).toLocaleString("pt-BR")}</div>
+      const primary = Number(i[primaryKey] || 0);
+      const secondary = Number(i[secondaryKey] || 0);
+      const primaryPx = maxValue > 0 && primary ? Math.max(Math.round((primary / maxValue) * plotH), 6) : 0;
+      const secondaryPx = maxValue > 0 && secondary ? Math.max(Math.round((secondary / maxValue) * plotH), 6) : 0;
+      return `<div class="acq-col dual-col" title="${escapeHtml(i.month)}: ${primary.toLocaleString("pt-BR")} · ${secondary.toLocaleString("pt-BR")}">
         <div class="dual-bars">
-          <div class="acq-col-bar dual-bar scheduled" style="height:${scheduledPx}px"></div>
-          <div class="acq-col-bar dual-bar completed" style="height:${completedPx}px"></div>
+          <div class="dual-bar-group">
+            <div class="acq-col-value">${primary.toLocaleString("pt-BR")}</div>
+            <div class="acq-col-bar dual-bar ${primaryClass}" style="height:${primaryPx}px"></div>
+            <div class="dual-bar-series-label">${escapeHtml(primaryLabel)}</div>
+          </div>
+          <div class="dual-bar-group">
+            <div class="acq-col-value">${secondary.toLocaleString("pt-BR")}</div>
+            <div class="acq-col-bar dual-bar ${secondaryClass}" style="height:${secondaryPx}px"></div>
+            <div class="dual-bar-series-label">${escapeHtml(secondaryLabel)}</div>
+          </div>
         </div>
         <div class="acq-col-label">${escapeHtml(monthShortLabel(i.month, long))}</div>
       </div>`;
     })
     .join("")}</div></div>
-    <p class="chart-legend-note"><span class="swatch scheduled"></span> Agendadas <span class="swatch completed"></span> Realizadas</p>`;
+    <p class="chart-legend-note"><span class="swatch ${primaryClass}"></span> ${escapeHtml(legendPrimary)} <span class="swatch ${secondaryClass}"></span> ${escapeHtml(legendSecondary)}</p>`;
+}
+
+export function dualColumns(series, limit = 6) {
+  return dualGroupedColumns(series, { limit });
+}
+
+/** Intenções vs efetivados por mês — colunas verticais agrupadas (estilo V1). */
+export function intentionEffectiveColumns(series, limit = 12) {
+  return dualGroupedColumns(
+    series.map((item) => ({
+      month: item.month,
+      intentions: item.intentions || 0,
+      effective: item.effective || 0,
+    })),
+    {
+      limit,
+      primaryKey: "intentions",
+      secondaryKey: "effective",
+      primaryLabel: "Int.",
+      secondaryLabel: "Efet.",
+      primaryClass: "intention",
+      secondaryClass: "effective",
+      legendPrimary: "Intenções/pedidos",
+      legendSecondary: "Efetivados",
+      emptyNote: "Sem meses históricos para exibir.",
+    },
+  );
+}
+
+/** Utilização por tipo — duas barras horizontais empilhadas (estilo V1). */
+export function mechanismTypeDualBars(items, { limit = 8, expanded = false } = {}) {
+  const list = sortUnknownLast(Array.isArray(items) ? items : [], (item) => item.label, (a, b) => {
+    const linkedDiff = (b.linkedCount ?? b.count ?? 0) - (a.linkedCount ?? a.count ?? 0);
+    return linkedDiff || String(a.label).localeCompare(String(b.label), "pt-BR");
+  });
+  if (!list.length) return `<p class="placeholder-note">Sem tipos no catálogo</p>`;
+  const canExpand = list.length > limit;
+  const visible = expanded || !canExpand ? list : list.slice(0, limit);
+  const maxLinked = Math.max(...visible.map((i) => i.linkedCount ?? i.count ?? 0), 1);
+  const rows = visible
+    .map((item) => {
+      const linked = item.linkedCount ?? item.count ?? 0;
+      const implemented = item.implementedCount ?? 0;
+      const pctVal =
+        item.implementationPercent != null && Number.isFinite(Number(item.implementationPercent))
+          ? `${Number(item.implementationPercent).toLocaleString("pt-BR")}%`
+          : linked
+            ? `${Math.round((implemented / linked) * 1000) / 10}%`.replace(".", ",")
+            : "—";
+      const wLinked = (linked / maxLinked) * 100;
+      const wImpl = linked ? (implemented / maxLinked) * 100 : 0;
+      const meta = `${linked.toLocaleString("pt-BR")} vinculados · ${implemented.toLocaleString("pt-BR")} impl.`;
+      return `<div class="type-stat-row" title="${escapeHtml(item.label)}: ${escapeHtml(meta)} · ${escapeHtml(pctVal)}">
+        <div class="type-stat-label truncate" title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</div>
+        <div class="type-stat-bars">
+          <div class="type-stat-track"><span class="type-stat-fill-linked" style="width:${wLinked}%"></span></div>
+          <div class="type-stat-track"><span class="type-stat-fill-impl" style="width:${wImpl}%"></span></div>
+          <div class="type-stat-meta">${escapeHtml(meta)}</div>
+        </div>
+        <div class="type-stat-pct">${escapeHtml(pctVal)}</div>
+      </div>`;
+    })
+    .join("");
+  const button = canExpand
+    ? `<button type="button" class="btn btn-chart btn-chart-expand" data-mk-types-expand aria-expanded="${expanded ? "true" : "false"}">${expanded ? "Ver menos" : "Ver todos"}</button>`
+    : "";
+  return `${rows}${button}`;
 }

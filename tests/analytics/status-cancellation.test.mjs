@@ -9,6 +9,7 @@ import {
   resolveAnalyticalStatus,
   resolveAnalyticalStatusFromMaps,
   resolveConsolidatedCancellation,
+  portfolioStatusBucket,
 } from "../../lib/analytics/index.mjs";
 
 test("ativo bruto sem cancelamento → Ativo", () => {
@@ -20,6 +21,17 @@ test("congelado sem cancelamento → Congelado", () => {
   const status = resolveAnalyticalStatusFromMaps("Congelado", null);
   assert.equal(status, ANALYTICAL_STATUS.FROZEN);
   assert.equal(isActiveClient(status), false);
+  assert.equal(portfolioStatusBucket(status), "frozen");
+});
+
+test("congelado com cancelamento efetivo → Cancelado confirmado (não Congelado)", () => {
+  const status = resolveAnalyticalStatusFromMaps("Congelado", {
+    isCancelled: true,
+    hasConfirmedDate: true,
+    date: new Date("2024-06-01T00:00:00Z"),
+  });
+  assert.equal(status, ANALYTICAL_STATUS.CANCELLED_CONFIRMED);
+  assert.notEqual(status, ANALYTICAL_STATUS.FROZEN);
 });
 
 test("status bruto ativo + churn efetivado → Cancelado", () => {

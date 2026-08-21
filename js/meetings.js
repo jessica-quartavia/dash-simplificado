@@ -257,24 +257,50 @@ async function openDrawer(client) {
   }
 }
 
-function typesForChart(period) {
+function calendlyUuidFromUri(uri) {
+  if (!uri) return null;
+  const match = String(uri).match(/([0-9a-f-]{36})$/i);
+  return match ? match[1].toLowerCase() : null;
+}
+
+function scopedCalendlyEventUuids(rows, period) {
+  const uuids = new Set();
+  for (const client of rows || []) {
+    for (const meeting of client.meetings || []) {
+      if (meeting.source !== "calendly") continue;
+      if (period?.active && !meetingTypeEventInPeriod({ startTime: meeting.startTime }, period)) continue;
+      const uuid = calendlyUuidFromUri(meeting.externalUri);
+      if (uuid) uuids.add(uuid);
+    }
+  }
+  return uuids;
+}
+
+function typesForChart(period, rows) {
   const src = state.payload?.meetingTypes;
   const events = Array.isArray(src?.events) ? src.events : [];
-  if (!src?.available) return { available: false, list: [] };
-  const scoped = period.active ? events.filter((e) => meetingTypeEventInPeriod(e, period)) : events;
-  if (period.active) {
-    const mapped = scoped.map((e) => ({
-      title: e.rawEventType || e.title,
-      rawEventType: e.rawEventType || e.title,
-      startTime: e.startTime,
-      canceled: e.canceled === true,
-      attendanceStatus: e.canceled === true || e.attendanceStatus === "cancelada" ? "cancelada" : "desconhecido",
-    }));
-    const dist = buildMeetingTypeDistributions(mapped);
-    return { available: true, list: state.typeMode === "raw" ? dist.byRaw : dist.byFamily };
-  }
-  const list = state.typeMode === "raw" ? src.byRaw || [] : src.byFamily || [];
-  return { available: true, list };
+  if (!src?.available) return { available: false, list: [], totalEvents: 0 };
+  const allowedUuids = scopedCalendlyEventUuids(rows, period);
+  const populationScoped = events.filter((event) => {
+    const uuid = String(event.eventUuid || "").trim().toLowerCase();
+    return uuid && allowedUuids.has(uuid);
+  });
+  const scoped = period.active
+    ? populationScoped.filter((e) => meetingTypeEventInPeriod(e, period))
+    : populationScoped;
+  const mapEvent = (e) => ({
+    title: e.rawEventType || e.title,
+    rawEventType: e.rawEventType || e.title,
+    startTime: e.startTime,
+    canceled: e.canceled === true,
+    attendanceStatus: e.canceled === true || e.attendanceStatus === "cancelada" ? "cancelada" : "desconhecido",
+  });
+  const dist = buildMeetingTypeDistributions(scoped.map(mapEvent));
+  return {
+    available: true,
+    list: state.typeMode === "raw" ? dist.byRaw : dist.byFamily,
+    totalEvents: scoped.length,
+  };
 }
 
 function renderSuccess() {
@@ -298,7 +324,7 @@ function renderSuccess() {
   const attendanceText = summary.attendanceInsufficientData || summary.attendanceRate == null
     ? "Dados insuficientes"
     : pct(summary.attendanceRate);
-  const types = typesForChart(period);
+  const types = typesForChart(period, rows);
   const typeLimit = state.typeMode === "raw" ? 10 : 8;
   const typeList = state.showAllTypes ? types.list : types.list.slice(0, typeLimit);
 

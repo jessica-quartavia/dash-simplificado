@@ -66,8 +66,11 @@ test("denominador ativo usa a carteira filtrada, não o total", () => {
   const portfolio = filterPortfolio(payload.portfolio, filters);
   const summary = summarizeMechanismRows(rows, {
     catalog: payload.catalog,
+    portfolio: portfolio,
     portfolioCount: portfolioSize(portfolio),
   });
+  assert.equal(summary.baseQvDisplayed, 2);
+  assert.equal(summary.displayedCombinedTotal, 2);
   assert.equal(summary.clientsWithMechanisms, 2);
   assert.equal(summary.coverage.total, 3);
   assert.equal(summary.coverage.percent, 66.7);
@@ -106,18 +109,29 @@ test("status oficial BASE QV: concluido=Implementado; apto e em andamento reconh
   assert.equal(ana.implemented, 1);
   assert.equal(ana.inProgress, 1);
   const rows = filterMechanismClients(payload.clients, defaultMechanismFilters());
-  const summary = summarizeMechanismRows(rows, { catalog: payload.catalog, portfolioCount: 3 });
+  const portfolio = filterPortfolio(payload.portfolio, defaultMechanismFilters());
+  const summary = summarizeMechanismRows(rows, {
+    catalog: payload.catalog,
+    portfolio,
+    portfolioCount: portfolioSize(portfolio),
+  });
   assert.equal(summary.availableMechanisms, 3);
   assert.equal(summary.implementedMechanisms, 2);
   assert.equal(summary.clientsWithImplementedMechanism, 2);
   assert.equal(summary.inProgressMechanisms, 1);
+  assert.equal(summary.activeClientsWithImplemented, 2);
+  assert.equal(summary.activeClientTotal, 2);
+  assert.equal(summary.clientsWithLinkedMechanisms, 2);
+  assert.equal(summary.mechanismImplementationRate, 100);
   assert.equal(summary.implementationPercent, 100);
+  assert.equal(summary.statusDist.some((item) => item.label === "Apto"), false);
 });
 
-test("percentual implementado usa clientes, não vínculos", () => {
+test("percentual implantado = clientes com impl. ÷ clientes com mecanismo vinculado", () => {
   const summary = summarizeMechanismRows(
     [{
       clientId: "1",
+      analyticalStatus: "Ativo",
       available: 4,
       implemented: 1,
       mechanisms: [
@@ -127,12 +141,23 @@ test("percentual implementado usa clientes, não vínculos", () => {
         { status: "Apto", mechanismId: "m4" },
       ],
     }],
-    { catalog: [], portfolioCount: 10 },
+    {
+      catalog: [],
+      portfolio: [{ analyticalStatus: "Ativo", engineer: "EP1", segment: "APEX", count: 10 }],
+      portfolioCount: 10,
+      consolidationQuality: { clients: { pharusUsersWithMechanisms: 73 } },
+      pharusAvailable: true,
+    },
   );
+  assert.equal(summary.mechanismImplementationRate, 100);
   assert.equal(summary.implementationPercent, 100);
   assert.equal(summary.implementationPercentLinks, 25);
-  assert.equal(summary.clientsWithMechanisms, 1);
+  assert.equal(summary.baseQvDisplayed, 1);
+  assert.equal(summary.appPharusDisplayed, 73);
+  assert.equal(summary.displayedCombinedTotal, 74);
+  assert.equal(summary.clientsWithMechanisms, 74);
   assert.equal(summary.clientsWithImplementedMechanism, 1);
+  assert.equal(summary.clientsWithLinkedMechanisms, 1);
 });
 
 test("filtros recortam clientes e o denominador de cobertura", () => {

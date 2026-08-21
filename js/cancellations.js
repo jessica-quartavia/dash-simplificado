@@ -21,7 +21,7 @@ import { resolvePeriod } from "../lib/analytics/filters/period.mjs";
 import { normalizeProgramFilter, programSelectOptions } from "../lib/analytics/filters/program.mjs";
 import { createPageRefresh } from "./components/page-refresh.js";
 import { fetchPageJson, mapLoadError } from "./utils/page-load.js";
-import { donut, escapeHtml, hBars } from "./general-charts.mjs";
+import { donut, escapeHtml, hBars, intentionEffectiveColumns } from "./general-charts.mjs";
 import {
   bindFilterBar,
   bindTableExport,
@@ -184,29 +184,6 @@ function monthShortLabel(ym, long) {
   return long ? `${names[idx]}/${String(y).slice(2)}` : names[idx];
 }
 
-function intentionEffectiveColumns(series, limit = 12) {
-  if (!series.length) return `<p class="placeholder-note">Sem meses históricos para exibir.</p>`;
-  const visible = series.slice(-limit);
-  const maxValue = Math.max(...visible.flatMap((i) => [i.intentions || 0, i.effective || 0]), 0);
-  const plotH = 180;
-  const long = Number(limit) >= 12;
-  return `<div class="acq-chart-scroll"><div class="acq-chart-grid dual-chart" data-cols="${visible.length}">${visible
-    .map((i) => {
-      const intentionsPx = maxValue > 0 && i.intentions ? Math.max(Math.round((i.intentions / maxValue) * plotH), 6) : 0;
-      const effectivePx = maxValue > 0 && i.effective ? Math.max(Math.round((i.effective / maxValue) * plotH), 6) : 0;
-      return `<div class="acq-col dual-col" title="${escapeHtml(i.month)}: ${i.intentions} intenções · ${i.effective} efetivados">
-        <div class="acq-col-value">${Number(i.intentions || 0).toLocaleString("pt-BR")}</div>
-        <div class="dual-bars">
-          <div class="acq-col-bar dual-bar scheduled" style="height:${intentionsPx}px"></div>
-          <div class="acq-col-bar dual-bar completed" style="height:${effectivePx}px"></div>
-        </div>
-        <div class="acq-col-label">${escapeHtml(monthShortLabel(i.month, long))}</div>
-      </div>`;
-    })
-    .join("")}</div></div>
-    <p class="chart-legend-note"><span class="swatch scheduled"></span> Intenções/pedidos <span class="swatch completed"></span> Efetivados</p>`;
-}
-
 function semesterBars(series) {
   const total = series.reduce((sum, item) => sum + (item.total || 0), 0);
   return series.map((item) => ({
@@ -304,7 +281,7 @@ function renderSuccess() {
     <section class="section-block">
       <h2>E · Evolução</h2>
       <p>Séries independentes por data de intenção e de efetivação; não representa conversão do mesmo cliente.</p>
-      <article class="chart-card"><h3>Intenções vs efetivados por mês</h3><div id="cxChartMonth"></div></article>
+      <article class="chart-card"><h3>Intenções e cancelamentos efetivados por mês</h3><div id="cxChartMonth"></div></article>
     </section>
 
     <section class="section-block">

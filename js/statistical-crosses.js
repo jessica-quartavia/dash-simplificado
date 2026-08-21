@@ -24,6 +24,8 @@ import {
   renderRankingHeatmapTable,
   renderProportionalHeatmapTable,
 } from "./components/statistical-matrix.js";
+import { renderSurvivalSection, bindSurvivalChart } from "./components/survival-chart.mjs";
+import { sortLabelsUnknownLast } from "../lib/analytics/filters/sort-categories.mjs";
 
 const fmt = new Intl.NumberFormat("pt-BR");
 
@@ -35,6 +37,7 @@ const state = {
   errorCode: null,
   filters: defaultStatisticalCrossesFilters(),
   showAllDiscoveries: false,
+  survivalCompare: "overall",
 };
 
 let eventsBound = false;
@@ -56,7 +59,7 @@ function $(id) {
 }
 
 function uniqueSorted(values) {
-  return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  return sortLabelsUnknownLast(values.filter(Boolean));
 }
 
 function filtersFromForm() {
@@ -303,14 +306,16 @@ function renderCohortHeatmap(cohort) {
     }),
   }));
   const meta = cohort.metadata || {};
-  const note = `Coortes: ${cohorts.length} · elegíveis ${fmt.format(cohorts.reduce((a, c) => a + (c.nStart || 0), 0))} · excluídos por datas: ${fmt.format((meta.skippedCancelledNoDate || 0) + (meta.skippedDuplicate || 0) + (meta.skippedCancelBeforeHire || 0) + (meta.skippedNoHire || 0))}`;
+  const cohortCount = cohorts.length;
+  const cellSize = cohortCount > 14 ? 52 : cohortCount > 10 ? 58 : 64;
+  const note = `Coortes: ${cohorts.length} · elegíveis ${fmt.format(cohorts.reduce((a, c) => a + (c.nStart || 0), 0))} · excluídos por datas: ${fmt.format((meta.skippedCancelledNoDate || 0) + (meta.skippedDuplicate || 0) + (meta.skippedCancelBeforeHire || 0) + (meta.skippedNoHire || 0))} · mín. n≥5`;
   return renderStatisticalMatrix({
     columns,
     rows,
     cornerLabel: "Mês de vida",
-    legendHtml: `<span class="note-muted">Verde = maior retenção · vermelho/laranja = menor retenção</span>`,
+    legendHtml: `<span class="note-muted">Verde = maior retenção · vermelho/laranja = menor retenção · células — = idade futura ou amostra insuficiente</span>`,
     note,
-    cellSize: cohorts.length > 10 ? 64 : 70,
+    cellSize,
     labelWidth: 200,
   });
 }
@@ -340,10 +345,10 @@ function renderGroupMatrixTable(model) {
     columns,
     rows,
     cornerLabel: "Indicador",
-    legendHtml: `<span class="note-muted">Azul = abaixo da referência · cinza = semelhante · laranja/vermelho = acima</span>`,
-    note: model.note || "",
+    legendHtml: `<span class="note-muted">Azul = abaixo da referência geral · cinza = semelhante · laranja/vermelho = acima · n= por coluna no cabeçalho</span>`,
+    note: model.note || "Valores padronizados em relação à referência geral da população filtrada.",
     cellMinWidth: Math.max(88, Math.min(120, 520 / Math.max(model.groups.length, 1))),
-    labelWidth: 220,
+    labelWidth: 260,
   });
 }
 
@@ -610,6 +615,11 @@ function renderSuccess() {
 
   content.innerHTML = `<div class="statistical-page">${state.error ? `<p class="page-inline-error">${escapeHtml(state.error)}</p>` : ""}
 
+    <div class="sc-interpret-alert" role="note">
+      <strong>Como ler associações:</strong> Associação (Spearman/Cramér) mede relação observada; diferença padronizada compara medianas ativos vs cancelados;
+      AUC mede separação preditiva univariada; cobertura = % de clientes com dado. Relações descritivas — não implicam causalidade.
+    </div>
+
     <section class="section-block" id="scSecResumo">
       <h2>Resumo da base analítica</h2>
       <p>Uma linha por cliente · regras oficiais de cancelamento, ciclo e NPS.</p>
@@ -685,8 +695,8 @@ function renderSuccess() {
     </section>
 
     <section class="section-block" id="scSecSurvival">
-      <h2>Sobrevivência (Kaplan-Meier)</h2>
-      ${renderSurvivalSummary(p.survival)}
+      <h2>Curva de sobrevivência</h2>
+      ${renderSurvivalSection(p.survival, { compare: state.survivalCompare })}
     </section>
 
     <section class="section-block sc-matrix-section" id="scSecCohort">
@@ -732,6 +742,17 @@ function renderSuccess() {
   bindMatrixTooltips(content);
   bindMatrixExpand(content);
   bindMatrixViewToggle(content);
+  bindSurvivalPanel(content);
+}
+
+function bindSurvivalPanel(root) {
+  bindSurvivalChart(root, (compare) => {
+    state.survivalCompare = compare;
+    const section = root.querySelector?.("#scSecSurvival") || root.closest?.("#scSecSurvival");
+    if (!section || !state.payload) return;
+    section.innerHTML = `<h2>Curva de sobrevivência</h2>${renderSurvivalSection(state.payload.survival, { compare })}`;
+    bindSurvivalPanel(section);
+  });
 }
 
 function renderFilters() {

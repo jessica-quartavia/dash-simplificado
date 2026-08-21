@@ -16,7 +16,7 @@ import {
 import { resolveVisibleFilterFields } from "../lib/analytics/filters/page-contracts.mjs";
 import { createFilterChangeHandler } from "../lib/analytics/filters/filter-state.mjs";
 import { normalizeProgramFilter, programSelectOptions } from "../lib/analytics/filters/program.mjs";
-import { donut, escapeHtml, hBars } from "./general-charts.mjs";
+import { donut, escapeHtml, vBars } from "./general-charts.mjs";
 import {
   bindFilterBar,
   bindTableExport,
@@ -239,7 +239,7 @@ function renderSuccess() {
     </section>
   `;
 
-  if ($("sfChartNps")) $("sfChartNps").innerHTML = hBars(dist.npsClassification.filter((i) => i.count > 0));
+  if ($("sfChartNps")) $("sfChartNps").innerHTML = vBars(dist.npsClassification.filter((i) => i.count > 0));
   if ($("sfChartCsat")) $("sfChartCsat").innerHTML = donut(dist.csatSatisfaction.filter((i) => i.count > 0));
 
   const tbody = $("sfRows");

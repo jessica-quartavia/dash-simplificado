@@ -1,7 +1,7 @@
 /**
  * Renderização visual do Resumo Executivo — somente markup/CSS classes.
  */
-import { escapeHtml, hBars, rankedBars, acquisitionColumns } from "./general-charts.mjs";
+import { escapeHtml, hBars, rankedBars, acquisitionColumns, mechanismDistributionBars, intentionEffectiveColumns } from "./general-charts.mjs";
 
 const fmt = new Intl.NumberFormat("pt-BR");
 const pctFmt = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
@@ -232,16 +232,17 @@ function renderEngagement(block) {
   );
 }
 
-function renderValue(block) {
+function renderValue(block, chartExpanded = {}) {
   if (!block) return execSection("Entrega de valor", "", "error");
   const clients = metric(block, "clients_with_implemented_mechanisms");
   const rate = metric(block, "clients_implementation_rate");
   const distribution = metric(block, "mechanism_type_distribution");
-  const distItems = (distribution.value?.top || distribution.value || []).map((item) => ({
+  const distItems = (distribution.value?.full || distribution.value?.top || distribution.value || []).map((item) => ({
     label: item.label,
     count: item.count ?? item.clients ?? 0,
     percent: item.percent ?? 0,
   }));
+  const distExpanded = chartExpanded.mechanismDistribution === true;
 
   return execSection(
     "Entrega de valor",
@@ -251,7 +252,10 @@ function renderValue(block) {
         ${execKpi({
           label: "Clientes com mecanismos implantados",
           value: num(clients.value),
-          note: coverageNote(clients),
+          note:
+            rate.numerator != null && rate.denominator != null
+              ? `${num(rate.numerator)}/${num(rate.denominator)} clientes vinculados`
+              : coverageNote(clients),
           accent: true,
         })}
         ${execKpi({
@@ -260,7 +264,11 @@ function renderValue(block) {
           note: rate.numerator != null ? `${num(rate.numerator)}/${num(rate.denominator)} clientes` : rate.note || "",
         })}
       </div>
-      ${execChart("Distribuição dos mecanismos", hBars(distItems, { wideLabels: true }), "executive-chart-card--distribution")}
+      ${execChart(
+        "Distribuição dos mecanismos",
+        mechanismDistributionBars(distItems, { limit: 8, expanded: distExpanded, chartId: "mechanismDistribution" }),
+        "executive-chart-card--distribution",
+      )}
     </div>`,
     block.status,
   );
@@ -339,22 +347,8 @@ function renderHealth(block) {
     </div>
     ${execChart(
       "Cancelamentos × intenções (mensal)",
-      hBars(
-        monthlyRows.flatMap((row) => [
-          {
-            label: `${row.label || row.month} · efetivados`,
-            count: row.effective ?? row.effectiveCancellations ?? 0,
-            percent: 0,
-          },
-          {
-            label: `${row.label || row.month} · intenções`,
-            count: row.intentions ?? row.intention ?? 0,
-            percent: 0,
-          },
-        ]),
-        { wideLabels: true, compact: true },
-      ),
-      "executive-chart-card--wide",
+      intentionEffectiveColumns(monthlyRows, 12),
+      "executive-chart-card--wide executive-chart-card--monthly",
     )}
     <div class="executive-grid executive-grid--health-bottom">
       ${execChart(
@@ -367,7 +361,7 @@ function renderHealth(block) {
         ${execKpi({
           label: "Clientes aptos para renovação",
           value: eligible.status === "pending_rule" ? "Regra pendente" : num(eligible.value),
-          note: eligible.pending?.message ? "Pendente de validação" : eligible.limitations || "",
+          note: eligible.pending?.message ? "Pendente de validação" : "Clientes com ciclo válido",
           mini: true,
         })}
         ${execKpi({
@@ -448,20 +442,20 @@ function renderTemporal(block) {
     `
     <p class="executive-note">Sinais determinísticos pré-cancelamento. Associação descritiva — sem causalidade.</p>
     <div class="executive-grid executive-grid--temporal">
-      ${execChart("Principais sinais", signalHtml, "executive-chart-card--signals")}
-      ${execChart("Clientes por quantidade de sinais", hBars(distItems, { wideLabels: true, compact: true }), "executive-chart-card--distribution")}
+      ${execChart("Principais sinais pré-cancelamento", signalHtml, "executive-chart-card--signals")}
+      ${execChart("Clientes por quantidade de sinais pré-cancelamento", hBars(distItems, { wideLabels: true, compact: true }), "executive-chart-card--distribution")}
     </div>`,
     block.status,
   );
 }
 
-export function renderExecutiveDashboard(payload = {}) {
+export function renderExecutiveDashboard(payload = {}, { chartExpanded = {} } = {}) {
   return `
     <div class="executive-dashboard">
       ${renderBase(payload.baseClients)}
       ${renderOnboarding(payload.onboarding)}
       ${renderEngagement(payload.engagement)}
-      ${renderValue(payload.valueDelivery)}
+      ${renderValue(payload.valueDelivery, chartExpanded)}
       ${renderHealth(payload.clientHealth)}
       ${renderIntentionDestination(payload.clientHealth)}
       ${renderEp(payload.ep)}

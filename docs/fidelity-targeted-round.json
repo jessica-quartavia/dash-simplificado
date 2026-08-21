@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-21T16:13:55.696Z",
+  "generatedAt": "2026-08-21T16:59:45.267Z",
   "totals": {
-    "compared": 56,
-    "pass": 54,
+    "compared": 51,
+    "pass": 49,
     "divergent": 0,
     "expected_difference": 0,
     "not_comparable": 2,
@@ -11,40 +11,40 @@
   "slowest": [
     {
       "page": "executive_summary",
-      "v1_ms": 11072,
-      "v2_ms": 7730
-    },
-    {
-      "page": "temporal_indicators",
-      "v1_ms": 3964,
-      "v2_ms": 5028
+      "v1_ms": 10943,
+      "v2_ms": 7567
     },
     {
       "page": "cancellations",
-      "v1_ms": 4806,
-      "v2_ms": 4725
+      "v1_ms": 5108,
+      "v2_ms": 4738
+    },
+    {
+      "page": "meetings",
+      "v1_ms": 4728,
+      "v2_ms": 4433
+    },
+    {
+      "page": "general",
+      "v1_ms": 2466,
+      "v2_ms": 3417
     },
     {
       "page": "mechanisms",
-      "v1_ms": 1717,
-      "v2_ms": 2864
-    },
-    {
-      "page": "satisfaction",
-      "v1_ms": 2107,
-      "v2_ms": 1855
+      "v1_ms": 1636,
+      "v2_ms": 3341
     }
   ],
   "pages": [
     {
-      "page": "satisfaction",
+      "page": "general",
       "metrics": [
         {
-          "metric_id": "sat_nps",
-          "label": "NPS",
-          "page": "satisfaction",
-          "v1_value": 72.7,
-          "v2_value": 72.7,
+          "metric_id": "gd_total",
+          "label": "Total clientes",
+          "page": "general",
+          "v1_value": 3428,
+          "v2_value": 3428,
           "difference": 0,
           "relative_difference": 0,
           "v1_sample_size": null,
@@ -57,11 +57,11 @@
           "payloadPathV2": null
         },
         {
-          "metric_id": "sat_promoters",
-          "label": "Promotores",
-          "page": "satisfaction",
-          "v1_value": 85,
-          "v2_value": 85,
+          "metric_id": "gd_active",
+          "label": "Ativos",
+          "page": "general",
+          "v1_value": 1743,
+          "v2_value": 1743,
           "difference": 0,
           "relative_difference": 0,
           "v1_sample_size": null,
@@ -74,11 +74,11 @@
           "payloadPathV2": null
         },
         {
-          "metric_id": "sat_neutrals",
-          "label": "Neutros",
-          "page": "satisfaction",
-          "v1_value": 13,
-          "v2_value": 13,
+          "metric_id": "gd_frozen",
+          "label": "Congelados",
+          "page": "general",
+          "v1_value": 331,
+          "v2_value": 331,
           "difference": 0,
           "relative_difference": 0,
           "v1_sample_size": null,
@@ -91,45 +91,11 @@
           "payloadPathV2": null
         },
         {
-          "metric_id": "sat_detractors",
-          "label": "Detratores",
-          "page": "satisfaction",
-          "v1_value": 8,
-          "v2_value": 8,
-          "difference": 0,
-          "relative_difference": 0,
-          "v1_sample_size": null,
-          "v2_sample_size": null,
-          "match": true,
-          "classification": "PASS",
-          "status": "PASS",
-          "note": "",
-          "payloadPathV1": null,
-          "payloadPathV2": null
-        },
-        {
-          "metric_id": "sat_respondents",
-          "label": "Respondentes NPS (trimestre)",
-          "page": "satisfaction",
-          "v1_value": 106,
-          "v2_value": 106,
-          "difference": 0,
-          "relative_difference": 0,
-          "v1_sample_size": null,
-          "v2_sample_size": null,
-          "match": true,
-          "classification": "PASS",
-          "status": "PASS",
-          "note": "",
-          "payloadPathV1": null,
-          "payloadPathV2": null
-        },
-        {
-          "metric_id": "sat_coverage",
-          "label": "Cobertura NPS %",
-          "page": "satisfaction",
-          "v1_value": 3.1,
-          "v2_value": 3.1,
+          "metric_id": "gd_cancelled",
+          "label": "Cancelados",
+          "page": "general",
+          "v1_value": 515,
+          "v2_value": 515,
           "difference": 0,
           "relative_difference": 0,
           "v1_sample_size": null,
@@ -143,41 +109,24 @@
         }
       ],
       "timing": {
-        "v1_ms": 2107,
-        "v2_ms": 1855,
-        "v1_bytes": 3687233,
-        "v2_bytes": 3687233
+        "v1_ms": 2466,
+        "v2_ms": 3417,
+        "v1_bytes": 6453865,
+        "v2_bytes": 6429614
       },
-      "total_ms": 4026,
+      "total_ms": 6072,
       "v1Error": null,
       "v2Error": null
     },
     {
-      "page": "cancellations",
+      "page": "meetings",
       "metrics": [
         {
-          "metric_id": "cx_effective",
-          "label": "Efetivados",
-          "page": "cancellations",
-          "v1_value": 500,
-          "v2_value": 500,
-          "difference": 0,
-          "relative_difference": 0,
-          "v1_sample_size": null,
-          "v2_sample_size": null,
-          "match": true,
-          "classification": "PASS",
-          "status": "PASS",
-          "note": "archived=no",
-          "payloadPathV1": null,
-          "payloadPathV2": null
-        },
-        {
-          "metric_id": "cx_intent",
-          "label": "Intenções/pedidos",
-          "page": "cancellations",
-          "v1_value": 187,
-          "v2_value": 187,
+          "metric_id": "mt_total",
+          "label": "Total reuniões",
+          "page": "meetings",
+          "v1_value": 6448,
+          "v2_value": 6448,
           "difference": 0,
           "relative_difference": 0,
           "v1_sample_size": null,
@@ -190,123 +139,11 @@
           "payloadPathV2": null
         },
         {
-          "metric_id": "cx_process",
-          "label": "Em processo",
-          "page": "cancellations",
-          "difference": null,
-          "relative_difference": null,
-          "v1_sample_size": null,
-          "v2_sample_size": null,
-          "match": true,
-          "classification": "PASS",
-          "status": "PASS",
-          "note": "",
-          "payloadPathV1": null,
-          "payloadPathV2": null
-        },
-        {
-          "metric_id": "cx_non_renewal",
-          "label": "Não renovações",
-          "page": "cancellations",
-          "v1_value": 354,
-          "v2_value": 354,
-          "difference": 0,
-          "relative_difference": 0,
-          "v1_sample_size": null,
-          "v2_sample_size": null,
-          "match": true,
-          "classification": "PASS",
-          "status": "PASS",
-          "note": "",
-          "payloadPathV1": null,
-          "payloadPathV2": null
-        },
-        {
-          "metric_id": "cx_early",
-          "label": "Antes fim ciclo",
-          "page": "cancellations",
-          "difference": null,
-          "relative_difference": null,
-          "v1_sample_size": null,
-          "v2_sample_size": null,
-          "match": true,
-          "classification": "PASS",
-          "status": "PASS",
-          "note": "",
-          "payloadPathV1": null,
-          "payloadPathV2": null
-        },
-        {
-          "metric_id": "cx_top_reason_1",
-          "label": "Top motivo #1",
-          "page": "cancellations",
-          "v1_value": "Outros motivos:216",
-          "v2_value": "Outros motivos:216",
-          "difference": null,
-          "relative_difference": null,
-          "v1_sample_size": null,
-          "v2_sample_size": null,
-          "match": true,
-          "classification": "PASS",
-          "status": "PASS",
-          "note": "byCategory efetivados",
-          "payloadPathV1": null,
-          "payloadPathV2": null
-        }
-      ],
-      "timing": {
-        "v1_ms": 4806,
-        "v2_ms": 4725,
-        "v1_bytes": 2397121,
-        "v2_bytes": 2398476
-      },
-      "total_ms": 9558,
-      "v1Error": null,
-      "v2Error": null
-    },
-    {
-      "page": "renewal",
-      "metrics": [
-        {
-          "metric_id": "rn_renewed",
-          "label": "Renovados",
-          "page": "renewal",
-          "v1_value": 202,
-          "v2_value": 202,
-          "difference": 0,
-          "relative_difference": 0,
-          "v1_sample_size": null,
-          "v2_sample_size": null,
-          "match": true,
-          "classification": "PASS",
-          "status": "PASS",
-          "note": "",
-          "payloadPathV1": null,
-          "payloadPathV2": null
-        },
-        {
-          "metric_id": "rn_total",
-          "label": "Total renovações",
-          "page": "renewal",
-          "v1_value": 249,
-          "v2_value": 249,
-          "difference": 0,
-          "relative_difference": 0,
-          "v1_sample_size": null,
-          "v2_sample_size": null,
-          "match": true,
-          "classification": "PASS",
-          "status": "PASS",
-          "note": "",
-          "payloadPathV1": null,
-          "payloadPathV2": null
-        },
-        {
-          "metric_id": "rn_eligible",
-          "label": "Aptos (ciclo válido)",
-          "page": "renewal",
-          "v1_value": 3391,
-          "v2_value": 3391,
+          "metric_id": "mt_attendance",
+          "label": "Taxa comparecimento",
+          "page": "meetings",
+          "v1_value": 85.6,
+          "v2_value": 85.6,
           "difference": 0,
           "relative_difference": 0,
           "v1_sample_size": null,
@@ -320,12 +157,12 @@
         }
       ],
       "timing": {
-        "v1_ms": 1832,
-        "v2_ms": 1834,
-        "v1_bytes": 1264985,
-        "v2_bytes": 1264985
+        "v1_ms": 4728,
+        "v2_ms": 4433,
+        "v1_bytes": 7562718,
+        "v2_bytes": 7916262
       },
-      "total_ms": 3687,
+      "total_ms": 9253,
       "v1Error": null,
       "v2Error": null
     },
@@ -453,60 +290,12 @@
         }
       ],
       "timing": {
-        "v1_ms": 1717,
-        "v2_ms": 2864,
+        "v1_ms": 1636,
+        "v2_ms": 3341,
         "v1_bytes": 979682,
         "v2_bytes": 656175
       },
-      "total_ms": 4589,
-      "v1Error": null,
-      "v2Error": null
-    },
-    {
-      "page": "temporal_indicators",
-      "metrics": [
-        {
-          "metric_id": "ti_active_with_signals",
-          "label": "Ativos com sinais",
-          "page": "temporal_indicators",
-          "v1_value": 1526,
-          "v2_value": 1526,
-          "difference": 0,
-          "relative_difference": 0,
-          "v1_sample_size": null,
-          "v2_sample_size": null,
-          "match": true,
-          "classification": "PASS",
-          "status": "PASS",
-          "note": "",
-          "payloadPathV1": null,
-          "payloadPathV2": null
-        },
-        {
-          "metric_id": "ti_signal_intensity",
-          "label": "Clientes por quantidade de sinais",
-          "page": "temporal_indicators",
-          "v1_value": "1 sinal=674|2 sinais=576|3 sinais=166|4 ou mais sinais=110",
-          "v2_value": "1 sinal=674|2 sinais=576|3 sinais=166|4 ou mais sinais=110",
-          "difference": null,
-          "relative_difference": null,
-          "v1_sample_size": null,
-          "v2_sample_size": null,
-          "match": true,
-          "classification": "PASS",
-          "status": "PASS",
-          "note": "activeRisk.clients buckets V1",
-          "payloadPathV1": null,
-          "payloadPathV2": null
-        }
-      ],
-      "timing": {
-        "v1_ms": 3964,
-        "v2_ms": 5028,
-        "v1_bytes": 23337597,
-        "v2_bytes": 23338370
-      },
-      "total_ms": 9223,
+      "total_ms": 5000,
       "v1Error": null,
       "v2Error": null
     },
@@ -568,8 +357,8 @@
           "metric_id": "exec_active_segment_distribution",
           "label": "Base ativa por segmento",
           "page": "executive_summary",
-          "v1_value": "[{\"label\":\"APEX\",\"count\":722,\"percent\":41.4},{\"label\":\"PRIVATE\",\"count\":119,\"percent\":6.8},{\"label\":\"PRINCIPAL\",\"count\":514,\"percent\":29.5},{\"label\":\"DEBTS\",\"count\":133,\"percent\":7.6},{\"label\":\"OVER\",\"count\":127,\"percent\":7.3},{\"label\":\"Dados insuficientes\",\"count\":128,\"percent\":7.3}]",
-          "v2_value": "[{\"label\":\"APEX\",\"count\":722,\"percent\":41.4},{\"label\":\"PRIVATE\",\"count\":119,\"percent\":6.8},{\"label\":\"PRINCIPAL\",\"count\":514,\"percent\":29.5},{\"label\":\"DEBTS\",\"count\":133,\"percent\":7.6},{\"label\":\"OVER\",\"count\":127,\"percent\":7.3},{\"label\":\"Dados insuficientes\",\"count\":128,\"percent\":7.3}]",
+          "v1_value": "[{\"label\":\"APEX\",\"count\":723,\"percent\":41.5},{\"label\":\"PRIVATE\",\"count\":119,\"percent\":6.8},{\"label\":\"PRINCIPAL\",\"count\":514,\"percent\":29.5},{\"label\":\"DEBTS\",\"count\":133,\"percent\":7.6},{\"label\":\"OVER\",\"count\":127,\"percent\":7.3},{\"label\":\"Dados insuficientes\",\"count\":127,\"percent\":7.3}]",
+          "v2_value": "[{\"label\":\"APEX\",\"count\":723,\"percent\":41.5},{\"label\":\"PRIVATE\",\"count\":119,\"percent\":6.8},{\"label\":\"PRINCIPAL\",\"count\":514,\"percent\":29.5},{\"label\":\"DEBTS\",\"count\":133,\"percent\":7.6},{\"label\":\"OVER\",\"count\":127,\"percent\":7.3},{\"label\":\"Dados insuficientes\",\"count\":127,\"percent\":7.3}]",
           "difference": null,
           "relative_difference": null,
           "v1_sample_size": null,
@@ -619,8 +408,8 @@
           "metric_id": "exec_median_liquidity_reserve",
           "label": "Reserva mediana",
           "page": "executive_summary",
-          "v1_value": 166301,
-          "v2_value": 166301,
+          "v1_value": 168150.5,
+          "v2_value": 168150.5,
           "difference": 0,
           "relative_difference": 0,
           "v1_sample_size": null,
@@ -772,8 +561,8 @@
           "metric_id": "exec_clients_without_financial_diagnosis",
           "label": "Clientes sem diagnóstico financeiro",
           "page": "executive_summary",
-          "v1_value": 124,
-          "v2_value": 124,
+          "v1_value": 123,
+          "v2_value": 123,
           "difference": 0,
           "relative_difference": 0,
           "v1_sample_size": null,
@@ -806,8 +595,8 @@
           "metric_id": "exec_clients_implementation_rate",
           "label": "% com mecanismo implantado",
           "page": "executive_summary",
-          "v1_value": 22.4,
-          "v2_value": 22.4,
+          "v1_value": 97,
+          "v2_value": 97,
           "difference": 0,
           "relative_difference": 0,
           "v1_sample_size": null,
@@ -925,8 +714,8 @@
           "metric_id": "exec_intention_destination_branches",
           "label": "Destino das intenções e pedidos",
           "page": "executive_summary",
-          "v1_value": "{\"total\":187,\"rule\":\"Universo: hasIntentionOrPedido. Prioridade exclusiva: cancelado > arquivado > retido > em processo.\",\"branches\":[{\"key\":\"em_processo\",\"label\":\"Em processo\",\"subtitle\":\"Sem desfecho posterior\",\"count\":76,\"percent\":40.6},{\"key\":\"retido\",\"label\":\"Retido\",\"subtitle\":\"Desfecho de retenção\",\"count\":18,\"percent\":9.6},{\"key\":\"arquivado\",\"label\":\"Arquivado\",\"subtitle\":\"Possui registro arquivado\",\"count\":19,\"percent\":10.2},{\"key\":\"cancelado\",\"label\":\"Cancelado\",\"subtitle\":\"Cancelamento efetivado\",\"count\":74,\"percent\":39.6}]}",
-          "v2_value": "{\"total\":187,\"rule\":\"Universo: hasIntentionOrPedido. Prioridade exclusiva: cancelado > arquivado > retido > em processo.\",\"branches\":[{\"key\":\"em_processo\",\"label\":\"Em processo\",\"subtitle\":\"Sem desfecho posterior\",\"count\":76,\"percent\":40.6},{\"key\":\"retido\",\"label\":\"Retido\",\"subtitle\":\"Desfecho de retenção\",\"count\":18,\"percent\":9.6},{\"key\":\"arquivado\",\"label\":\"Arquivado\",\"subtitle\":\"Possui registro arquivado\",\"count\":19,\"percent\":10.2},{\"key\":\"cancelado\",\"label\":\"Cancelado\",\"subtitle\":\"Cancelamento efetivado\",\"count\":74,\"percent\":39.6}]}",
+          "v1_value": "{\"total\":187,\"rule\":\"Universo: intencao_registrada_at OR data_pedido OR status de intenção/pedido (OR). Prioridade exclusiva: cancelado > arquivado > retido > em processo.\",\"closure\":{\"branchSum\":187,\"matchesUniverse\":true},\"branches\":[{\"key\":\"em_processo\",\"label\":\"Em processo\",\"subtitle\":\"Sem desfecho posterior\",\"count\":76,\"percent\":40.6},{\"key\":\"retido\",\"label\":\"Retido\",\"subtitle\":\"Desfecho de retenção\",\"count\":18,\"percent\":9.6},{\"key\":\"arquivado\",\"label\":\"Arquivado\",\"subtitle\":\"Possui registro arquivado\",\"count\":19,\"percent\":10.2},{\"key\":\"cancelado\",\"label\":\"Cancelado\",\"subtitle\":\"Cancelamento efetivado\",\"count\":74,\"percent\":39.6}]}",
+          "v2_value": "{\"total\":187,\"rule\":\"Universo: intencao_registrada_at OR data_pedido OR status de intenção/pedido (OR). Prioridade exclusiva: cancelado > arquivado > retido > em processo.\",\"closure\":{\"branchSum\":187,\"matchesUniverse\":true},\"branches\":[{\"key\":\"em_processo\",\"label\":\"Em processo\",\"subtitle\":\"Sem desfecho posterior\",\"count\":76,\"percent\":40.6},{\"key\":\"retido\",\"label\":\"Retido\",\"subtitle\":\"Desfecho de retenção\",\"count\":18,\"percent\":9.6},{\"key\":\"arquivado\",\"label\":\"Arquivado\",\"subtitle\":\"Possui registro arquivado\",\"count\":19,\"percent\":10.2},{\"key\":\"cancelado\",\"label\":\"Cancelado\",\"subtitle\":\"Cancelamento efetivado\",\"count\":74,\"percent\":39.6}]}",
           "difference": null,
           "relative_difference": null,
           "v1_sample_size": null,
@@ -1025,7 +814,7 @@
         },
         {
           "metric_id": "exec_temporal_top_signals",
-          "label": "Sinais de cancelamento",
+          "label": "Principais sinais pré-cancelamento",
           "page": "executive_summary",
           "v1_value": "[{\"label\":\"Sem implementação em 90 dias\",\"count\":501,\"percent\":98.4,\"description\":\"Nenhuma implementação nos 90 dias antes do cancelamento.\"},{\"label\":\"Sem reunião em 60 dias\",\"count\":418,\"percent\":82.1,\"description\":\"Nenhuma reunião nos 60 dias antes do cancelamento.\"},{\"label\":\"Sem atualização financeira em 60 dias\",\"count\":293,\"percent\":57.6,\"description\":\"Nenhuma atualização financeira nos 60 dias antes do cancelamento.\"},{\"label\":\"30+ dias sem atividade\",\"count\":284,\"percent\":55.8,\"description\":\"Último mês antes do cancelamento com 30 ou mais dias sem atividade.\"},{\"label\":\"NPS detrator recente\",\"count\":2,\"percent\":0.4,\"description\":\"Último NPS até 90 dias antes do cancelamento foi 0-6.\"}]",
           "v2_value": "[{\"label\":\"Sem implementação em 90 dias\",\"count\":501,\"percent\":98.4,\"description\":\"Nenhuma implementação nos 90 dias antes do cancelamento.\"},{\"label\":\"Sem reunião em 60 dias\",\"count\":418,\"percent\":82.1,\"description\":\"Nenhuma reunião nos 60 dias antes do cancelamento.\"},{\"label\":\"Sem atualização financeira em 60 dias\",\"count\":293,\"percent\":57.6,\"description\":\"Nenhuma atualização financeira nos 60 dias antes do cancelamento.\"},{\"label\":\"30+ dias sem atividade\",\"count\":284,\"percent\":55.8,\"description\":\"Último mês antes do cancelamento com 30 ou mais dias sem atividade.\"},{\"label\":\"NPS detrator recente\",\"count\":2,\"percent\":0.4,\"description\":\"Último NPS até 90 dias antes do cancelamento foi 0-6.\"}]",
@@ -1042,10 +831,10 @@
         },
         {
           "metric_id": "exec_temporal_signal_distribution",
-          "label": "Clientes por quantidade de sinais",
+          "label": "Clientes por quantidade de sinais pré-cancelamento",
           "page": "executive_summary",
-          "v1_value": "[{\"label\":\"1 sinal\",\"count\":674,\"percent\":44.2},{\"label\":\"2 sinais\",\"count\":576,\"percent\":37.7},{\"label\":\"3 sinais\",\"count\":166,\"percent\":10.9},{\"label\":\"4 ou mais sinais\",\"count\":110,\"percent\":7.2}]",
-          "v2_value": "[{\"label\":\"1 sinal\",\"count\":674,\"percent\":44.2},{\"label\":\"2 sinais\",\"count\":576,\"percent\":37.7},{\"label\":\"3 sinais\",\"count\":166,\"percent\":10.9},{\"label\":\"4 ou mais sinais\",\"count\":110,\"percent\":7.2}]",
+          "v1_value": "[{\"label\":\"1 sinal\",\"count\":675,\"percent\":44.2},{\"label\":\"2 sinais\",\"count\":575,\"percent\":37.7},{\"label\":\"3 sinais\",\"count\":166,\"percent\":10.9},{\"label\":\"4 ou mais sinais\",\"count\":110,\"percent\":7.2}]",
+          "v2_value": "[{\"label\":\"1 sinal\",\"count\":675,\"percent\":44.2},{\"label\":\"2 sinais\",\"count\":575,\"percent\":37.7},{\"label\":\"3 sinais\",\"count\":166,\"percent\":10.9},{\"label\":\"4 ou mais sinais\",\"count\":110,\"percent\":7.2}]",
           "difference": null,
           "relative_difference": null,
           "v1_sample_size": null,
@@ -1059,12 +848,124 @@
         }
       ],
       "timing": {
-        "v1_ms": 11072,
-        "v2_ms": 7730,
+        "v1_ms": 10943,
+        "v2_ms": 7567,
         "v1_bytes": 2744,
-        "v2_bytes": 59147
+        "v2_bytes": 59517
       },
-      "total_ms": 18803,
+      "total_ms": 18510,
+      "v1Error": null,
+      "v2Error": null
+    },
+    {
+      "page": "cancellations",
+      "metrics": [
+        {
+          "metric_id": "cx_effective",
+          "label": "Efetivados",
+          "page": "cancellations",
+          "v1_value": 500,
+          "v2_value": 500,
+          "difference": 0,
+          "relative_difference": 0,
+          "v1_sample_size": null,
+          "v2_sample_size": null,
+          "match": true,
+          "classification": "PASS",
+          "status": "PASS",
+          "note": "archived=no",
+          "payloadPathV1": null,
+          "payloadPathV2": null
+        },
+        {
+          "metric_id": "cx_intent",
+          "label": "Intenções/pedidos",
+          "page": "cancellations",
+          "v1_value": 187,
+          "v2_value": 187,
+          "difference": 0,
+          "relative_difference": 0,
+          "v1_sample_size": null,
+          "v2_sample_size": null,
+          "match": true,
+          "classification": "PASS",
+          "status": "PASS",
+          "note": "",
+          "payloadPathV1": null,
+          "payloadPathV2": null
+        },
+        {
+          "metric_id": "cx_process",
+          "label": "Em processo",
+          "page": "cancellations",
+          "difference": null,
+          "relative_difference": null,
+          "v1_sample_size": null,
+          "v2_sample_size": null,
+          "match": true,
+          "classification": "PASS",
+          "status": "PASS",
+          "note": "",
+          "payloadPathV1": null,
+          "payloadPathV2": null
+        },
+        {
+          "metric_id": "cx_non_renewal",
+          "label": "Não renovações",
+          "page": "cancellations",
+          "v1_value": 354,
+          "v2_value": 354,
+          "difference": 0,
+          "relative_difference": 0,
+          "v1_sample_size": null,
+          "v2_sample_size": null,
+          "match": true,
+          "classification": "PASS",
+          "status": "PASS",
+          "note": "",
+          "payloadPathV1": null,
+          "payloadPathV2": null
+        },
+        {
+          "metric_id": "cx_early",
+          "label": "Antes fim ciclo",
+          "page": "cancellations",
+          "difference": null,
+          "relative_difference": null,
+          "v1_sample_size": null,
+          "v2_sample_size": null,
+          "match": true,
+          "classification": "PASS",
+          "status": "PASS",
+          "note": "",
+          "payloadPathV1": null,
+          "payloadPathV2": null
+        },
+        {
+          "metric_id": "cx_top_reason_1",
+          "label": "Top motivo #1",
+          "page": "cancellations",
+          "v1_value": "Outros motivos:216",
+          "v2_value": "Outros motivos:216",
+          "difference": null,
+          "relative_difference": null,
+          "v1_sample_size": null,
+          "v2_sample_size": null,
+          "match": true,
+          "classification": "PASS",
+          "status": "PASS",
+          "note": "byCategory efetivados",
+          "payloadPathV1": null,
+          "payloadPathV2": null
+        }
+      ],
+      "timing": {
+        "v1_ms": 5108,
+        "v2_ms": 4738,
+        "v1_bytes": 2397115,
+        "v2_bytes": 2398470
+      },
+      "total_ms": 9866,
       "v1Error": null,
       "v2Error": null
     }

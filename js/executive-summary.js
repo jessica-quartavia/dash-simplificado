@@ -7,6 +7,7 @@ import { createPageRefresh } from "./components/page-refresh.js";
 import { fetchPageJson, mapLoadError } from "./utils/page-load.js";
 import { escapeHtml } from "./general-charts.mjs";
 import { renderExecutiveDashboard } from "./executive-summary-layout.mjs";
+import { bindChartExpand } from "./components/chart-expand.js";
 
 const state = {
   mounted: false,
@@ -15,10 +16,12 @@ const state = {
   error: null,
   errorCode: null,
   filters: defaultExecutiveSummaryFilters(),
+  chartExpanded: {},
 };
 
 let eventsBound = false;
 let pageRefresh = null;
+let unbindChartExpand = () => {};
 
 function $(id) {
   return document.getElementById(id);
@@ -42,7 +45,9 @@ function renderPage() {
     return;
   }
 
-  host.innerHTML = renderExecutiveDashboard(state.payload);
+  host.innerHTML = renderExecutiveDashboard(state.payload, { chartExpanded: state.chartExpanded });
+  unbindChartExpand();
+  unbindChartExpand = bindChartExpand(host, state.chartExpanded, () => renderPage());
   pageRefresh?.markSuccess(state.payload.lastUpdatedAt || state.payload.generatedAt);
   pageRefresh?.setEnabled(true);
 }

@@ -5,6 +5,7 @@ import {
   defaultGeneralFilters,
   filterGeneralAcquisitionRows,
   filterGeneralClients,
+  filterGeneralPortfolioRows,
   sortGeneralClients,
   segmentLabelOf,
 } from "../lib/analytics/general-filters.mjs";
@@ -148,6 +149,16 @@ function filteredRows() {
   );
 }
 
+/** Situação da carteira — ignora filtro Somente ativos / status. */
+function portfolioRows() {
+  const clients = state.payload?.clients || [];
+  return sortGeneralClients(
+    filterGeneralPortfolioRows(clients, state.filters),
+    state.sortKey,
+    state.sortDir,
+  );
+}
+
 /**
  * Aquisição: ignora o filtro de status (métrica histórica).
  * Demais recortes cadastrais continuam aplicados.
@@ -273,7 +284,9 @@ function renderDrawer(client) {
 function renderSuccess() {
   const rows = filteredRows();
   const summary = summarizeGeneralRows(rows);
+  const portfolio = summarizeGeneralRows(portfolioRows());
   const dist = distributionsFromRows(rows);
+  const portfolioDist = distributionsFromRows(portfolioRows());
   const content = $("page-content");
   if (!content) return;
 
@@ -293,10 +306,7 @@ function renderSuccess() {
     (row) => row.engineer && row.engineer !== "Não informado",
   ).length;
   const engineerCoverage = coverageText(engineerFilled, total);
-  const statusIsActiveDefault = state.filters.status === DEFAULT_STATUS_FILTER;
-  const statusChartNote = statusIsActiveDefault
-    ? "No recorte padrão (Ativos), este gráfico concentra praticamente uma categoria. Use o filtro Status para ver a composição completa."
-    : "Composição do recorte atual pelo status analítico.";
+  const statusChartNote = "Composição geral da carteira no recorte cadastral (ignora filtro Somente ativos).";
 
   content.innerHTML = `
     ${state.error ? `<p class="page-inline-error">${escapeHtml(state.error)}</p>` : ""}
@@ -324,11 +334,12 @@ function renderSuccess() {
     <section class="section-block">
       <h2>Situação da carteira</h2>
       <p>Estados fora da leitura principal de ativos.</p>
+      <p class="section-scope-note"><span aria-hidden="true">ℹ</span> O filtro &quot;Somente ativos&quot; não se aplica a esta seção.</p>
       <div class="kpi-row kpi-row-compact">
-        ${kpiCard("Clientes congelados", fmt.format(summary.frozenClients), "Fora da carteira ativa, sem churn efetivado", { compact: true })}
-        ${kpiCard("Cancelados confirmados", fmt.format(summary.cancelledClients), "Churn efetivado ou distrato assinado", { compact: true })}
-        ${kpiCard("Cancelados sem data confirmada", fmt.format(summary.cancelledWithoutConfirmedDate), "Marcados sem data efetiva", { compact: true })}
-        ${kpiCard("Clientes não ativos", fmt.format(summary.nonActiveClients), "Congelados + marcados sem confirmação", { compact: true })}
+        ${kpiCard("Clientes congelados", fmt.format(portfolio.frozenClients), "Fora da carteira ativa, sem churn efetivado", { compact: true })}
+        ${kpiCard("Cancelados confirmados", fmt.format(portfolio.cancelledClients), "Churn efetivado ou distrato assinado", { compact: true })}
+        ${kpiCard("Cancelados sem data confirmada", fmt.format(portfolio.cancelledWithoutConfirmedDate), "Marcados sem data efetiva", { compact: true })}
+        ${kpiCard("Clientes não ativos", fmt.format(portfolio.nonActiveClients), "Congelados + marcados sem confirmação", { compact: true })}
       </div>
       <article class="chart-card chart-card-quiet">
         <h3>Clientes por status</h3>
@@ -451,7 +462,7 @@ function renderSuccess() {
     </section>
   `;
 
-  if ($("chartStatus")) $("chartStatus").innerHTML = donut(dist.status);
+  if ($("chartStatus")) $("chartStatus").innerHTML = donut(portfolioDist.status);
   if ($("chartSegment")) $("chartSegment").innerHTML = hBars(dist.segments.filter((i) => i.count > 0));
   if ($("chartStay")) $("chartStay").innerHTML = hBars(dist.stayRanges.filter((i) => i.count > 0));
   if ($("chartEngineers")) $("chartEngineers").innerHTML = hBars(dist.engineers, state.showAllEngineers ? null : 8);

@@ -114,9 +114,9 @@ test("mecanismo multiselect OR", () => {
 
 test("renovou sim/no respeita ciclo válido", () => {
   const rows = [
-    { clientId: "1", engineer: "EP1", segment: "PRIVATE", program: "Pharus", currentCycle: 3, renewed: true, cycleValid: true },
-    { clientId: "2", engineer: "EP1", segment: "PRIVATE", program: "Davos", currentCycle: 1, renewed: false, cycleValid: true },
-    { clientId: "3", engineer: "EP1", segment: "PRIVATE", program: "Pharus", currentCycle: null, renewed: false, cycleValid: false },
+    { clientId: "1", analyticalStatus: "Ativo", engineer: "EP1", segment: "PRIVATE", program: "Pharus", currentCycle: 3, renewed: true, cycleValid: true },
+    { clientId: "2", analyticalStatus: "Ativo", engineer: "EP1", segment: "PRIVATE", program: "Davos", currentCycle: 1, renewed: false, cycleValid: true },
+    { clientId: "3", analyticalStatus: "Ativo", engineer: "EP1", segment: "PRIVATE", program: "Pharus", currentCycle: null, renewed: false, cycleValid: false },
   ];
   assert.equal(filterRenewalClients(rows, { ...defaultRenewalFilters(), renewed: "yes" }).length, 1);
   assert.equal(filterRenewalClients(rows, { ...defaultRenewalFilters(), renewed: "no" }).length, 1);

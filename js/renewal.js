@@ -4,6 +4,7 @@ import {
   defaultRenewalFilters,
   filterRenewalClients,
   RENEWED_FILTER_OPTIONS,
+  STATUS_FILTER_OPTIONS,
   sortRenewalClients,
 } from "../lib/analytics/renewal-filters.mjs";
 import {
@@ -48,6 +49,7 @@ let pageRefresh = null;
 
 const FILTER_FIELDS = [
   { kind: "search", id: "rnSearch", key: "search" },
+  { kind: "select", id: "rnStatus", key: "status", label: "Status do cliente", options: STATUS_FILTER_OPTIONS },
   { kind: "select", id: "rnEngineer", key: "engineer", label: "EP", dynamic: true, allLabel: "Todos" },
   { kind: "select", id: "rnSegment", key: "segment", label: "Segmento", dynamic: true, allLabel: "Todos" },
   { kind: "select", id: "rnProgram", key: "program", label: "Programa", dynamic: true, allLabel: "Todos" },
@@ -65,6 +67,7 @@ function uniqueSorted(values) {
 function filtersFromForm() {
   return {
     search: $("rnSearch")?.value || "",
+    status: $("rnStatus")?.value || "all",
     engineer: $("rnEngineer")?.value || "all",
     segment: $("rnSegment")?.value || "all",
     program: normalizeProgramFilter($("rnProgram")?.value || "all"),

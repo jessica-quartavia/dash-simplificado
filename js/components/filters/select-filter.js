@@ -179,9 +179,13 @@ export function updateSelectFilterField(host, field, values, current) {
 
 export function bindSelectFilter({ host, field, onChange } = {}) {
   const root = host?.querySelector?.(`[data-sf-id="${field.id}"]`);
-  if (!root || root.dataset.sfBound === "1") return () => {};
+  if (!root) return () => {};
 
-  root.dataset.sfBound = "1";
+  if (typeof root._sfCleanup === "function") {
+    root._sfCleanup();
+    root._sfCleanup = null;
+  }
+
   const state = { open: false, overlayRoot: null, backdrop: null, controller: null };
   state.controller = () => closeSelectPopover(root, state);
 
@@ -238,14 +242,15 @@ export function bindSelectFilter({ host, field, onChange } = {}) {
   popover?.addEventListener("click", onOptionClick);
   popover?.querySelector("[data-sf-search]")?.addEventListener("input", onSearchInput);
 
-  return () => {
+  root._sfCleanup = () => {
     closeSelectPopover(root, state);
     trigger?.removeEventListener("click", onTriggerClick);
     trigger?.removeEventListener("keydown", onTriggerKeyDown);
     popover?.removeEventListener("click", onOptionClick);
     popover?.querySelector("[data-sf-search]")?.removeEventListener("input", onSearchInput);
-    root.dataset.sfBound = "0";
+    root._sfCleanup = null;
   };
+  return root._sfCleanup;
 }
 
 export function bindSelectFilters(root = document, onChange) {

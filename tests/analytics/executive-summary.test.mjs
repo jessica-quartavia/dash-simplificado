@@ -156,6 +156,7 @@ test("destino das intenções usa ramificação exclusiva oficial", () => {
   assert.equal(result.branches.find((b) => b.key === "arquivado").count, 1);
   assert.equal(result.branches.find((b) => b.key === "retido").count, 1);
   assert.equal(result.branches.find((b) => b.key === "em_processo").count, 1);
+  assert.equal(result.closure?.matchesUniverse, true);
 });
 
 test("Resumo Executivo não expõe filtros na UI", () => {
@@ -277,7 +278,7 @@ test("comparação executivo × fonte passa para métricas escalares", () => {
   assert.equal(active.executiveValue, 1);
   const pending = comparison.rows.find((row) => row.metricId === "renewal_eligible_clients");
   assert.equal(pending.match, true);
-  assert.equal(pending.pending, true);
+  assert.equal(pending.pending, false);
 });
 
 test("buildExecutiveSections mantém compatibilidade de blocos", () => {

@@ -179,6 +179,11 @@ export function bindMultiSelectFilter({
     || host?.querySelector?.("[data-msf-root]");
   if (!root) return () => {};
 
+  if (typeof root._msfCleanup === "function") {
+    root._msfCleanup();
+    root._msfCleanup = null;
+  }
+
   const state = {
     open: false,
     overlayRoot: null,
@@ -241,13 +246,15 @@ export function bindMultiSelectFilter({
   popover?.addEventListener("change", onOptionChange);
   popover?.addEventListener("pointerdown", onPopoverPointerDown);
 
-  return () => {
+  root._msfCleanup = () => {
     closePopover(root, field, state);
     trigger?.removeEventListener("click", onTriggerClick);
     allBtn?.removeEventListener("click", onAllClick);
     popover?.removeEventListener("change", onOptionChange);
     popover?.removeEventListener("pointerdown", onPopoverPointerDown);
+    root._msfCleanup = null;
   };
+  return root._msfCleanup;
 }
 
 export function fillMultiSelectOptions(host, field, options, currentValues) {

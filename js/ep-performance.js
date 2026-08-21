@@ -2,9 +2,12 @@ import { onPageChange, getCurrentPageId } from "./navigation.js";
 import {
   defaultEpPerformanceFilters,
   filterEpEngineers,
+  normalizeEpPerformanceFilters,
   sortEpEngineers,
   summarizeFilteredEpEngineers,
+  EP_PERIOD_SEMANTICS,
 } from "../lib/analytics/ep-performance-filters.mjs";
+import { STATUS_FILTER_OPTIONS } from "../lib/analytics/general-filters.mjs";
 import { resolveVisibleFilterFields } from "../lib/analytics/filters/page-contracts.mjs";
 import { createFilterChangeHandler } from "../lib/analytics/filters/filter-state.mjs";
 import { normalizeProgramFilter, programSelectOptions } from "../lib/analytics/filters/program.mjs";
@@ -49,6 +52,9 @@ let pageRefresh = null;
 
 const FILTER_FIELDS = [
   { kind: "search", id: "epSearch", key: "search" },
+  { kind: "select", id: "epProgram", key: "program", label: "Programa", dynamic: true, allLabel: "Todos" },
+  { kind: "select", id: "epStatus", key: "status", label: "Status do cliente", options: [{ value: "all", label: "Todos" }, ...STATUS_FILTER_OPTIONS.filter((o) => o.value !== "all")] },
+  { kind: "period", id: "epPeriod", fromId: "epFrom", toId: "epTo" },
   {
     kind: "multiselect",
     id: "epEngineer",
@@ -58,7 +64,6 @@ const FILTER_FIELDS = [
     allLabel: "Todos",
   },
   { kind: "select", id: "epSegment", key: "segment", label: "Segmento", dynamic: true, allLabel: "Todos" },
-  { kind: "select", id: "epProgram", key: "program", label: "Programa", dynamic: true, allLabel: "Todos" },
 ];
 
 function $(id) {
@@ -70,12 +75,16 @@ function uniqueSorted(values) {
 }
 
 function filtersFromForm() {
-  return {
+  return normalizeEpPerformanceFilters({
     search: $("epSearch")?.value || "",
     engineer: readMultiSelectFieldValue({ id: "epEngineer", key: "engineer" }),
     segment: $("epSegment")?.value || "all",
     program: normalizeProgramFilter($("epProgram")?.value || "all"),
-  };
+    status: $("epStatus")?.value || "all",
+    period: $("epPeriod")?.value || "all",
+    from: $("epFrom")?.value || "",
+    to: $("epTo")?.value || "",
+  });
 }
 
 function filteredEngineers() {
@@ -367,7 +376,11 @@ function renderFilters() {
   unbindFilterMount = mountPageFilters({
     host,
     pageId: "ep_performance",
-    innerHtml: renderFilterBar({ fields, filters: state.filters }),
+    innerHtml: renderFilterBar({
+      fields,
+      filters: state.filters,
+      note: `${EP_PERIOD_SEMANTICS.portfolioSnapshot} ${EP_PERIOD_SEMANTICS.meetings} ${EP_PERIOD_SEMANTICS.npsCsat}`,
+    }),
     onBodyReady: (body) => {
       if (state.payload) populateFilterOptions();
       $("epSegment") && ($("epSegment").value = state.filters.segment);

@@ -1,10 +1,10 @@
 # Auditoria V1 × V2
 
-Gerado: 2026-08-21T16:13:55.696Z
+Gerado: 2026-08-21T16:59:45.267Z
 
 ## Totais
-- Comparadas: 56
-- PASS: 54
+- Comparadas: 51
+- PASS: 49
 - Divergentes: 0
 - Esperadas: 0
 
@@ -17,8 +17,8 @@ Gerado: 2026-08-21T16:13:55.696Z
 
 ## Performance V2 (top 5)
 
-- executive_summary: V1 11072ms · V2 7730ms
-- temporal_indicators: V1 3964ms · V2 5028ms
-- cancellations: V1 4806ms · V2 4725ms
-- mechanisms: V1 1717ms · V2 2864ms
-- satisfaction: V1 2107ms · V2 1855ms
+- executive_summary: V1 10943ms · V2 7567ms
+- cancellations: V1 5108ms · V2 4738ms
+- meetings: V1 4728ms · V2 4433ms
+- general: V1 2466ms · V2 3417ms
+- mechanisms: V1 1636ms · V2 3341ms

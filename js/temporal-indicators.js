@@ -5,8 +5,8 @@ import {
   defaultTemporalIndicatorsFilters,
   sortTemporalActivityRecency,
   summarizeFilteredTemporal,
+  needsTemporalClientRows,
   TEMPORAL_CANCEL_OPTIONS,
-  TEMPORAL_SOURCE_OPTIONS,
   temporalMonthSelectOptions,
 } from "../lib/analytics/temporal-indicators-filters.mjs";
 import { resolveVisibleFilterFields } from "../lib/analytics/filters/page-contracts.mjs";
@@ -36,7 +36,7 @@ const RECENCY_EXPORT_COLUMNS = [
   { key: "engineer", header: "EP" },
   { key: "program", header: "Programa" },
   { key: "status", header: "Status" },
-  { key: "source", header: "Fonte" },
+  { key: "source", header: "Origem técnica" },
   { key: "lastLoginAt", header: "Último login", type: "date" },
   { key: "lastMeetingAt", header: "Última reunião", type: "date" },
   { key: "lastImplementationAt", header: "Última implementação", type: "date" },
@@ -60,6 +60,8 @@ const state = {
   sortDir: "asc",
   page: 1,
   pageSize: 25,
+  monthlyClients: null,
+  monthlyClientsLoading: false,
 };
 
 let eventsBound = false;
@@ -70,7 +72,6 @@ let pageRefresh = null;
 const FILTER_FIELDS = [
   { kind: "search", id: "tiSearch", key: "search" },
   { kind: "select", id: "tiProgram", key: "program", label: "Programa", dynamic: true, allLabel: "Todos" },
-  { kind: "select", id: "tiSource", key: "source", label: "Fonte", options: TEMPORAL_SOURCE_OPTIONS },
   { kind: "select", id: "tiMonth", key: "month", label: "Mês", dynamic: true, allLabel: "Todos" },
   { kind: "select", id: "tiCancelWindow", key: "cancelWindow", label: "Cancelamento", options: TEMPORAL_CANCEL_OPTIONS },
 ];
@@ -83,14 +84,22 @@ function filtersFromForm() {
   return {
     search: $("tiSearch")?.value || "",
     program: normalizeProgramFilter($("tiProgram")?.value || "all"),
-    source: $("tiSource")?.value || "all",
+    source: "all",
     month: $("tiMonth")?.value || "all",
     cancelWindow: $("tiCancelWindow")?.value || "all",
   };
 }
 
+function effectivePayload() {
+  if (!state.payload) return null;
+  if (state.monthlyClients?.length) {
+    return { ...state.payload, clients: state.monthlyClients };
+  }
+  return state.payload;
+}
+
 function currentView() {
-  const filtered = summarizeFilteredTemporal(state.payload || {}, state.filters);
+  const filtered = summarizeFilteredTemporal(effectivePayload() || {}, state.filters);
   const recencyRows = sortTemporalActivityRecency(filtered.recency, state.sortKey, state.sortDir);
   const insights = buildPreCancellationInsights(filtered.preCancellation);
   const preSignalBars = (filtered.preCancellation?.signals || [])
@@ -161,7 +170,6 @@ function populateFilterOptions() {
     "Todos",
     state.filters.month,
   );
-  if ($("tiSource")) $("tiSource").value = state.filters.source || "all";
   if ($("tiCancelWindow")) $("tiCancelWindow").value = state.filters.cancelWindow || "all";
 }
 
@@ -173,7 +181,6 @@ function resolveFilterFields() {
 function exportRecencyTable(rows, format) {
   const filters = [
     { label: "Programa", value: state.filters.program === "all" ? "Todos" : state.filters.program },
-    { label: "Fonte", value: state.filters.source === "all" ? "Todas" : state.filters.source },
     { label: "Mês", value: state.filters.month === "all" ? "Todos" : state.filters.month },
     {
       label: "Cancelamento",
@@ -203,9 +210,9 @@ function renderSuccess() {
 
     <section class="section-block">
       <h2>Indicadores</h2>
-      <p>Atividade agregada dos assuntos no recorte filtrado (últimos ${state.payload?.months?.length || 12} meses).</p>
+      <p>Atividade agregada de clientes/usuários no recorte filtrado (últimos ${state.payload?.months?.length || 12} meses).</p>
       <div class="kpi-row kpi-row-compact">
-        ${kpiCard("Assuntos", fmt.format(summary.totalSubjects), "Clientes e usuários Pharus vinculados")}
+        ${kpiCard("Clientes/usuários", fmt.format(summary.totalSubjects), "Clientes e usuários Pharus vinculados")}
         ${kpiCard("Logins", fmt.format(summary.totalLogins), "App Pharus metrics.events")}
         ${kpiCard("Reuniões", fmt.format(summary.totalMeetings), "client_meetings + manual_meetings")}
         ${kpiCard("Atualizações financeiras", fmt.format(summary.totalFinancialUpdates), "client_financial_data")}
@@ -397,11 +404,27 @@ function renderStateView() {
   }
 }
 
+async function ensureTemporalClientRows() {
+  if (!needsTemporalClientRows(state.filters)) return;
+  if (state.monthlyClients?.length || state.monthlyClientsLoading) return;
+  state.monthlyClientsLoading = true;
+  try {
+    const detail = await fetchPageJson("/api/temporal-indicators/details");
+    state.monthlyClients = detail.clients || [];
+  } catch (error) {
+    console.warn("[Temporal] lazy clients failed", error);
+  } finally {
+    state.monthlyClientsLoading = false;
+  }
+}
+
 const onFilterChange = createFilterChangeHandler({
   state,
   filtersFromForm,
   renderFilters,
-  renderSuccess,
+  renderSuccess: () => {
+    void ensureTemporalClientRows().then(() => renderSuccess());
+  },
 });
 
 function ensurePageRefresh() {
@@ -434,7 +457,10 @@ async function loadTemporalIndicators({ force = false } = {}) {
   state.loading = true;
   state.error = null;
   state.errorCode = null;
-  if (force) state.payload = null;
+  if (force) {
+    state.payload = null;
+    state.monthlyClients = null;
+  }
   ensurePageRefresh().setLoading(true);
   renderFilters();
   renderStateView();

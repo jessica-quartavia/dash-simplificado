@@ -1,0 +1,52 @@
+{
+  "generatedAt": "2026-08-21T15:30:00.000Z",
+  "phase": "1b",
+  "description": "Executive core-only — bundle compartilhado + cores por domínio",
+  "before": {
+    "architecture": "10 payloads completos em paralelo (DOMAIN_LOADERS)",
+    "cold_total_ms": 7967,
+    "cold_requests": 34,
+    "dedup_hits": 21,
+    "payload_kb": 48
+  },
+  "after": {
+    "architecture": "preloadExecutiveSharedBundle + buildExecutiveDomainSources (cores)",
+    "cold_total_ms": 7997,
+    "cold_requests": 35,
+    "dedup_hits": 0,
+    "payload_kb": 49,
+    "warm_total_ms": 82,
+    "core_breakdown_ms": {
+      "preload_ms": 4823,
+      "general_core_ms": 369,
+      "journey_core_ms": 156,
+      "meetings_core_ms": 196,
+      "financial_core_ms": 76,
+      "satisfaction_core_ms": 9,
+      "cancellations_core_ms": 135,
+      "renewal_core_ms": 39,
+      "mechanisms_core_ms": 781,
+      "temporal_core_ms": 392,
+      "ep_core_ms": 531
+    }
+  },
+  "payloads_eliminated": [
+    "computeGeneralDataPayload (full) — substituído por computeGeneralCore",
+    "computeOnboardingPayload (full) — computeJourneyCore",
+    "computeMeetingsPayload (full) — computeMeetingsCore",
+    "computeFinancialUpdatesPayload (full) — computeFinancialUpdatesCore",
+    "computeMechanismsPayload (full page charts) — computeMechanismsCore",
+    "computeSatisfactionPayload (full) — computeSatisfactionCore",
+    "computeCancellationsPayload (full) — computeCancellationCore",
+    "computeRenewalPayload (full) — computeRenewalCore",
+    "computeEpPerformancePayload (re-fetch general+meetings+mechanisms) — computeEpCore from shared cores",
+    "computeTemporalIndicatorsPayload (full ~23MB) — computeTemporalCore executiveSlim"
+  ],
+  "request_note": "35 REST pages = paginação de tabelas grandes (client_meetings 7p, clients 4p, meeting_attendance 5p). Meta <=20 exigiria RPC/materialização — fora do escopo desta fase.",
+  "fidelity": {
+    "targeted_audit": "54/56 PASS",
+    "executive_assertions": 32,
+    "executive_assertions_pass": true,
+    "divergent": 0
+  }
+}
