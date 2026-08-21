@@ -122,11 +122,11 @@ function renderSuccess() {
     ${state.error ? `<p class="page-inline-error">${escapeHtml(state.error)}</p>` : ""}
     <section class="section-block">
       <h2>Tempo até aprovação</h2>
-      <p>Tempo médio entre a contratação e a última reunião Central de Inteligência, só com intervalos válidos.</p>
+      <p>Proxy V1: contratação → última reunião Central de Inteligência (intervalos negativos e futuros excluídos).</p>
       <article class="kpi-card kpi-card-highlight kpi-card-hero">
         <div class="kpi-label">Tempo médio até aprovação</div>
         <div class="kpi-value">${daysLabel(approval.value)}</div>
-        <div class="kpi-note">${escapeHtml(scope.populationLabel || "Carteira completa")} · cálculo por média · recorte filtrado</div>
+        <div class="kpi-note">${escapeHtml(scope.populationLabel || "Carteira completa")} · cálculo por mediana (V1 UI) · recorte filtrado</div>
         <div class="kpi-coverage">${escapeHtml(coverageLine(approval))}</div>
       </article>
     </section>

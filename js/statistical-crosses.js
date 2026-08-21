@@ -30,6 +30,22 @@ import {
   SC_DIFF_UNIT_OPTIONS,
 } from "./components/statistical-diff-chart.mjs";
 import { sortLabelsUnknownLast } from "../lib/analytics/filters/sort-categories.mjs";
+import {
+  EXECUTIVE_RECOMMENDATIONS,
+  getInsightsForBlock,
+  STATISTICAL_INSIGHTS_SNAPSHOT_FOOTNOTE,
+  STATISTICAL_METHODOLOGY_DETAILS,
+  STATISTICAL_METHODOLOGY_NOTE,
+  STATISTICAL_PAGE_CONCLUSION,
+} from "../lib/analytics/statistical-insights.mjs";
+import {
+  bindStatisticalInsightToggles,
+  renderExecutiveReadingBlock,
+  renderExecutiveRecommendationsBlock,
+  renderMethodologyNotice,
+  renderPageConclusion,
+  renderStatisticalInsightsForBlock,
+} from "./components/statistical-insight.mjs";
 
 const fmt = new Intl.NumberFormat("pt-BR");
 
@@ -60,8 +76,14 @@ const FILTER_FIELDS = [
   { kind: "number", id: "scMinSample", key: "minSample", label: "Amostra mínima", min: 1, step: 1, default: 5, title: "Mínimo por grupo para mediana descritiva" },
 ];
 
+let unbindInsightToggles = () => {};
+
 function $(id) {
   return document.getElementById(id);
+}
+
+function scInsightHtml(blockId) {
+  return renderStatisticalInsightsForBlock(blockId, getInsightsForBlock);
 }
 
 function uniqueSorted(values) {
@@ -961,7 +983,11 @@ function renderSuccess() {
 
   content.innerHTML = `<div class="statistical-page">${state.error ? `<p class="page-inline-error">${escapeHtml(state.error)}</p>` : ""}
 
+    ${renderMethodologyNotice(STATISTICAL_METHODOLOGY_NOTE, STATISTICAL_METHODOLOGY_DETAILS, STATISTICAL_INSIGHTS_SNAPSHOT_FOOTNOTE)}
+
     ${renderHealthScoreCandidatesBlock(healthCandidates, pred?.ranking)}
+
+    ${renderExecutiveReadingBlock(getInsightsForBlock)}
 
     <section class="section-block" id="scSecResumo">
       <h2>1. Resumo da base analítica</h2>
@@ -992,6 +1018,7 @@ function renderSuccess() {
 
     <section class="section-block sc-axis-block" id="scSecCancel">
       <h2>3. Cancelamento — correlações e associações</h2>
+      ${scInsightHtml("scSecCancel")}
       <p class="note-muted">Mostra quais variáveis possuem maior relação observada com cancelamento. Valores maiores representam associações mais fortes, não causalidade.</p>
       <article class="sc-matrix-card sc-matrix-card--wide"><h3 class="sc-matrix-title">Matriz de associação com cancelamento</h3>${renderAxisHeatmapTable(axes.cancellation)}</article>
 
@@ -1036,6 +1063,7 @@ function renderSuccess() {
 
     <section class="section-block sc-axis-block" id="scSecNps">
       <h2>4. NPS — matriz de correlação</h2>
+      ${scInsightHtml("scSecNps")}
       <article class="sc-matrix-card sc-matrix-card--wide">${renderAxisHeatmapTable(axes.nps)}</article>
       <article class="chart-card"><h3>Promotores, Neutros e Detratores</h3>${renderNpsGroupsChart(p.npsGroups)}</article>
       <details class="sc-data-details"><summary>Tabela por classe NPS</summary>
@@ -1048,6 +1076,7 @@ function renderSuccess() {
 
     <section class="section-block sc-axis-block" id="scSecRenewal">
       <h2>5. Renovação — matriz de associação</h2>
+      ${scInsightHtml("scSecRenewal")}
       <article class="sc-matrix-card sc-matrix-card--wide">${renderAxisHeatmapTable(axes.renewal)}</article>
       <div class="chart-grid">
         <article class="chart-card"><h3>Associações numéricas com renovações</h3>${renderAssocBars(assocBarItems(renewalNum))}</article>
@@ -1063,6 +1092,7 @@ function renderSuccess() {
 
     <section class="section-block sc-axis-block" id="scSecTenure">
       <h2>6. Permanência — matriz de correlação</h2>
+      ${scInsightHtml("scSecTenure")}
       <article class="sc-matrix-card sc-matrix-card--wide">${renderAxisHeatmapTable(axes.tenure)}</article>
       <details class="sc-data-details"><summary>Metodologia de permanência</summary>
         <p class="note-muted">Permanência analítica usa ajuste +365 para ciclo ≥ 2 nas comparações descritivas. Curva de sobrevivência e coorte usam permanência cronológica real.</p>
@@ -1077,12 +1107,14 @@ function renderSuccess() {
 
     <section class="section-block sc-matrix-section" id="scSecGroups">
       <h2>7. Matriz comparativa dos grupos</h2>
+      ${scInsightHtml("scSecGroups")}
       <p class="note-muted">Valores padronizados em relação à referência geral · azul abaixo · laranja/vermelho acima.</p>
       <article class="sc-matrix-card sc-matrix-card--wide">${renderGroupMatrixTable(groupMatrix)}</article>
     </section>
 
     <section class="section-block" id="scSecPredict">
       <h2>8. Ranking preditivo de cancelamento</h2>
+      ${scInsightHtml("scSecPredict")}
       ${pred?.note || pred?.status === "insufficient_sample" ? `<p class="note-muted">${escapeHtml(pred.note || "Amostra insuficiente.")}</p>` : `<p class="note-muted" id="scPredictMeta">Importância relativa no modelo exploratório multivariável — não prova causalidade.</p>`}
       <article class="chart-card">${renderPredictBars(pred?.ranking)}</article>
       <details class="sc-data-details"><summary>Top 20 — ranking multivariável</summary>
@@ -1107,6 +1139,7 @@ function renderSuccess() {
 
     <section class="section-block sc-matrix-section" id="scSecCohort">
       <h2>11. Análise de cohort</h2>
+      ${scInsightHtml("scSecCohort")}
       <p class="note-muted">Linhas = meses de vida desde a contratação · colunas = mês/trimestre de entrada · retenção = sem cancelamento até a idade.</p>
       ${renderCohortControls()}
       <article class="sc-matrix-card sc-matrix-card--wide">${renderCohortHeatmap(p.cohort)}</article>
@@ -1116,8 +1149,11 @@ function renderSuccess() {
 
     <section class="section-block sc-matrix-section" id="scSecGeneralMatrix">
       <h2>12. Matriz geral de relações entre variáveis</h2>
+      ${scInsightHtml("scSecGeneralMatrix")}
       <article class="sc-matrix-card sc-matrix-card--wide">${renderCorrelationMatrixTable(p.correlationMatrix)}</article>
     </section>
+
+    ${renderExecutiveRecommendationsBlock(EXECUTIVE_RECOMMENDATIONS)}
 
     <section class="section-block" id="scSecSignals">
       <h2>Clientes ativos com sinais detectados</h2>
@@ -1165,9 +1201,13 @@ function renderSuccess() {
       <p class="note-muted">Fontes read-only (BASE QV / App Pharus). Cancelamento confirmado via helper analítico oficial. Congelados e arquivados respeitam contexto de cada análise.</p>
     </section>
 
+    ${renderPageConclusion(STATISTICAL_PAGE_CONCLUSION)}
+
     ${renderMethodologyAccordion(p.methodology)}
   </div>`;
 
+  unbindInsightToggles();
+  unbindInsightToggles = bindStatisticalInsightToggles(content);
   bindContentEvents();
   bindMatrixTooltips(content);
   bindMatrixExpand(content);

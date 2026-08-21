@@ -159,10 +159,7 @@ function portfolioRows() {
   );
 }
 
-/**
- * Aquisição: ignora o filtro de status (métrica histórica).
- * Demais recortes cadastrais continuam aplicados.
- */
+/** Aquisição: mesma população filtrada da V1 (status incluído). */
 function acquisitionRows() {
   return filterGeneralAcquisitionRows(state.payload?.clients || [], state.filters);
 }
@@ -221,7 +218,9 @@ function renderAcquisition(rows) {
   const subtitle = $("gAcqSubtitle");
   if (subtitle) {
     subtitle.textContent =
-      "Clientes adquiridos por mês, independentemente do status atual. O recorte de ativos da página não se aplica a este gráfico.";
+      state.filters.status === "active"
+        ? "Clientes adquiridos por mês que permanecem ativos atualmente"
+        : "Novos clientes adquiridos por mês";
   }
   if (sum) {
     const change = summary.latestMonthChangePercent;

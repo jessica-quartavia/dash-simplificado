@@ -195,6 +195,7 @@ function renderSuccess() {
         ${kpiCard("CSAT satisfeitos", pctLabel(summary.csatSatisfiedPercent), "Nota 5 na escala 1–5")}
         ${kpiCard("Clientes com feedback", fmt.format(summary.clientsWithFeedback), "NPS ou CSAT vinculado", { coverage: `Cobertura: ${pctLabel(summary.feedbackCoveragePercent)} da carteira` })}
       </div>
+      <p class="chart-note">NPS Pharus: ${state.payload?.summary?.npsPharus?.nps == null ? "—" : fmt.format(state.payload.summary.npsPharus.nps)} · NPS Davos: ${state.payload?.summary?.npsDavos?.nps == null ? "—" : fmt.format(state.payload.summary.npsDavos.nps)} (referência fixa por Programa BASE QV, independente do filtro principal)</p>
     </section>
 
     <section class="section-block">

@@ -7,6 +7,7 @@ import {
   programMatches,
   programSelectOptions,
   programTokensFromRow,
+  resolveClientProgram,
 } from "../../lib/analytics/filters/program.mjs";
 import { defaultGeneralFilters, filterGeneralClients } from "../../lib/analytics/general-filters.mjs";
 
@@ -46,4 +47,18 @@ test("valor fora da allowlist não gera token", () => {
   assert.equal(normalizeProgramToken("LANDLORD"), null);
   assert.equal(programTokensFromRow({ program: "LANDLORD" }).size, 0);
   assert.equal(programMatches({ program: "LANDLORD" }, "Pharus"), false);
+});
+
+test("resolveClientProgram usa clients.programa e davos_contrato_assinado", () => {
+  assert.equal(resolveClientProgram({ program: "PHARUS" }), "Pharus");
+  assert.equal(resolveClientProgram({ program: " davos " }), "Davos");
+  assert.equal(resolveClientProgram({ davosContractSigned: true }), "Davos");
+  assert.equal(resolveClientProgram({ program: "LANDLORD" }), "Não informado");
+  assert.equal(resolveClientProgram({ program: "Pharus + Davos" }), "Davos");
+});
+
+test("davos_contrato_assinado adiciona token Davos ao filtro", () => {
+  assert.equal(programMatches({ davos_contrato_assinado: true }, "Davos"), true);
+  assert.equal(programMatches({ davos_contrato_assinado: true, program: "Pharus" }, "Pharus"), true);
+  assert.equal(programMatches({ davos_contrato_assinado: true, program: "Pharus" }, "Davos"), true);
 });

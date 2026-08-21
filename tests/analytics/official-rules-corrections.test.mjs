@@ -116,7 +116,7 @@ test("executive mechanismImplementationRate === mechanisms page rate", () => {
   const executive = extractExecutiveMetrics({
     mechanisms: { summary, rows: [] },
   });
-  assert.equal(executive.clients_implementation_rate?.value, summary.mechanismImplementationRate);
-  assert.equal(executive.clients_implementation_rate?.numerator, summary.clientsWithImplementedMechanism);
-  assert.equal(executive.clients_implementation_rate?.denominator, summary.clientsWithLinkedMechanisms);
+  assert.equal(executive.clients_implementation_rate?.value, summary.displayedImplementationRate);
+  assert.equal(executive.clients_implementation_rate?.numerator, summary.displayedImplementedClients);
+  assert.equal(executive.clients_implementation_rate?.denominator, summary.displayedClients);
 });

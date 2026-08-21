@@ -11,6 +11,8 @@ import {
 import {
   distributionsFromFinancialRows,
   summarizeFinancialUpdateRows,
+  financialUpdatesLeader,
+  formatFinancialLeaderNote,
 } from "../lib/analytics/financial-updates-metrics.mjs";
 import { resolveVisibleFilterFields } from "../lib/analytics/filters/page-contracts.mjs";
 import { createFilterChangeHandler } from "../lib/analytics/filters/filter-state.mjs";
@@ -19,7 +21,7 @@ import { parseMultiSelectValue } from "../lib/analytics/filters/multiselect.mjs"
 import { normalizeProgramFilter, programSelectOptions } from "../lib/analytics/filters/program.mjs";
 import { createPageRefresh } from "./components/page-refresh.js";
 import { fetchPageJson, mapLoadError } from "./utils/page-load.js";
-import { donut, escapeHtml, hBars } from "./general-charts.mjs";
+import { donut, escapeHtml, hBars, financialUpdateColumns } from "./general-charts.mjs";
 import {
   bindFilterBar,
   bindTableExport,
@@ -43,7 +45,7 @@ const state = {
   sortDir: "asc",
   page: 1,
   pageSize: 25,
-  monthRange: 12,
+  monthRange: 6,
   showAllEngineers: false,
 };
 
@@ -180,6 +182,8 @@ function renderSuccess() {
   const pageRows = rows.slice(start, start + state.pageSize);
   const note = state.payload?.summary?.note || "Atualização = updated_at > created_at.";
   const engItems = (dist.updatesByEngineer || []).slice(0, state.showAllEngineers ? undefined : 8);
+  const leader = financialUpdatesLeader(rows);
+  const leaderNote = formatFinancialLeaderNote(leader);
 
   content.innerHTML = `
     ${state.error ? `<p class="page-inline-error">${escapeHtml(state.error)}</p>` : ""}
@@ -247,6 +251,7 @@ function renderSuccess() {
         <h3>Atualização por Engenheiro Patrimonial</h3>
         <p>Clientes com atualização nos últimos 30 dias, por EP.</p>
         <div id="fuChartEngineers"></div>
+        ${leaderNote ? `<p class="chart-note">${escapeHtml(leaderNote)}</p>` : ""}
         <button class="btn btn-secondary" type="button" id="fuToggleEngineers">${state.showAllEngineers ? "Ver principais" : "Ver todos"}</button>
       </article>
     </section>
@@ -286,8 +291,10 @@ function renderSuccess() {
     </section>
   `;
 
-  if ($("fuChartRecency")) $("fuChartRecency").innerHTML = hBars(dist.updateRecency.filter((i) => i.count > 0));
-  if ($("fuChartMonths")) $("fuChartMonths").innerHTML = hBars(dist.updatesByMonth.filter((i) => i.count > 0));
+  if ($("fuChartRecency")) $("fuChartRecency").innerHTML = hBars(dist.updateRecency);
+  if ($("fuChartMonths")) {
+    $("fuChartMonths").innerHTML = financialUpdateColumns(dist.updatesByMonth, state.monthRange);
+  }
   if ($("fuChartCoverage")) $("fuChartCoverage").innerHTML = hBars(dist.fieldCoverage.filter((i) => i.count > 0));
   if ($("fuChartEngineers")) {
     $("fuChartEngineers").innerHTML = hBars(

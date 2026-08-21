@@ -224,6 +224,50 @@ function monthShortLabel(ym, long) {
   return long ? `${names[idx]}/${String(y).slice(2)}` : names[idx];
 }
 
+export function financialUpdateColumns(series, monthRange = 6) {
+  const list = Array.isArray(series) ? series : [];
+  if (!list.length) {
+    return `<p class="placeholder-note">Sem meses para exibir.</p>`;
+  }
+  const maxValue = Math.max(...list.map((i) => Number(i.count) || 0), 0);
+  const plotH = 180;
+  const long = Number(monthRange) >= 12;
+  const minCol = 56;
+  return `<div class="acq-chart-scroll"><div class="acq-chart-grid" style="min-width:${list.length * minCol}px" data-cols="${list.length}">${list
+    .map((item, idx) => {
+      const count = Number(item.count) || 0;
+      const heightPct = maxValue > 0 ? (count / maxValue) * 100 : 0;
+      const barPx = count > 0 ? Math.max(Math.round((heightPct / 100) * plotH), 6) : 0;
+      const month = item.month || item.label;
+      const latest = idx === list.length - 1;
+      return `<div class="acq-col${latest ? " is-latest" : ""}" title="${escapeHtml(monthShortLabel(month, true))}: ${count.toLocaleString("pt-BR")} clientes">
+        <div class="acq-col-value">${count.toLocaleString("pt-BR")}</div>
+        <div class="acq-col-bar" style="height:${barPx}px"></div>
+        <div class="acq-col-label">${escapeHtml(monthShortLabel(month, long))}</div>
+      </div>`;
+    })
+    .join("")}</div></div>`;
+}
+
+export function priorityBars(items, colors = {}) {
+  const list = Array.isArray(items) ? items.filter((item) => (item?.count || 0) > 0) : [];
+  if (!list.length) return `<p class="placeholder-note">Sem dados</p>`;
+  const max = Math.max(...list.map((item) => item.count), 1);
+  return `<div class="hbar-list">${list
+    .map((item) => {
+      const color = colors[item.label] || "#95a5a6";
+      const width = Math.max(4, Math.round((item.count / max) * 100));
+      const metric = `${Number(item.count).toLocaleString("pt-BR")} · ${Number(item.percent ?? 0).toLocaleString("pt-BR")}%`;
+      const urgentClass = item.label === "Urgente" ? " hbar-priority-urgent" : "";
+      return `<div class="hbar${urgentClass}" title="${escapeHtml(item.label)}: ${escapeHtml(metric)}">
+        <div class="hbar-label">${escapeHtml(item.label)}</div>
+        <div class="hbar-track"><span style="width:${width}%;background:${color}"></span></div>
+        <div class="hbar-val">${escapeHtml(metric)}</div>
+      </div>`;
+    })
+    .join("")}</div>`;
+}
+
 export function acquisitionColumns(series, limit) {
   if (!series.length) {
     return `<p class="placeholder-note">Sem meses históricos de aquisição para exibir.</p>`;
@@ -341,8 +385,9 @@ export function mechanismTypeDualBars(items, { limit = 8, expanded = false } = {
       const wLinked = (linked / maxLinked) * 100;
       const wImpl = linked ? (implemented / maxLinked) * 100 : 0;
       const meta = `${linked.toLocaleString("pt-BR")} vinculados · ${implemented.toLocaleString("pt-BR")} impl.`;
-      return `<div class="type-stat-row" title="${escapeHtml(item.label)}: ${escapeHtml(meta)} · ${escapeHtml(pctVal)}">
-        <div class="type-stat-label truncate" title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</div>
+      const origin = item.dataOrigin ? `<span class="type-stat-origin">${escapeHtml(item.dataOrigin)}</span>` : "";
+      return `<div class="type-stat-row" title="${escapeHtml(item.label)}: ${escapeHtml(meta)} · ${escapeHtml(pctVal)}${item.dataOrigin ? ` · ${escapeHtml(item.dataOrigin)}` : ""}">
+        <div class="type-stat-label truncate" title="${escapeHtml(item.label)}">${escapeHtml(item.label)}${origin}</div>
         <div class="type-stat-bars">
           <div class="type-stat-track"><span class="type-stat-fill-linked" style="width:${wLinked}%"></span></div>
           <div class="type-stat-track"><span class="type-stat-fill-impl" style="width:${wImpl}%"></span></div>

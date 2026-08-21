@@ -153,9 +153,9 @@ test("percentual implantado = clientes com impl. ÷ clientes com mecanismo vincu
   assert.equal(summary.implementationPercent, 100);
   assert.equal(summary.implementationPercentLinks, 25);
   assert.equal(summary.baseQvDisplayed, 1);
-  assert.equal(summary.appPharusDisplayed, 73);
-  assert.equal(summary.displayedCombinedTotal, 74);
-  assert.equal(summary.clientsWithMechanisms, 74);
+  assert.equal(summary.appPharusDisplayed, 0);
+  assert.equal(summary.displayedCombinedTotal, 1);
+  assert.equal(summary.clientsWithMechanisms, 1);
   assert.equal(summary.clientsWithImplementedMechanism, 1);
   assert.equal(summary.clientsWithLinkedMechanisms, 1);
 });

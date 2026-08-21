@@ -253,9 +253,11 @@ function renderValue(block, chartExpanded = {}) {
           label: "Clientes com mecanismos implantados",
           value: num(clients.value),
           note:
-            rate.numerator != null && rate.denominator != null
-              ? `${num(rate.numerator)}/${num(rate.denominator)} clientes vinculados`
-              : coverageNote(clients),
+            clients.note
+              ? `${escapeHtml(clients.note)} · ${rate.numerator != null && rate.denominator != null ? `${num(rate.numerator)}/${num(rate.denominator)} clientes vinculados` : coverageNote(clients)}`
+              : rate.numerator != null && rate.denominator != null
+                ? `${num(rate.numerator)}/${num(rate.denominator)} clientes vinculados`
+                : coverageNote(clients),
           accent: true,
         })}
         ${execKpi({

@@ -1461,6 +1461,14 @@
   text-align: right;
 }
 
+.type-stat-origin {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 400;
+  margin-top: 0.15rem;
+}
+
 .mech-dist-list {
   display: flex;
   flex-direction: column;
@@ -3858,6 +3866,180 @@
 @media (max-width: 1366px) {
   .statistical-page .sc-diff-row {
     grid-template-columns: minmax(100px, 160px) 1fr;
+  }
+}
+
+.sc-methodology-banner {
+  margin: 0 0 1rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--border, #ddd) 80%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--card, #fff) 92%, var(--muted-bg, #f4f4f5));
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.sc-methodology-note {
+  margin: 0;
+}
+
+.sc-methodology-details {
+  margin-top: 0.35rem;
+  font-size: 0.8125rem;
+}
+
+.sc-methodology-details summary {
+  cursor: pointer;
+  color: var(--text-muted, #666);
+}
+
+.sc-insight-snapshot-note {
+  margin: 0.45rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted, #777);
+}
+
+.sc-insight {
+  margin: 0.5rem 0 0.85rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--brand-coral, #e86a5a) 22%, var(--border, #ddd));
+  border-left: 3px solid var(--brand-coral, #e86a5a);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--brand-coral, #e86a5a) 4%, var(--card, #fff));
+  max-width: 100%;
+}
+
+.sc-insight-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.25rem;
+}
+
+.sc-insight-icon {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--brand-coral, #e86a5a);
+  flex-shrink: 0;
+}
+
+.sc-insight-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted, #666);
+}
+
+.sc-insight-summary {
+  margin: 0 0 0.35rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.sc-insight-toggle {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--link, #2563eb);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.sc-insight-toggle:hover {
+  color: var(--link-hover, #1d4ed8);
+}
+
+.sc-insight-panel {
+  margin-top: 0.55rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid color-mix(in srgb, var(--border, #ddd) 70%, transparent);
+}
+
+.sc-insight-section {
+  margin-bottom: 0.55rem;
+}
+
+.sc-insight-section-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted, #666);
+}
+
+.sc-insight-section--action .sc-insight-section-title {
+  color: var(--text, #222);
+}
+
+.sc-insight-action-icon {
+  color: var(--brand-coral, #e86a5a);
+  margin-right: 0.15rem;
+}
+
+.sc-insight-text {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.sc-insight-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.sc-insight-list--muted {
+  color: var(--text-muted, #777);
+}
+
+.sc-insight-list li + li {
+  margin-top: 0.15rem;
+}
+
+.sc-executive-reading .sc-insight + .sc-insight {
+  margin-top: 0.45rem;
+}
+
+.sc-recommendations-block .sc-recommendations-list {
+  margin: 0.35rem 0 0.5rem;
+  padding-left: 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.sc-recommendations-list li + li {
+  margin-top: 0.35rem;
+}
+
+.sc-rec-index {
+  color: var(--text-muted, #666);
+  font-weight: 600;
+}
+
+.sc-page-conclusion .sc-conclusion-title {
+  font-size: 1rem;
+  margin: 0 0 0.35rem;
+}
+
+.sc-page-conclusion .sc-conclusion-text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text, #222);
+}
+
+@media (max-width: 1366px) {
+  .sc-insight,
+  .sc-methodology-banner {
+    padding-inline: 0.65rem;
   }
 }
 

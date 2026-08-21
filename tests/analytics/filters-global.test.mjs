@@ -75,7 +75,11 @@ test("periodSensitive=false não recorta estoque (general)", () => {
     { clientId: "2", clientName: "João", clientCode: "B2", analyticalStatus: "Ativo", engineer: "EP2", segmentLabel: "APEX", contractDate: "2024-01-01" },
   ];
   const stock = filterGeneralClients(rows, { ...defaultGeneralFilters(), status: "all", period: "last_6m" }, { now: NOW });
-  const acq = filterGeneralAcquisitionRows(rows, { ...defaultGeneralFilters(), status: "all", period: "last_6m" }, { now: NOW });
+  const acq = filterGeneralAcquisitionRows(
+    rows,
+    { ...defaultGeneralFilters(), status: "all", period: "last_6m" },
+    { now: NOW, applyPeriod: true },
+  );
   assert.equal(stock.length, 2);
   assert.equal(acq.length, 1);
 });

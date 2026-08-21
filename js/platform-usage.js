@@ -140,7 +140,7 @@ function loginDistribution(rows) {
   return [
     { label: "Sim", count: yes, percent: Math.round((yes / total) * 1000) / 10 },
     { label: "Não", count: no, percent: Math.round((no / total) * 1000) / 10 },
-  ].filter((i) => i.count > 0);
+  ];
 }
 
 function lastAccessDistribution(rows) {
@@ -261,10 +261,13 @@ function renderSuccess() {
       ${connected && reconNote ? `<p class="section-meta section-meta--muted">${escapeHtml(reconNote)}</p>` : ""}
       ${filtersActive ? `<p class="section-meta section-meta--muted">Tabela e gráficos refletem os filtros ativos (${fmt.format(rows.length)} de ${fmt.format(state.payload?.clients?.length || 0)} usuários).</p>` : ""}
       <div class="kpi-row kpi-row-primary">
-        ${kpiCard(summary.usersLabel || "Usuários com registro de acesso", connected ? kpiValue(summary.totalUsers) : "—", connected ? coverageNote(summary) : "")}
-        ${kpiCard("Com login", connected ? kpiValue(summary.usersWithLogin) : "—", connected ? `${pctLabel(summary.loginCoverage)} da população com registro` : "")}
-        ${kpiCard("Total de logins", connected ? kpiValue(summary.totalLogins) : "—", connected && summary.appPharusLoginEvents != null ? `${fmt.format(summary.appPharusLoginEvents)} eventos elegíveis` : "")}
-        ${kpiCard("Dias desde último acesso (mediana)", connected ? daysLabel(summary.typicalDaysSinceLastAccess) : "—", connected && summary.daysSinceLastAccessSample != null ? `amostra: ${fmt.format(summary.daysSinceLastAccessSample)} usuários` : "")}
+        ${kpiCard(summary.usersLabel || "Usuários App Pharus", connected ? kpiValue(summary.totalUsers) : "—", connected ? coverageNote(summary) : "")}
+        ${kpiCard("Realizaram login", connected ? kpiValue(summary.usersWithLogin) : "—", connected ? `${pctLabel(summary.loginCoverage)} da base App Pharus` : "")}
+        ${kpiCard("Número total de logins", connected ? kpiValue(summary.totalLogins) : "—", connected && summary.appPharusLoginEvents != null ? `${fmt.format(summary.appPharusLoginEvents)} eventos elegíveis` : "")}
+        ${kpiCard("Média de logins por mês", connected ? kpiValue(summary.averageLoginsPerMonth) : "—", connected ? "Por usuário desde o primeiro acesso" : "")}
+        ${kpiCard("Dias desde o último acesso", connected ? daysLabel(summary.typicalDaysSinceLastAccess) : "—", connected && summary.daysSinceLastAccessSample != null ? `Mediana · amostra ${fmt.format(summary.daysSinceLastAccessSample)} usuários` : "")}
+        ${kpiCard("Tempo médio entre acessos", connected ? daysLabel(summary.averageDaysBetweenAccesses) : "—", connected ? "Mediana · dias distintos com login" : "")}
+        ${kpiCard("Tempo médio de sessão", "Sem Dados", connected ? "Sem base confiável na view atual" : "")}
       </div>
       ${connected && timing.fetchMs != null ? `<p class="section-meta section-meta--muted">Carregamento: ${fmt.format(timing.restRequests || 0)} requests · ${fmt.format(Math.round(timing.fetchMs))} ms</p>` : ""}
     </section>

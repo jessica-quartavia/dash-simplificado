@@ -257,37 +257,12 @@ async function openDrawer(client) {
   }
 }
 
-function calendlyUuidFromUri(uri) {
-  if (!uri) return null;
-  const match = String(uri).match(/([0-9a-f-]{36})$/i);
-  return match ? match[1].toLowerCase() : null;
-}
-
-function scopedCalendlyEventUuids(rows, period) {
-  const uuids = new Set();
-  for (const client of rows || []) {
-    for (const meeting of client.meetings || []) {
-      if (meeting.source !== "calendly") continue;
-      if (period?.active && !meetingTypeEventInPeriod({ startTime: meeting.startTime }, period)) continue;
-      const uuid = calendlyUuidFromUri(meeting.externalUri);
-      if (uuid) uuids.add(uuid);
-    }
-  }
-  return uuids;
-}
-
-function typesForChart(period, rows) {
+function typesForChart(period) {
   const src = state.payload?.meetingTypes;
   const events = Array.isArray(src?.events) ? src.events : [];
   if (!src?.available) return { available: false, list: [], totalEvents: 0 };
-  const allowedUuids = scopedCalendlyEventUuids(rows, period);
-  const populationScoped = events.filter((event) => {
-    const uuid = String(event.eventUuid || "").trim().toLowerCase();
-    return uuid && allowedUuids.has(uuid);
-  });
-  const scoped = period.active
-    ? populationScoped.filter((e) => meetingTypeEventInPeriod(e, period))
-    : populationScoped;
+  const mode = state.typeMode === "raw" ? "raw" : "family";
+  const typeLimit = mode === "raw" ? 10 : 8;
   const mapEvent = (e) => ({
     title: e.rawEventType || e.title,
     rawEventType: e.rawEventType || e.title,
@@ -295,10 +270,21 @@ function typesForChart(period, rows) {
     canceled: e.canceled === true,
     attendanceStatus: e.canceled === true || e.attendanceStatus === "cancelada" ? "cancelada" : "desconhecido",
   });
+
+  if (!period.active) {
+    const preagg = mode === "raw" ? src.byRaw : src.byFamily;
+    if (Array.isArray(preagg) && preagg.length) {
+      const list = state.showAllTypes ? preagg : preagg.slice(0, typeLimit);
+      const totalEvents = preagg.reduce((sum, row) => sum + (row.count || 0), 0);
+      return { available: true, list, totalEvents };
+    }
+  }
+
+  const scoped = period.active ? events.filter((e) => meetingTypeEventInPeriod(e, period)) : events;
   const dist = buildMeetingTypeDistributions(scoped.map(mapEvent));
   return {
     available: true,
-    list: state.typeMode === "raw" ? dist.byRaw : dist.byFamily,
+    list: mode === "raw" ? dist.byRaw : dist.byFamily,
     totalEvents: scoped.length,
   };
 }
@@ -324,7 +310,7 @@ function renderSuccess() {
   const attendanceText = summary.attendanceInsufficientData || summary.attendanceRate == null
     ? "Dados insuficientes"
     : pct(summary.attendanceRate);
-  const types = typesForChart(period, rows);
+  const types = typesForChart(period);
   const typeLimit = state.typeMode === "raw" ? 10 : 8;
   const typeList = state.showAllTypes ? types.list : types.list.slice(0, typeLimit);
 
@@ -336,18 +322,26 @@ function renderSuccess() {
       <div class="kpi-row">
         ${kpiCard("Total de reuniões", fmt.format(summary.totalMeetings), scopeNote)}
         ${kpiCard("Clientes com reunião", fmt.format(summary.clientsWithMeeting), `${fmt.format(summary.filteredClients)} no recorte`, { featured: true })}
-        ${kpiCard("Cobertura", pct(summary.meetingCoverageRate), "Sobre a população filtrada", { featured: true, highlight: true })}
-        ${kpiCard("Nunca reunidos", fmt.format(summary.clientsWithoutMeeting), "Clientes do recorte sem reunião válida")}
+        ${kpiCard("Clientes sem nenhuma reunião", fmt.format(summary.clientsWithoutMeeting), "Clientes do recorte sem reunião válida")}
       </div>
       <div class="kpi-row kpi-row-secondary">
         ${kpiCard(
-          "Recência típica",
-          summary.typicalDaysSinceLastMeeting == null ? "—" : `${fmt.format(Math.round(summary.typicalDaysSinceLastMeeting))} dias`,
-          recencySecondaryNote(summary.latestMeetingDate, summary.daysSinceLatestMeeting, dateBR),
+          "Dias desde a última reunião",
+          summary.daysSinceLatestMeeting == null ? "—" : `${fmt.format(Math.round(summary.daysSinceLatestMeeting))} dias`,
+          [
+            recencySecondaryNote(summary.latestMeetingDate, summary.daysSinceLatestMeeting, dateBR),
+            summary.typicalDaysSinceLastMeeting == null
+              ? null
+              : `Mediana ${fmt.format(Math.round(summary.typicalDaysSinceLastMeeting))} dias`,
+            summary.averageDaysSinceLastMeeting == null
+              ? null
+              : `Média ${fmt.format(Math.round(summary.averageDaysSinceLastMeeting))} dias`,
+          ]
+            .filter(Boolean)
+            .join(" · "),
           { featured: true },
         )}
-        ${kpiCard("Intervalo típico", summary.averageIntervalDays == null ? "—" : `${fmt.format(Math.round(summary.averageIntervalDays))} d`, `Média entre reuniões com presença · mediana ${summary.typicalIntervalDays == null ? "—" : fmt.format(Math.round(summary.typicalIntervalDays))} d`)}
-        ${kpiCard("Primeira reunião", pct(summary.firstMeetingCompletionRate), `${fmt.format(summary.clientsWithFirstMeeting)} realizaram · ${fmt.format(summary.clientsWithoutFirstMeeting)} ainda não`)}
+        ${kpiCard("Intervalo médio entre reuniões", summary.averageIntervalDays == null ? "—" : `${fmt.format(Math.round(summary.averageIntervalDays))} d`, `Média entre reuniões com presença · mediana ${summary.typicalIntervalDays == null ? "—" : fmt.format(Math.round(summary.typicalIntervalDays))} d`)}
         ${kpiCard("Média de reuniões/mês", summary.averageMeetingsPerMonth == null ? "—" : fmt.format(summary.averageMeetingsPerMonth), period.active ? "Divisor do período" : "Histórico do recorte")}
       </div>
     </section>
@@ -359,7 +353,6 @@ function renderSuccess() {
         ${kpiCard("Taxa de comparecimento", attendanceText, summary.attendanceInsufficientData ? "Sem reuniões elegíveis no recorte" : `No-show ${pct(summary.noShowRate)} · elegíveis ${fmt.format(summary.eligibleMeetings)}`, { featured: true, highlight: true })}
         ${kpiCard("No-shows", fmt.format(summary.totalNoShows), `${fmt.format(summary.noShowsEligible)} no denominador elegível`, { featured: true })}
         ${kpiCard("Remarcações", fmt.format(summary.totalReschedules), RESCHEDULE_NOTE)}
-        ${kpiCard("Futuras / canceladas", `${fmt.format(summary.futureMeetings)} / ${fmt.format(summary.cancelledMeetings)}`, "Fora do denominador de presença")}
       </div>
       <div class="chart-grid">
         <article class="chart-card"><h3>Status de presença</h3><p>Compareceu, no-show, cancelada ou sem confirmação</p><div id="mChartStatus"></div></article>
@@ -372,9 +365,9 @@ function renderSuccess() {
       <p>Frequência, recência e intervalo usam a mesma população filtrada como denominador.</p>
       <div class="chart-grid">
         <article class="chart-card"><h3>Frequência</h3><p>Reuniões válidas por cliente</p><div id="mChartFreq"></div></article>
-        <article class="chart-card"><h3>Recência</h3><p>Dias desde a última reunião válida</p><div id="mChartDays"></div></article>
-        <article class="chart-card"><h3>Intervalo</h3><p>Faixas do intervalo médio entre presenças confirmadas</p><div id="mChartInterval"></div></article>
-        <article class="chart-card"><h3>Engenheiro patrimonial</h3><p>Reuniões do recorte por EP</p><div id="mChartEngineers"></div><button class="btn btn-secondary btn-chart" type="button" id="mToggleEngineers">${state.showAllEngineers ? "Ver principais" : "Ver todos"}</button></article>
+        <article class="chart-card"><h3>Dias desde a última reunião</h3><p>Dias desde a última reunião válida</p><div id="mChartDays"></div></article>
+        <article class="chart-card"><h3>Intervalo médio entre reuniões</h3><p>Faixas do intervalo médio entre presenças confirmadas</p><div id="mChartInterval"></div></article>
+        <article class="chart-card"><h3>Reuniões por Engenheiro Patrimonial</h3><p>Reuniões do recorte por EP</p><div id="mChartEngineers"></div><button class="btn btn-secondary btn-chart" type="button" id="mToggleEngineers">${state.showAllEngineers ? "Ver principais" : "Ver todos"}</button></article>
       </div>
     </section>
 
@@ -395,7 +388,7 @@ function renderSuccess() {
 
     <section class="section-block">
       <h2>Perfil</h2>
-      <p>Tipos vêm do Calendly e respeitam só o filtro de período. Frequência e EP seguem o recorte de clientes.</p>
+      <p>Tipos vêm exclusivamente do Calendly (Business Data) e respeitam apenas o filtro de período quando ativo.</p>
       <div class="chart-grid">
         <article class="chart-card">
           <div class="chart-title-row">

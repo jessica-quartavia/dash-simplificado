@@ -157,10 +157,10 @@ function renderSuccess() {
       <p>Elegíveis com ciclo válido no recorte filtrado. Renovação = ciclo atual maior que 1.</p>
       <div class="kpi-row kpi-row-three">
         ${kpiCard("Clientes que renovaram", fmt.format(summary.renewedClients), pctLabel(summary.renewedClientsPercent) + " dos elegíveis", { featured: true, highlight: true })}
-        ${kpiCard("Clientes aptos para renovação", fmt.format(summary.eligibleClients), "Ciclo válido (> 0) no recorte")}
         ${kpiCard("Total de renovações", fmt.format(summary.totalRenewals), "Soma de max(ciclo − 1, 0)")}
         ${kpiCard("Maior ciclo atual", summary.maxCurrentCycle == null ? "—" : fmt.format(summary.maxCurrentCycle), "Entre elegíveis")}
       </div>
+      <p class="chart-note">Gráficos respeitam o filtro Status (use Ativos para analisar somente clientes ativos).</p>
     </section>
 
     <section class="section-block">

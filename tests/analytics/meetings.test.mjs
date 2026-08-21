@@ -6,6 +6,7 @@ import {
 } from "../../lib/analytics/meeting-filters.mjs";
 import {
   classifyMeetingDate,
+  clientHasMeeting,
   isConfirmedNoShow,
   isNoShowEligible,
   normalizeAttendanceStatus,
@@ -168,6 +169,47 @@ test("payload: no-show e primeira reunião seguem a regra da V1", () => {
   assert.equal(payload.summary.cancelledMeetings, 1);
   assert.equal(payload.summary.futureMeetings, 1);
   assert.ok(!JSON.stringify(payload.clients).includes("cpf"));
+});
+
+test("clientHasMeeting segue regra V1 (inclui reunião analítica no recorte)", () => {
+  const withFutureOnly = {
+    clientId: "f1",
+    hasValidMeeting: false,
+    journeyMeetingsCount: 0,
+    meetings: [
+      meeting({ meetingId: "fut", meetingDateStatus: "future", startTime: "2026-12-01T12:00:00.000Z" }),
+    ],
+  };
+  assert.equal(clientHasMeeting(withFutureOnly), false);
+  const withValid = {
+    clientId: "v1",
+    hasValidMeeting: true,
+    journeyMeetingsCount: 1,
+    meetings: [meeting({})],
+  };
+  assert.equal(clientHasMeeting(withValid), true);
+});
+
+test("identidade cobertura e nunca reunidos", () => {
+  const rows = [
+    { clientId: "1", hasValidMeeting: true, journeyMeetingsCount: 1, meetings: [meeting({})], firstMeetingCompleted: true, absences: 0, reschedules: 0, daysSinceLastMeeting: 10, averageIntervalDays: 20, frequencyBand: "1 reunião" },
+    { clientId: "2", hasValidMeeting: false, journeyMeetingsCount: 0, meetings: [], firstMeetingCompleted: false, absences: 0, reschedules: 0, frequencyBand: "Nenhuma" },
+  ];
+  const summary = summarizeMeetingRows(rows, { now });
+  assert.equal(summary.clientsWithMeeting, 1);
+  assert.equal(summary.clientsWithoutMeeting, 1);
+  assert.equal(summary.meetingCoverageRate, 50);
+  assert.equal(summary.clientsWithMeeting + summary.clientsWithoutMeeting, summary.filteredClients);
+});
+
+test("intervalo típico usa mediana por cliente", () => {
+  const rows = [
+    { clientId: "1", meetings: [meeting({})], averageIntervalDays: 10, typicalIntervalDays: 10, absences: 0, reschedules: 0, hasValidMeeting: true, firstMeetingCompleted: true, daysSinceLastMeeting: 5, frequencyBand: "1 reunião" },
+    { clientId: "2", meetings: [meeting({ meetingId: "m2" })], averageIntervalDays: 50, typicalIntervalDays: 50, absences: 0, reschedules: 0, hasValidMeeting: true, firstMeetingCompleted: true, daysSinceLastMeeting: 5, frequencyBand: "1 reunião" },
+  ];
+  const summary = summarizeMeetingRows(rows, { now });
+  assert.equal(summary.averageIntervalDays, 30);
+  assert.equal(summary.typicalIntervalDays, 30);
 });
 
 test("recência típica usa mediana e texto auxiliar não hardcodado", () => {

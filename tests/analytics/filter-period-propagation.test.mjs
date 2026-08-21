@@ -56,12 +56,12 @@ test("B — Apply dispara callback global com payload", () => {
   unbind();
 });
 
-test("C — general acquisition recebe período", () => {
+test("C — general acquisition recebe período quando applyPeriod", () => {
   const all = filterGeneralAcquisitionRows(GENERAL_ROWS, defaultGeneralFilters(), { now: NOW });
   const period = filterGeneralAcquisitionRows(
     GENERAL_ROWS,
     { ...defaultGeneralFilters(), period: "custom", from: "2026-06-01", to: "2026-08-20" },
-    { now: NOW },
+    { now: NOW, applyPeriod: true },
   );
   assert.equal(all.length, 2);
   assert.equal(period.length, 1);

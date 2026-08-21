@@ -5,7 +5,8 @@ import {
   summarizeFilteredSupport,
   IDENTIFIED_FILTER_OPTIONS,
 } from "../lib/analytics/support-filters.mjs";
-import { escapeHtml, hBarsExpandable, acquisitionColumns } from "./general-charts.mjs";
+import { escapeHtml, hBarsExpandable, acquisitionColumns, priorityBars } from "./general-charts.mjs";
+import { PRIORITY_COLORS } from "../lib/analytics/support-analytics.mjs";
 import { bindChartExpand } from "./components/chart-expand.js";
 import { createFilterChangeHandler } from "../lib/analytics/filters/filter-state.mjs";
 import { resolvePeriod } from "../lib/analytics/filters/period.mjs";
@@ -106,10 +107,6 @@ function kpiCard(label, value, note = "") {
   </article>`;
 }
 
-function pctLabel(v) {
-  if (v == null || !Number.isFinite(Number(v))) return "—";
-  return `${Number(v).toLocaleString("pt-BR")}%`;
-}
 
 function dateLabel(iso) {
   if (!iso) return "—";
@@ -138,6 +135,11 @@ function renderExpandableChart(containerId, toggleId, chartKey, items) {
   if (toggle) toggle.innerHTML = chart.buttonHtml;
 }
 
+function resolutionLabel(hours) {
+  if (hours == null || !Number.isFinite(Number(hours))) return "Sem Dados";
+  return `${fmt.format(Math.round(Number(hours)))} h`;
+}
+
 function renderSuccess() {
   const content = $("page-content");
   if (!content) return;
@@ -146,7 +148,6 @@ function renderSuccess() {
   if (state.page > pages) state.page = pages;
   const start = (state.page - 1) * state.pageSize;
   const pageRows = rows.slice(start, start + state.pageSize);
-  const ident = state.payload?.identification || {};
   const monthSeries = (state.payload?.monthlyEvolution || [])
     .filter((m) => m.grain === "month")
     .slice(-12)
@@ -156,27 +157,26 @@ function renderSuccess() {
     ${state.error ? `<p class="page-inline-error">${escapeHtml(state.error)}</p>` : ""}
     <section class="section-block">
       <h2>Acionamentos</h2>
-      <p class="section-lead">Volume operacional, identificação de clientes e distribuição por área e tipo.</p>
+      <p class="section-lead">Volume operacional, identificação de clientes e distribuição por área, tipo e prioridade.</p>
       <div class="kpi-row kpi-row-primary">
-        ${kpiCard("Total", fmt.format(summary.totalTickets))}
+        ${kpiCard("Total de Acionamentos", fmt.format(summary.totalTickets))}
+        ${kpiCard("Clientes Identificados no Base QV", fmt.format(summary.identifiedClients))}
         ${kpiCard("Urgentes", fmt.format(summary.urgentTickets))}
-        ${kpiCard("Com cliente", fmt.format(summary.ticketsWithClient), pctLabel(summary.identificationCoverage))}
+        ${kpiCard("Tempo médio de resolução", resolutionLabel(summary.medianResolutionHours))}
+      </div>
+      <div class="kpi-row kpi-row-secondary">
+        ${kpiCard("Escalou problema", fmt.format(summary.escalatedTickets), "Prioridade Urgente ou Alta")}
         ${kpiCard("Top área", summary.topArea || "—", summary.topAreaCount ? `${fmt.format(summary.topAreaCount)} tickets` : "")}
         ${kpiCard("Top tipo", summary.topType || "—", summary.topTypeCount ? `${fmt.format(summary.topTypeCount)} tickets` : "")}
       </div>
     </section>
     <section class="section-block">
-      <h2>Identificação</h2>
-      <div class="kpi-row kpi-row-secondary">
-        ${kpiCard("Clientes identificados", fmt.format(ident.identifiedClients ?? summary.identifiedClients))}
-        ${kpiCard("Sem cliente", fmt.format(ident.ticketsWithoutClient ?? 0))}
-        ${kpiCard("E-mail corporativo", fmt.format(ident.corporateEmailTickets ?? 0))}
-        ${kpiCard("Aguardando reprocessamento", fmt.format(state.payload?.summary?.needsReprocessing ?? 0))}
-      </div>
-    </section>
-    <section class="section-block">
       <h2>Distribuições</h2>
       <div class="chart-grid">
+        <article class="chart-card chart-card--expandable">
+          <div class="chart-card-head"><div><h3>Acionamentos por prioridade</h3><p class="chart-card-subtitle">Contagem por prioridade normalizada</p></div></div>
+          <div class="chart-card-body" id="spChartPriority"></div>
+        </article>
         <article class="chart-card chart-card--expandable">
           <div class="chart-card-head"><div><h3>Por área</h3><p class="chart-card-subtitle">Clientes distintos por ticket</p></div><span id="spAreaToggle"></span></div>
           <div class="chart-card-body" id="spChartArea"></div>
@@ -235,6 +235,10 @@ function renderSuccess() {
     </section>
   </div>`;
 
+  const priorityHost = $("spChartPriority");
+  if (priorityHost) {
+    priorityHost.innerHTML = priorityBars(summary.byPriority, PRIORITY_COLORS);
+  }
   renderExpandableChart("spChartArea", "spAreaToggle", "byArea", summary.byArea);
   renderExpandableChart("spChartType", "spTypeToggle", "byType", summary.byType);
   const requesterDist = (() => {
