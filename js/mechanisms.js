@@ -184,6 +184,28 @@ function populateFilterOptions(host) {
   fillMultiSelectOptions(host, mechanismField, mechanismOptions, state.filters.mechanism);
 }
 
+function mechanismSourceLegend(quality, metadata = {}) {
+  const clients = quality?.clients || {};
+  const baseQv = clients.qvClientsWithMechanisms ?? clients.baseQv ?? 0;
+  const matched = clients.matchedInBoth ?? clients.presentInBothSources ?? 0;
+  const pharusUnavailable = metadata?.pharus?.status === "unavailable"
+    || metadata?.pharusConsulted === false
+    || metadata?.status === "partial";
+  if (pharusUnavailable) {
+    return {
+      line: `BASE QV ${fmt.format(baseQv)} · Parcial — App Pharus indisponível`,
+      tooltip:
+        "Clientes presentes nas duas fontes são contados uma única vez quando App Pharus responde. Matches ambíguos não entram no consolidado.",
+    };
+  }
+  const appPharus = clients.pharusUsersWithMechanisms ?? 0;
+  return {
+    line: `BASE QV ${fmt.format(baseQv)} · App Pharus ${fmt.format(appPharus)} · correspondência ${fmt.format(matched)}`,
+    tooltip:
+      "Clientes presentes nas duas fontes são contados uma única vez. Clientes Pharus sem correspondência segura permanecem no consolidado; matches ambíguos não são fundidos.",
+  };
+}
+
 function clientsWithMechanismsLabel(summary, quality) {
   const mode = summary?.consolidationMode || quality?.clients?.consolidationMode;
   if (mode === "partial") return "Clientes únicos com mecanismos (parcial)";
@@ -247,6 +269,7 @@ function renderSuccess() {
   const percentScope = quality?.implementationPercentScope?.primaryLabel || "";
   const temporalNote = quality?.temporalScope?.note || "";
   const sourceTip = consolidatedTooltip(meta);
+  const sourceLegend = mechanismSourceLegend(quality, meta);
 
   content.innerHTML = `
     ${state.error ? `<p class="page-inline-error">${escapeHtml(state.error)}</p>` : ""}
@@ -254,7 +277,7 @@ function renderSuccess() {
       <h2>Implementação de Mecanismos</h2>
       <p>Visão consolidada — BASE QV + App Pharus. Vínculos deduplicados por cliente e mecanismo canônico.</p>
       <div class="kpi-row kpi-row-primary">
-        ${kpiCard(clientsWithMechanismsLabel(summary, quality), fmt.format(summary.clientsWithMechanisms), coverageLine(summary.coverage), { highlight: true, featured: true, title: sourceTip })}
+        ${kpiCard(clientsWithMechanismsLabel(summary, quality), fmt.format(summary.clientsWithMechanisms), `${sourceLegend.line}${coverageLine(summary.coverage) ? ` · ${coverageLine(summary.coverage)}` : ""}`, { highlight: true, featured: true, title: `${sourceTip}\n${sourceLegend.tooltip}` })}
         ${kpiCard("Clientes com mecanismo implementado", fmt.format(summary.clientsWithImplementedMechanism), `${pctLabel(summary.implementationPercent)} do recorte`, { highlight: true, title: sourceTip })}
         ${kpiCard("Mecanismos implementados", fmt.format(summary.implementedMechanisms), "Vínculos distintos (cliente + mecanismo)", { title: sourceTip })}
         ${kpiCard("Em andamento", fmt.format(summary.inProgressMechanisms), "Somente status consolidável", { title: sourceTip })}
@@ -531,6 +554,7 @@ async function loadMechanisms({ force = false } = {}) {
     ensurePageRefresh().markSuccess();
   } catch (error) {
     const mapped = mapLoadError(error);
+    if (mapped.stale) return;
     state.errorCode = mapped.errorCode;
     state.error = mapped.error;
     if (force && state.payload) {

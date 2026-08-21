@@ -11,6 +11,9 @@
     "test": "node --test tests/**/*.test.mjs",
     "analytics:snapshot:build": "node scripts/build-analytics-snapshot.mjs",
     "analytics:filter-check": "node scripts/filter-check.mjs",
+    "analytics:v1-fidelity-check": "node scripts/analytics-v1-fidelity-check.mjs",
+    "analytics:cancellation-fidelity-check": "node scripts/cancellation-v1-fidelity-check.mjs",
+    "analytics:reports-delete-diagnose": "node scripts/diagnose-reports-delete.mjs",
     "assistant:test": "node scripts/assistant-test.mjs"
   },
   "devDependencies": {

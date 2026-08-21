@@ -19,6 +19,7 @@ import { mountPageFilters } from "./components/filters/filter-shell.js";
 import {
   bindMatrixTooltips,
   bindMatrixExpand,
+  bindMatrixViewToggle,
   renderStatisticalMatrix,
   renderRankingHeatmapTable,
   renderProportionalHeatmapTable,
@@ -730,6 +731,7 @@ function renderSuccess() {
   bindContentEvents();
   bindMatrixTooltips(content);
   bindMatrixExpand(content);
+  bindMatrixViewToggle(content);
 }
 
 function renderFilters() {
@@ -832,6 +834,7 @@ async function loadStatisticalCrosses({ force = false } = {}) {
     ensurePageRefresh().markSuccess(state.payload?.generatedAt ? new Date(state.payload.generatedAt) : new Date());
   } catch (error) {
     const mapped = mapLoadError(error);
+    if (mapped.stale) return;
     state.errorCode = mapped.errorCode;
     state.error = mapped.error;
     if (force && state.payload) {

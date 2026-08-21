@@ -471,6 +471,7 @@ async function loadEpPerformance({ force = false } = {}) {
     ensurePageRefresh().markSuccess();
   } catch (error) {
     const mapped = mapLoadError(error);
+    if (mapped.stale) return;
     state.errorCode = mapped.errorCode;
     state.error = mapped.error;
     if (force && state.payload) {

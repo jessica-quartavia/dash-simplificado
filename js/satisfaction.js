@@ -19,7 +19,7 @@ import { donut, escapeHtml, hBars } from "./general-charts.mjs";
 import {
   bindFilterBar,
   bindTableExport,
-  fillDynamicSelect,
+  fillDynamicSelectFilter,
   renderFilterBar,
   renderTableToolbar,
 } from "./components/filters/filter-bar.js";
@@ -51,35 +51,35 @@ let pageRefresh = null;
 const FILTER_FIELDS = [
   { kind: "search", id: "sfSearch", key: "search" },
   {
-    kind: "select",
+    kind: "selectfilter",
     id: "sfQuarter",
     key: "quarter",
     label: "Trimestre",
     options: SATISFACTION_QUARTER_OPTIONS,
   },
   {
-    kind: "select",
+    kind: "selectfilter",
     id: "sfNpsClass",
     key: "npsClassification",
     label: "Classificação NPS",
     options: NPS_CLASSIFICATION_FILTER_OPTIONS,
   },
   {
-    kind: "select",
+    kind: "selectfilter",
     id: "sfHasCsat",
     key: "hasCsat",
     label: "Possui CSAT",
     options: HAS_CSAT_FILTER_OPTIONS,
   },
   {
-    kind: "select",
+    kind: "selectfilter",
     id: "sfLastNps",
     key: "lastNpsBand",
     label: "Último NPS",
     options: LAST_NPS_BAND_OPTIONS,
   },
-  { kind: "select", id: "sfEngineer", key: "engineer", label: "EP", dynamic: true, allLabel: "Todos" },
-  { kind: "select", id: "sfProgram", key: "program", label: "Programa", dynamic: true, allLabel: "Todos" },
+  { kind: "selectfilter", id: "sfEngineer", key: "engineer", label: "EP", dynamic: true, allLabel: "Todos" },
+  { kind: "selectfilter", id: "sfProgram", key: "program", label: "Programa", dynamic: true, allLabel: "Todos" },
 ];
 
 function $(id) {
@@ -151,10 +151,10 @@ function kpiCard(label, value, note, options = {}) {
   </article>`;
 }
 
-function populateFilterOptions() {
+function populateFilterOptions(host = document) {
   const clients = state.payload?.clients || [];
-  fillDynamicSelect($("sfEngineer"), uniqueSorted(clients.map((c) => c.engineer)), "Todos", state.filters.engineer);
-  fillDynamicSelect($("sfProgram"), programSelectOptions(clients), "Todos", state.filters.program);
+  fillDynamicSelectFilter(host, { id: "sfEngineer", allLabel: "Todos" }, uniqueSorted(clients.map((c) => c.engineer)), "Todos", state.filters.engineer);
+  fillDynamicSelectFilter(host, { id: "sfProgram", allLabel: "Todos" }, programSelectOptions(clients), "Todos", state.filters.program);
 }
 
 function renderSuccess() {
@@ -286,7 +286,7 @@ function renderFilters() {
     pageId: "satisfaction",
     innerHtml: renderFilterBar({ fields, filters: state.filters }),
     onBodyReady: (body) => {
-      if (state.payload) populateFilterOptions();
+      if (state.payload) populateFilterOptions(body);
       $("sfQuarter") && ($("sfQuarter").value = state.filters.quarter || "latest");
       $("sfNpsClass") && ($("sfNpsClass").value = state.filters.npsClassification || "all");
       $("sfHasCsat") && ($("sfHasCsat").value = state.filters.hasCsat || "all");
@@ -392,6 +392,7 @@ async function loadSatisfaction({ force = false } = {}) {
     ensurePageRefresh().markSuccess();
   } catch (error) {
     const mapped = mapLoadError(error);
+    if (mapped.stale) return;
     state.errorCode = mapped.errorCode;
     state.error = mapped.error;
     if (force && state.payload) {

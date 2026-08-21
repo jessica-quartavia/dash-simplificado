@@ -31,7 +31,28 @@ const STATUS_COLORS = {
   Baixa: "#c4c4c4",
   "App Pharus": "#0a0a0a",
   "QV360 Web": "#737373",
+  Offboarding: "#d18426",
+  "Cancelamento efetivado": "#737373",
+  Retenção: "#0a0a0a",
+  "Intenção/pedido": "#e85d3a",
+  "Intenção ou pedido": "#e85d3a",
+  "Nenhuma etapa": "#c4c4c4",
+  Efetivado: "#737373",
+  "Em retenção": "#0a0a0a",
 };
+
+export const CHART_CATEGORICAL_PALETTE = [
+  "#e85d3a",
+  "#0a0a0a",
+  "#737373",
+  "#d18426",
+  "#4b5563",
+  "#9ca3af",
+  "#1f2937",
+  "#cbd5e1",
+  "#64748b",
+  "#334155",
+];
 
 export function escapeHtml(value) {
   return String(value ?? "")
@@ -41,8 +62,13 @@ export function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
-function colorForLabel(label, fallback = "#737373") {
-  return STATUS_COLORS[label] || fallback;
+function colorForLabel(label, index = 0) {
+  if (STATUS_COLORS[label]) return STATUS_COLORS[label];
+  return CHART_CATEGORICAL_PALETTE[index % CHART_CATEGORICAL_PALETTE.length];
+}
+
+export function chartColorForLabel(label, index = 0) {
+  return colorForLabel(label, index);
 }
 
 /** Botão padrão Ver mais / Ver menos para gráficos densos. */
@@ -117,17 +143,17 @@ export function donut(items) {
   const radius = 42;
   const c = 2 * Math.PI * radius;
   const arcs = items
-    .map((item) => {
+    .map((item, index) => {
       const len = (item.count / total) * c;
-      const stroke = colorForLabel(item.label);
+      const stroke = colorForLabel(item.label, index);
       const circle = `<circle cx="60" cy="60" r="${radius}" fill="none" stroke="${stroke}" stroke-width="14" stroke-dasharray="${len} ${c - len}" stroke-dashoffset="${-offset}" transform="rotate(-90 60 60)"></circle>`;
       offset += len;
       return circle;
     })
     .join("");
   const legend = items
-    .map((item) => {
-      const color = colorForLabel(item.label);
+    .map((item, index) => {
+      const color = colorForLabel(item.label, index);
       return `<div><i style="background:${color}"></i>${escapeHtml(item.label)} — ${item.count.toLocaleString("pt-BR")} (${Number(item.percent).toLocaleString("pt-BR")}%)</div>`;
     })
     .join("");

@@ -239,7 +239,8 @@ test("DELETE sem id retorna 400", async () => {
   assert.equal(response.status, 400);
 });
 
-test("DELETE por outro usuário retorna 403", async () => {
+test("DELETE corporativo permite excluir relatório de outro usuário", async () => {
+  let deletedId = null;
   const store = {
     findById: async () => ({
       id: "rep-x",
@@ -247,18 +248,77 @@ test("DELETE por outro usuário retorna 403", async () => {
       status: "published",
       created_by: "00000000-0000-0000-0000-000000000099",
     }),
-    deleteFile: async () => {},
-    deleteById: async () => {},
+    deleteFile: async () => ({ removed: true, missing: false, status: 200 }),
+    deleteById: async (id) => {
+      deletedId = id;
+    },
     toPublicRow: reportsStore.toPublicRow.bind(reportsStore),
   };
   const response = await handleReportsRequest(new Request("http://localhost/api/reports?id=rep-x", { method: "DELETE" }), {
     ...mockAuth(),
     reportsStore: store,
   });
+  assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.equal(payload.ok, true);
+  assert.equal(deletedId, "rep-x");
+  assert.equal(payload.message, "Relatório excluído.");
+  assert.ok(payload.request_id);
+});
+
+test("DELETE legado sem created_by conclui com sucesso", async () => {
+  let deletedId = null;
+  const store = {
+    findById: async () => ({
+      id: "rep-legacy",
+      storage_path: "reports/2026/08/legacy.pdf",
+      status: "published",
+      created_by: null,
+    }),
+    deleteFile: async () => ({ removed: false, missing: true, status: 404 }),
+    deleteById: async (id) => {
+      deletedId = id;
+    },
+    toPublicRow: reportsStore.toPublicRow.bind(reportsStore),
+  };
+  const response = await handleReportsRequest(new Request("http://localhost/api/reports?id=rep-legacy", { method: "DELETE" }), {
+    ...mockAuth(),
+    reportsStore: store,
+  });
+  assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.equal(deletedId, "rep-legacy");
+  assert.equal(payload.storageMissing, true);
+  assert.match(payload.message, /excluído/i);
+});
+
+test("DELETE falha no Storage retorna categoria amigável", async () => {
+  const store = {
+    findById: async () => ({
+      id: "rep-z",
+      storage_path: "reports/2026/08/z.pdf",
+      status: "published",
+      created_by: CORP_USER.id,
+    }),
+    deleteFile: async () => {
+      const error = new Error("storage forbidden");
+      error.status = 403;
+      error.code = "storage_delete_failed";
+      error.category = "storage_delete_failed";
+      throw error;
+    },
+    deleteById: async () => {},
+    toPublicRow: reportsStore.toPublicRow.bind(reportsStore),
+  };
+  const response = await handleReportsRequest(new Request("http://localhost/api/reports?id=rep-z", { method: "DELETE" }), {
+    ...mockAuth(),
+    reportsStore: store,
+  });
   assert.equal(response.status, 403);
   const payload = await response.json();
-  assert.equal(payload.code, "forbidden");
+  assert.equal(payload.code, "storage_delete_failed");
   assert.ok(payload.request_id);
+  assert.ok(payload.error_category);
 });
 
 test("DELETE remove registro mesmo se storage já não existir", async () => {
@@ -293,8 +353,8 @@ test("frontend readonly responsável e router", () => {
   assert.match(source, /readonly/);
   assert.match(source, /getUserEmail/);
   assert.match(source, /onPageChange/);
-  assert.match(source, /Baixar/);
-  assert.match(source, /Excluir relatório/);
+  assert.match(source, /Abrir/);
+  assert.match(source, /Excluir/);
   assert.match(source, /method: "DELETE"/);
   assert.match(app, /bootReports/);
 });

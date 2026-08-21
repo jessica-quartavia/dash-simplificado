@@ -25,7 +25,7 @@ import { donut, escapeHtml, hBars } from "./general-charts.mjs";
 import {
   bindFilterBar,
   bindTableExport,
-  fillDynamicSelect,
+  fillDynamicSelectFilter,
   renderFilterBar,
   renderTableToolbar,
 } from "./components/filters/filter-bar.js";
@@ -55,16 +55,16 @@ let pageRefresh = null;
 const FILTER_FIELDS = [
   { kind: "search", id: "cxSearch", key: "search" },
   { kind: "period", id: "cxPeriod", fromId: "cxFrom", toId: "cxTo" },
-  { kind: "select", id: "cxStatus", key: "status", label: "Status", options: STATUS_FILTER_OPTIONS },
+  { kind: "selectfilter", id: "cxStatus", key: "status", label: "Status", options: STATUS_FILTER_OPTIONS },
   {
-    kind: "select",
+    kind: "selectfilter",
     id: "cxStage",
     key: "cancellationStage",
     label: "Etapa de cancelamento",
     options: CANCELLATION_STAGE_FILTER_OPTIONS,
   },
   {
-    kind: "select",
+    kind: "selectfilter",
     id: "cxReasonCategory",
     key: "reasonCategory",
     label: "Categoria motivo",
@@ -72,16 +72,16 @@ const FILTER_FIELDS = [
     allLabel: "Todos",
   },
   {
-    kind: "select",
+    kind: "selectfilter",
     id: "cxResponsible",
     key: "responsible",
     label: "Responsável",
     dynamic: true,
     allLabel: "Todos",
   },
-  { kind: "select", id: "cxEngineer", key: "engineer", label: "EP", dynamic: true, allLabel: "Todos" },
-  { kind: "select", id: "cxSegment", key: "segment", label: "Segmento", dynamic: true, allLabel: "Todos" },
-  { kind: "select", id: "cxProgram", key: "program", label: "Programa", dynamic: true, allLabel: "Todos" },
+  { kind: "selectfilter", id: "cxEngineer", key: "engineer", label: "EP", dynamic: true, allLabel: "Todos" },
+  { kind: "selectfilter", id: "cxSegment", key: "segment", label: "Segmento", dynamic: true, allLabel: "Todos" },
+  { kind: "selectfilter", id: "cxProgram", key: "program", label: "Programa", dynamic: true, allLabel: "Todos" },
 ];
 
 function $(id) {
@@ -216,23 +216,25 @@ function semesterBars(series) {
   }));
 }
 
-function populateFilterOptions() {
+function populateFilterOptions(host = document) {
   const clients = state.payload?.clients || [];
-  fillDynamicSelect(
-    $("cxReasonCategory"),
+  fillDynamicSelectFilter(
+    host,
+    { id: "cxReasonCategory", allLabel: "Todos" },
     collectCancellationReasonCategories(clients),
     "Todos",
     state.filters.reasonCategory,
   );
-  fillDynamicSelect(
-    $("cxResponsible"),
+  fillDynamicSelectFilter(
+    host,
+    { id: "cxResponsible", allLabel: "Todos" },
     collectCancellationResponsibles(clients),
     "Todos",
     state.filters.responsible,
   );
-  fillDynamicSelect($("cxEngineer"), uniqueSorted(clients.map((c) => c.engineer)), "Todos", state.filters.engineer);
-  fillDynamicSelect($("cxSegment"), uniqueSorted(clients.map((c) => c.segment)), "Todos", state.filters.segment);
-  fillDynamicSelect($("cxProgram"), programSelectOptions(clients), "Todos", state.filters.program);
+  fillDynamicSelectFilter(host, { id: "cxEngineer", allLabel: "Todos" }, uniqueSorted(clients.map((c) => c.engineer)), "Todos", state.filters.engineer);
+  fillDynamicSelectFilter(host, { id: "cxSegment", allLabel: "Todos" }, uniqueSorted(clients.map((c) => c.segment)), "Todos", state.filters.segment);
+  fillDynamicSelectFilter(host, { id: "cxProgram", allLabel: "Todos" }, programSelectOptions(clients), "Todos", state.filters.program);
 }
 
 function renderSuccess() {
@@ -420,7 +422,7 @@ function renderFilters() {
       periodInvalid: period.invalid,
     }),
     onBodyReady: (body) => {
-      if (state.payload) populateFilterOptions();
+      if (state.payload) populateFilterOptions(body);
       $("cxStatus") && ($("cxStatus").value = state.filters.status);
       $("cxStage") && ($("cxStage").value = state.filters.cancellationStage || "all");
       $("cxReasonCategory") && ($("cxReasonCategory").value = state.filters.reasonCategory || "all");
@@ -527,6 +529,7 @@ async function loadCancellations({ force = false } = {}) {
     ensurePageRefresh().markSuccess();
   } catch (error) {
     const mapped = mapLoadError(error);
+    if (mapped.stale) return;
     state.errorCode = mapped.errorCode;
     state.error = mapped.error;
     if (force && state.payload) {

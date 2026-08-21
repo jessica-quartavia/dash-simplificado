@@ -8,6 +8,7 @@ import {
 } from "./pages.js";
 import { closeOpenDropdown } from "./components/dropdown-coordinator.js";
 import { initSidebarCollapse } from "./components/sidebar-collapse.js";
+import { resetPageFetchContext } from "./utils/page-load.js";
 
 const INTENDED_HASH_KEY = "qv:intendedHash";
 
@@ -26,6 +27,7 @@ function renderUnimplementedPageShell() {
 }
 
 let currentPageId = DEFAULT_PAGE_ID;
+let pageGeneration = 0;
 let navBound = false;
 const pageChangeListeners = [];
 /** @type {Set<string>} categorias abertas na sessão SPA */
@@ -48,6 +50,22 @@ function consumeIntendedHash() {
 
 export function getCurrentPageId() {
   return currentPageId;
+}
+
+export function getPageGeneration() {
+  return pageGeneration;
+}
+
+function clearPageShell() {
+  const filters = document.getElementById("page-filters");
+  const content = document.getElementById("page-content");
+  const actions = document.getElementById("page-actions");
+  if (filters) filters.replaceChildren();
+  if (actions) actions.replaceChildren();
+  if (content) {
+    content.innerHTML =
+      '<div class="gd-status" role="status"><strong>Carregando…</strong><span>Preparando a página selecionada.</span></div>';
+  }
 }
 
 export function getCurrentPageCanonical() {
@@ -128,6 +146,9 @@ function toggleNavGroup(groupId) {
 
 export function navigateTo(pageId, { updateHash = true } = {}) {
   const page = getPageById(pageId) || getPageById(DEFAULT_PAGE_ID);
+  pageGeneration += 1;
+  resetPageFetchContext();
+  clearPageShell();
   currentPageId = page.id;
   window.__portalCurrentPage = page.hash;
   window.__portalCurrentPageCanonical = page.id;

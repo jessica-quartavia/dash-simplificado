@@ -2,6 +2,7 @@ import { escapeHtml } from "../../general-charts.mjs";
 import { debounce } from "../../../lib/analytics/filters/search.mjs";
 import { bindDateRangePicker, renderDateRangePicker } from "./date-range-picker.js";
 import { bindMultiSelectFilter, renderMultiSelectFilter } from "./multi-select-filter.js";
+import { bindSelectFilter, renderSelectFilterFromField, updateSelectFilterField } from "./select-filter.js";
 
 function optionHtml(options, selected) {
   return (options || [])
@@ -28,6 +29,9 @@ export function renderFilterBar({
     }
     if (field.kind === "multiselect") {
       return renderMultiSelectFilter({ field, filters, label: field.label });
+    }
+    if (field.kind === "selectfilter") {
+      return renderSelectFilterFromField(field, filters);
     }
     if (field.kind === "select") {
       const options = field.dynamic
@@ -105,6 +109,16 @@ export function bindFilterBar({
       );
       continue;
     }
+    if (field.kind === "selectfilter") {
+      cleanups.push(
+        bindSelectFilter({
+          host,
+          field,
+          onChange: () => onChange?.(),
+        }),
+      );
+      continue;
+    }
     if (field.kind === "number") {
       const el = host.querySelector(`#${field.id}`);
       if (!el) continue;
@@ -161,4 +175,9 @@ export function fillDynamicSelect(select, values, allLabel, current) {
     `<option value="all">${escapeHtml(allLabel)}</option>` +
     values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("");
   select.value = [...select.options].some((opt) => opt.value === keep) ? keep : "all";
+}
+
+/** Atualiza opções de SelectFilter dinâmico (Cancelamento / Satisfação). */
+export function fillDynamicSelectFilter(host, field, values, allLabel, current) {
+  updateSelectFilterField(host, field, values, current ?? "all");
 }

@@ -144,14 +144,14 @@ function renderReportCard(report) {
         <span>${escapeHtml(dateTimeBR(report.createdAt))}</span>
       </div>
       <div class="reports-card-actions">
-        <button type="button" class="btn btn-secondary reports-download-btn" data-download-report="${escapeHtml(report.id)}" data-file-name="${escapeHtml(report.fileName || "")}">
-          Baixar
-        </button>
         <button type="button" class="btn btn-secondary reports-open-btn" data-open-report="${escapeHtml(report.id)}">
           Abrir
         </button>
-        <button type="button" class="btn btn-secondary btn-icon reports-delete-btn" data-delete-report="${escapeHtml(report.id)}" aria-label="Excluir relatório" title="Excluir">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m-1 0v14H9V6h6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <button type="button" class="btn btn-secondary reports-download-btn" data-download-report="${escapeHtml(report.id)}" data-file-name="${escapeHtml(report.fileName || "")}">
+          Baixar
+        </button>
+        <button type="button" class="btn btn-secondary reports-delete-btn" data-delete-report="${escapeHtml(report.id)}" aria-label="Excluir relatório" title="Excluir">
+          Excluir
         </button>
       </div>
     </article>
@@ -314,14 +314,24 @@ function openFilePicker() {
   ensureFileInput().click();
 }
 
+function isReportsDebug() {
+  return typeof location !== "undefined" && (location.search.includes("reportsDebug=1") || location.hostname === "localhost");
+}
+
 function mapApiError(payload, status) {
   if (status === 401) return reportsErrorMessage("unauthorized");
   if (status === 404 && (payload?.code === "reports_api_unavailable" || payload?.code === "local_api_unavailable")) {
     return "Rota /api/reports indisponível no servidor local. Reinicie com npm run dev.";
   }
   if (status === 403 || payload?.code === "forbidden") {
-    const extra = payload?.error_category ? ` (${payload.error_category})` : "";
-    return `${payload?.error || "Sem permissão para excluir este relatório."}${extra}`;
+    const parts = [payload?.error || "Sem permissão para excluir este relatório."];
+    if (payload?.hint) parts.push(payload.hint);
+    if (isReportsDebug()) {
+      if (payload?.error_category) parts.push(`[${payload.error_category}]`);
+      if (payload?.postgrest_code) parts.push(`PostgREST ${payload.postgrest_code}`);
+      if (payload?.request_id) parts.push(`req ${payload.request_id}`);
+    }
+    return parts.join(" ");
   }
   if (payload?.code && reportsErrorMessage(payload.code) !== "Não foi possível consultar os relatórios.") {
     return reportsErrorMessage(payload.code);
@@ -472,9 +482,10 @@ async function deleteReport(reportId) {
     state.reports = state.reports.filter((item) => item.id !== reportId);
     closeDeleteModal();
     renderContent();
-    setToast(payload.message || "Relatório excluído com sucesso.");
+    setToast(payload.message || "Relatório excluído.");
   } catch (error) {
-    setToast(error instanceof Error ? error.message : "Não foi possível excluir o relatório.", "error");
+    const message = error instanceof Error ? error.message : "Não foi possível excluir o relatório.";
+    setToast(message, "error");
   } finally {
     state.deleting = false;
     if (state.deleteReportId) renderDeleteModal();

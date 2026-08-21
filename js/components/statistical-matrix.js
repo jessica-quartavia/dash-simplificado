@@ -55,6 +55,16 @@ function buildStyleVars(vars) {
     .join(";");
 }
 
+function matrixToolbar() {
+  return `<div class="matrix-panel-toolbar">
+        <div class="matrix-view-toggle" role="group" aria-label="Modo de visualização">
+          <button type="button" class="btn btn-secondary btn-sm is-active" data-matrix-view="heatmap">Heatmap</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-matrix-view="table">Tabela</button>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm matrix-expand-btn" data-matrix-expand aria-label="Expandir matriz">Expandir</button>
+      </div>`;
+}
+
 /**
  * Matriz simétrica (variável × variável, coorte, etc.) — células quadradas.
  */
@@ -120,9 +130,7 @@ export function renderStatisticalMatrix({
     ${legend}
     ${noteHtml}
     <div class="matrix-panel" data-matrix-panel>
-      <div class="matrix-panel-toolbar">
-        <button type="button" class="btn btn-secondary btn-sm matrix-expand-btn" data-matrix-expand aria-label="Expandir matriz">Expandir matriz</button>
-      </div>
+      ${matrixToolbar()}
       <div class="matrix-scroll matrix-scroll-symmetric${compactClass}" style="${styleVars}" data-matrix-root data-matrix-kind="symmetric">
         <table class="matrix-grid matrix-grid--symmetric gd-table" role="grid">
           <thead><tr><th class="matrix-row-label matrix-corner">${escapeHtml(cornerLabel)}</th>${headCells}${trailingHead}</tr></thead>
@@ -196,9 +204,7 @@ export function renderRankingHeatmapTable({
     ${legend}
     ${noteHtml}
     <div class="matrix-panel" data-matrix-panel>
-      <div class="matrix-panel-toolbar">
-        <button type="button" class="btn btn-secondary btn-sm matrix-expand-btn" data-matrix-expand aria-label="Expandir matriz">Expandir matriz</button>
-      </div>
+      ${matrixToolbar()}
       <div class="matrix-scroll matrix-scroll-ranking" style="${styleVars}" data-matrix-root data-matrix-kind="ranking">
         <table class="matrix-grid matrix-grid--ranking gd-table" role="grid">
           <thead><tr><th class="matrix-row-label matrix-corner matrix-rank-label">${escapeHtml(cornerLabel)}</th>${headCells}${trailingHead}</tr></thead>
@@ -281,6 +287,25 @@ export function bindMatrixTooltips(root = document) {
   }
 }
 
+export function bindMatrixViewToggle(root = document) {
+  const host = root.querySelector?.("#page-content") || root;
+  if (!host?.querySelectorAll) return;
+
+  host.querySelectorAll("[data-matrix-view]").forEach((btn) => {
+    if (btn.dataset.boundView === "1") return;
+    btn.dataset.boundView = "1";
+    btn.addEventListener("click", () => {
+      const panel = btn.closest("[data-matrix-panel]");
+      if (!panel) return;
+      const mode = btn.dataset.matrixView;
+      panel.querySelectorAll("[data-matrix-view]").forEach((other) => {
+        other.classList.toggle("is-active", other.dataset.matrixView === mode);
+      });
+      panel.classList.toggle("matrix-view-plain", mode === "table");
+    });
+  });
+}
+
 export function bindMatrixExpand(root = document) {
   const host = root.querySelector?.("#page-content") || root;
   if (!host?.querySelectorAll) return;
@@ -306,6 +331,7 @@ export function bindMatrixExpand(root = document) {
       body.appendChild(scroll.cloneNode(true));
       document.body.appendChild(overlay);
       bindMatrixTooltips(overlay);
+      bindMatrixViewToggle(overlay);
       const close = () => overlay.remove();
       overlay.querySelector("[data-matrix-expand-close]")?.addEventListener("click", close);
       overlay.addEventListener("click", (event) => {

@@ -514,6 +514,7 @@ async function loadQuality({ force = false } = {}) {
     ensurePageRefresh().markSuccess(payload.generatedAt ? new Date(payload.generatedAt) : new Date());
   } catch (error) {
     const mapped = mapLoadError(error);
+    if (mapped.stale) return;
     state.errorCode = mapped.errorCode;
     state.error = mapped.error;
     if (force && state.payload) {
