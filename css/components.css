@@ -3079,6 +3079,19 @@
 }
 
 .section-lead,
+.section-meta {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  max-width: 48rem;
+  margin-bottom: var(--space-3);
+  line-height: 1.55;
+}
+
+.section-meta--muted {
+  font-size: 0.875rem;
+  margin-bottom: var(--space-2);
+}
+
 .section-block > p:first-of-type {
   color: var(--muted);
   font-size: 0.9375rem;
