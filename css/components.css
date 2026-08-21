@@ -3320,6 +3320,15 @@
   background: color-mix(in srgb, var(--color-coral) 8%, transparent);
 }
 
+.page-source-unavailable {
+  font-size: 0.875rem;
+  color: var(--muted-foreground, #64748b);
+  padding: 8px 12px;
+  margin: 0 0 12px;
+  border-left: 2px solid var(--border, #cbd5e1);
+  background: color-mix(in srgb, var(--border, #cbd5e1) 12%, transparent);
+}
+
 .page-warning {
   font-size: 0.875rem;
   color: var(--muted);

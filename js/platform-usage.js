@@ -10,7 +10,7 @@ import { escapeHtml, hBarsExpandable } from "./general-charts.mjs";
 import { bindChartExpand } from "./components/chart-expand.js";
 import { createFilterChangeHandler } from "../lib/analytics/filters/filter-state.mjs";
 import { createPageRefresh } from "./components/page-refresh.js";
-import { fetchPageJson, mapLoadError } from "./utils/page-load.js";
+import { fetchPageJson, mapLoadError, clearPageCache } from "./utils/page-load.js";
 import { bindFilterBar, bindTableExport, renderFilterBar, renderTableToolbar } from "./components/filters/filter-bar.js";
 import { mountPageFilters } from "./components/filters/filter-shell.js";
 import { exportFilteredTable } from "./utils/page-table-export.js";
@@ -92,6 +92,30 @@ function pctLabel(v) {
   return `${Number(v).toLocaleString("pt-BR")}%`;
 }
 
+function kpiValue(v) {
+  if (v == null || !Number.isFinite(Number(v))) return "—";
+  return fmt.format(Number(v));
+}
+
+function metricsSourceUnavailable() {
+  return Boolean(
+    state.payload?.metricsSourceUnavailable
+    || (state.payload?.status !== "connected" && state.payload?.summary?.totalUsers == null),
+  );
+}
+
+function pharusLoadErrorMessage(error) {
+  const code = error?.code || "";
+  const msg = String(error?.message || "");
+  if (code === "config" || code === "pharus_config") {
+    return "Fonte App Pharus indisponível para leitura.";
+  }
+  if (/pharus|metrics\.events|schema metrics/i.test(msg)) {
+    return "Fonte App Pharus indisponível para leitura.";
+  }
+  return msg || "Não foi possível carregar os dados.";
+}
+
 function dateLabel(iso) {
   if (!iso) return "—";
   const d = new Date(iso);
@@ -132,6 +156,7 @@ function renderSuccess() {
       </section>`;
     return;
   }
+  const sourceUnavailable = metricsSourceUnavailable();
   const { rows, summary } = currentSummary();
   const pages = Math.max(1, Math.ceil(rows.length / state.pageSize));
   if (state.page > pages) state.page = pages;
@@ -141,15 +166,16 @@ function renderSuccess() {
 
   content.innerHTML = `
     ${state.error ? `<p class="page-inline-error">${escapeHtml(state.error)}</p>` : ""}
-    ${warnings.length ? `<div class="page-warnings">${warnings.map((w) => `<p class="page-warning">${escapeHtml(w.message || w.label || "")}</p>`).join("")}</div>` : ""}
+    ${sourceUnavailable ? `<p class="page-source-unavailable" role="status">${escapeHtml(state.payload?.sources?.warnings?.[0]?.message || state.payload?.message || "Fonte de uso ainda indisponível.")}</p>` : ""}
+    ${warnings.length && !sourceUnavailable ? `<div class="page-warnings">${warnings.map((w) => `<p class="page-warning">${escapeHtml(w.message || w.label || "")}</p>`).join("")}</div>` : ""}
     <section class="section-block">
       <h2>Uso da plataforma — App Pharus</h2>
       <p class="section-lead">Acesso, recência e frequência de login. Exclui contas @quartavia.com.br e demos.</p>
       <div class="kpi-row kpi-row-primary">
-        ${kpiCard("Usuários", fmt.format(summary.totalUsers), "População filtrada")}
-        ${kpiCard("Com login", fmt.format(summary.usersWithLogin), pctLabel(summary.loginCoverage))}
-        ${kpiCard("Total de logins", fmt.format(summary.totalLogins))}
-        ${kpiCard("Dias desde último acesso (mediana)", summary.typicalDaysSinceLastAccess != null ? fmt.format(summary.typicalDaysSinceLastAccess) : "—")}
+        ${kpiCard(state.payload?.summary?.usersLabel || "Usuários com registro de acesso", sourceUnavailable ? "—" : kpiValue(summary.totalUsers), sourceUnavailable ? "" : "População com login na view")}
+        ${kpiCard("Com login", sourceUnavailable ? "—" : kpiValue(summary.usersWithLogin), sourceUnavailable ? "" : pctLabel(summary.loginCoverage))}
+        ${kpiCard("Total de logins", sourceUnavailable ? "—" : kpiValue(summary.totalLogins))}
+        ${kpiCard("Dias desde último acesso (mediana)", sourceUnavailable ? "—" : kpiValue(summary.typicalDaysSinceLastAccess))}
       </div>
     </section>
     <section class="section-block">
@@ -222,13 +248,35 @@ function renderSuccess() {
 async function loadPayload(force = false) {
   state.loading = true;
   state.error = null;
+  ensurePageRefresh().setLoading(true);
+  if (force) clearPageCache("platform_usage");
   try {
-    state.payload = await fetchPageJson(API, { force });
+    state.payload = await fetchPageJson(API, { force, pageId: "platform_usage" });
+    ensurePageRefresh().markSuccess(state.payload?.generatedAt ? new Date(state.payload.generatedAt) : new Date());
   } catch (error) {
-    Object.assign(state, mapLoadError(error));
+    const mapped = mapLoadError(error);
+    if (mapped.stale) return mapped;
+    state.errorCode = mapped.errorCode;
+    state.error = pharusLoadErrorMessage(error);
+    if (force && state.payload) {
+      ensurePageRefresh().markError(state.error);
+    } else {
+      state.payload = null;
+      ensurePageRefresh().render();
+    }
+    return mapped;
   } finally {
     state.loading = false;
+    ensurePageRefresh().setEnabled(true);
   }
+}
+
+function ensurePageRefresh() {
+  if (pageRefresh) return pageRefresh;
+  pageRefresh = createPageRefresh({
+    onRefresh: () => refresh(true),
+  });
+  return pageRefresh;
 }
 
 function renderFilters() {
@@ -276,17 +324,19 @@ function renderErrorView() {
 
 async function refresh(force = false) {
   renderLoading();
-  await loadPayload(force);
-  if (state.error) { renderErrorView(); return; }
+  ensurePageRefresh().render();
+  const result = await loadPayload(force);
+  if (result?.stale) return;
+  if (state.error && !state.payload) { renderErrorView(); return; }
   renderFilters();
   renderSuccess();
-  pageRefresh?.updateMeta(state.payload?.generatedAt);
 }
 
 export function bootPlatformUsage() {
   if (state.mounted) return;
   state.mounted = true;
-  pageRefresh = createPageRefresh({ onRefresh: () => refresh(true) });
+  ensurePageRefresh().setEnabled(false);
+  ensurePageRefresh().render();
   onPageChange(async (page) => {
     if (page.id !== "platform_usage") return;
     if (!state.payload && !state.loading) await refresh();

@@ -118,7 +118,8 @@ test("consolidação sem App Pharus marca partial e não inventa App=0", () => {
     metadata: { sources: ["BASE QV"] },
   };
   const payload = consolidateMechanismsPayload({ baseQvPayload, pharusPayload: null, clientsRaw: [] });
-  assert.equal(payload.metadata.consolidationQuality.clients.consolidationMode, "partial");
+  assert.equal(payload.metadata.consolidationQuality.clients.consolidationMode, "base_qv_only");
+  assert.equal(payload.metadata.consolidationQuality.clients.pharusUsersWithMechanisms, null);
   assert.equal(payload.metadata.consolidationQuality.clients.pharusUsersWithMechanisms, null);
 });
 

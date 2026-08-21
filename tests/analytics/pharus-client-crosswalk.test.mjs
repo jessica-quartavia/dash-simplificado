@@ -58,5 +58,5 @@ test("crosswalk — fórmula matched + baseOnly + unmatched", () => {
   assert.equal(audit.baseQvOnly, 1);
   assert.equal(audit.unmatchedAppPharus, 1);
   assert.equal(audit.consolidatedUniquePeople, 3);
-  assert.equal(audit.consolidationMode, "partial");
+  assert.equal(audit.consolidationMode, "consolidated_with_unmatched");
 });

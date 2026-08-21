@@ -34,6 +34,18 @@ console.log(JSON.stringify({
     v2: { success: v2Mech.success, available: v2Mech.available, users: v2Mech.summary?.usersWithMechanisms, code: v2Mech.code, status: v2Mech.source?.status },
   },
   platform: {
-    v2: { status: v2Plat.status, available: v2Plat.available, totalUsers: v2Plat.summary?.totalUsers, message: v2Plat.message },
+    v2: {
+      status: v2Plat.status,
+      available: v2Plat.available,
+      metricsSourceUnavailable: v2Plat.metricsSourceUnavailable,
+      eventsLoaded: v2Plat.summary?.eventsLoaded,
+      totalUsers: v2Plat.summary?.totalUsers,
+      totalLogins: v2Plat.summary?.totalLogins,
+      typicalDaysSinceLastAccess: v2Plat.summary?.typicalDaysSinceLastAccess,
+      message: v2Plat.message,
+      fetchMs: v2Plat.sources?.timing?.fetchMs,
+      restRequests: v2Plat.sources?.timing?.restRequests,
+      warning: v2Plat.sources?.warnings?.[0]?.message || null,
+    },
   },
 }, null, 2));

@@ -20,7 +20,7 @@ import { createFilterChangeHandler } from "../lib/analytics/filters/filter-state
 import { parseMultiSelectValue } from "../lib/analytics/filters/multiselect.mjs";
 import { normalizeProgramFilter, programSelectOptions } from "../lib/analytics/filters/program.mjs";
 import { createPageRefresh } from "./components/page-refresh.js";
-import { fetchPageJson, mapLoadError } from "./utils/page-load.js";
+import { fetchPageJson, mapLoadError, clearPageCache } from "./utils/page-load.js";
 import {
   bindFilterBar,
   bindTableExport,
@@ -184,18 +184,19 @@ function populateFilterOptions(host) {
   fillMultiSelectOptions(host, mechanismField, mechanismOptions, state.filters.mechanism);
 }
 
+function pharusSourceUnavailable(metadata = {}) {
+  return metadata?.pharus?.status === "unavailable" || metadata?.pharusConsulted === false;
+}
+
 function mechanismSourceLegend(quality, metadata = {}) {
   const clients = quality?.clients || {};
   const baseQv = clients.qvClientsWithMechanisms ?? clients.baseQv ?? 0;
   const matched = clients.matchedInBoth ?? clients.presentInBothSources ?? 0;
-  const pharusUnavailable = metadata?.pharus?.status === "unavailable"
-    || metadata?.pharusConsulted === false
-    || metadata?.status === "partial";
-  if (pharusUnavailable) {
+  if (pharusSourceUnavailable(metadata)) {
     return {
       line: `BASE QV ${fmt.format(baseQv)} · Parcial — App Pharus indisponível`,
       tooltip:
-        "Clientes presentes nas duas fontes são contados uma única vez quando App Pharus responde. Matches ambíguos não entram no consolidado.",
+        "App Pharus não respondeu para leitura consolidada. Recarregue após liberar permissões no projeto Pharus.",
     };
   }
   const appPharus = clients.pharusUsersWithMechanisms ?? 0;
@@ -206,10 +207,8 @@ function mechanismSourceLegend(quality, metadata = {}) {
   };
 }
 
-function clientsWithMechanismsLabel(summary, quality) {
-  const mode = summary?.consolidationMode || quality?.clients?.consolidationMode;
-  if (mode === "partial") return "Clientes únicos com mecanismos (parcial)";
-  if (mode === "full") return "Clientes únicos com mecanismos";
+function clientsWithMechanismsLabel(summary, quality, metadata = {}) {
+  if (pharusSourceUnavailable(metadata)) return "Clientes únicos com mecanismos (parcial)";
   return "Clientes com mecanismos";
 }
 
@@ -277,7 +276,7 @@ function renderSuccess() {
       <h2>Implementação de Mecanismos</h2>
       <p>Visão consolidada — BASE QV + App Pharus. Vínculos deduplicados por cliente e mecanismo canônico.</p>
       <div class="kpi-row kpi-row-primary">
-        ${kpiCard(clientsWithMechanismsLabel(summary, quality), fmt.format(summary.clientsWithMechanisms), `${sourceLegend.line}${coverageLine(summary.coverage) ? ` · ${coverageLine(summary.coverage)}` : ""}`, { highlight: true, featured: true, title: `${sourceTip}\n${sourceLegend.tooltip}` })}
+        ${kpiCard(clientsWithMechanismsLabel(summary, quality, meta), fmt.format(summary.clientsWithMechanisms), `${sourceLegend.line}${coverageLine(summary.coverage) ? ` · ${coverageLine(summary.coverage)}` : ""}`, { highlight: true, featured: true, title: `${sourceTip}\n${sourceLegend.tooltip}` })}
         ${kpiCard("Clientes com mecanismo implementado", fmt.format(summary.clientsWithImplementedMechanism), `${pctLabel(summary.implementationPercent)} do recorte`, { highlight: true, title: sourceTip })}
         ${kpiCard("Mecanismos implementados", fmt.format(summary.implementedMechanisms), "Vínculos distintos (cliente + mecanismo)", { title: sourceTip })}
         ${kpiCard("Em andamento", fmt.format(summary.inProgressMechanisms), "Somente status consolidável", { title: sourceTip })}
@@ -548,8 +547,9 @@ async function loadMechanisms({ force = false } = {}) {
   ensurePageRefresh().setLoading(true);
   renderFilters();
   renderStateView();
+  if (force) clearPageCache("mechanisms");
   try {
-    state.payload = await fetchPageJson("/api/mechanisms", { force });
+    state.payload = await fetchPageJson("/api/mechanisms", { force, pageId: "mechanisms" });
     state.filters = { ...defaultMechanismFilters(), ...state.filters, status: state.filters.status || DEFAULT_STATUS_FILTER };
     ensurePageRefresh().markSuccess();
   } catch (error) {
