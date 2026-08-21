@@ -3,7 +3,8 @@ import {
   defaultSatisfactionFilters,
   filterSatisfactionClients,
   sortSatisfactionClients,
-  SATISFACTION_QUARTER_OPTIONS,
+  buildScopedSatisfactionView,
+  satisfactionQuarterOptions,
   NPS_CLASSIFICATION_FILTER_OPTIONS,
   HAS_CSAT_FILTER_OPTIONS,
   LAST_NPS_BAND_OPTIONS,
@@ -55,7 +56,7 @@ const FILTER_FIELDS = [
     id: "sfQuarter",
     key: "quarter",
     label: "Trimestre",
-    options: SATISFACTION_QUARTER_OPTIONS,
+    options: [{ value: "latest", label: "Mais recente" }],
   },
   {
     kind: "selectfilter",
@@ -111,11 +112,20 @@ function filteredRows() {
 }
 
 function currentSummary() {
-  const rows = filteredRows();
-  const population = state.payload?.population?.totalClients ?? (state.payload?.clients || []).length;
+  const scoped = buildScopedSatisfactionView(state.payload, state.filters);
+  const rows = sortSatisfactionClients(
+    filterSatisfactionClients(scoped.clients, state.filters),
+    state.sortKey,
+    state.sortDir,
+  );
+  const population = state.payload?.population?.totalClients ?? scopeInputsTotal(state.payload);
   const summary = summarizeSatisfactionRows(rows, population);
   const dist = distributionsFromSatisfactionRows(rows, state.payload?.distributions || {});
-  return { rows, summary, dist };
+  return { rows, summary, dist, selectedQuarter: scoped.selectedQuarter };
+}
+
+function scopeInputsTotal(payload) {
+  return payload?.scopeInputs?.totalClients ?? payload?.population?.totalClients ?? (payload?.clients || []).length;
 }
 
 function pctLabel(value) {
@@ -153,6 +163,8 @@ function kpiCard(label, value, note, options = {}) {
 
 function populateFilterOptions(host = document) {
   const clients = state.payload?.clients || [];
+  const quarterOptions = satisfactionQuarterOptions(state.payload);
+  fillDynamicSelectFilter(host, { id: "sfQuarter", allLabel: "Mais recente" }, quarterOptions, "Mais recente", state.filters.quarter);
   fillDynamicSelectFilter(host, { id: "sfEngineer", allLabel: "Todos" }, uniqueSorted(clients.map((c) => c.engineer)), "Todos", state.filters.engineer);
   fillDynamicSelectFilter(host, { id: "sfProgram", allLabel: "Todos" }, programSelectOptions(clients), "Todos", state.filters.program);
 }
@@ -227,7 +239,7 @@ function renderSuccess() {
     </section>
   `;
 
-  if ($("sfChartNps")) $("sfChartNps").innerHTML = donut(dist.npsClassification.filter((i) => i.count > 0));
+  if ($("sfChartNps")) $("sfChartNps").innerHTML = hBars(dist.npsClassification.filter((i) => i.count > 0));
   if ($("sfChartCsat")) $("sfChartCsat").innerHTML = donut(dist.csatSatisfaction.filter((i) => i.count > 0));
 
   const tbody = $("sfRows");

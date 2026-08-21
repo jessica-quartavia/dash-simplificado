@@ -1,0 +1,115 @@
+{
+  "generatedAt": "2026-08-21T13:32:38.847Z",
+  "totals": {
+    "compared": 5,
+    "pass": 5,
+    "divergent": 0,
+    "expected_difference": 0,
+    "not_comparable": 0,
+    "blocked": 0
+  },
+  "slowest": [
+    {
+      "page": "cancellations",
+      "v1_ms": 39748,
+      "v2_ms": 39796
+    }
+  ],
+  "pages": [
+    {
+      "page": "cancellations",
+      "metrics": [
+        {
+          "metric_id": "cx_effective",
+          "label": "Efetivados",
+          "page": "cancellations",
+          "v1_value": 500,
+          "v2_value": 500,
+          "difference": 0,
+          "relative_difference": 0,
+          "v1_sample_size": null,
+          "v2_sample_size": null,
+          "match": true,
+          "classification": "PASS",
+          "status": "PASS",
+          "note": "archived=no",
+          "payloadPathV1": null,
+          "payloadPathV2": null
+        },
+        {
+          "metric_id": "cx_intent",
+          "label": "Intenções/pedidos",
+          "page": "cancellations",
+          "v1_value": 187,
+          "v2_value": 187,
+          "difference": 0,
+          "relative_difference": 0,
+          "v1_sample_size": null,
+          "v2_sample_size": null,
+          "match": true,
+          "classification": "PASS",
+          "status": "PASS",
+          "note": "",
+          "payloadPathV1": null,
+          "payloadPathV2": null
+        },
+        {
+          "metric_id": "cx_process",
+          "label": "Em processo",
+          "page": "cancellations",
+          "difference": null,
+          "relative_difference": null,
+          "v1_sample_size": null,
+          "v2_sample_size": null,
+          "match": true,
+          "classification": "PASS",
+          "status": "PASS",
+          "note": "",
+          "payloadPathV1": null,
+          "payloadPathV2": null
+        },
+        {
+          "metric_id": "cx_non_renewal",
+          "label": "Não renovações",
+          "page": "cancellations",
+          "v1_value": 354,
+          "v2_value": 354,
+          "difference": 0,
+          "relative_difference": 0,
+          "v1_sample_size": null,
+          "v2_sample_size": null,
+          "match": true,
+          "classification": "PASS",
+          "status": "PASS",
+          "note": "",
+          "payloadPathV1": null,
+          "payloadPathV2": null
+        },
+        {
+          "metric_id": "cx_early",
+          "label": "Antes fim ciclo",
+          "page": "cancellations",
+          "difference": null,
+          "relative_difference": null,
+          "v1_sample_size": null,
+          "v2_sample_size": null,
+          "match": true,
+          "classification": "PASS",
+          "status": "PASS",
+          "note": "",
+          "payloadPathV1": null,
+          "payloadPathV2": null
+        }
+      ],
+      "timing": {
+        "v1_ms": 39748,
+        "v2_ms": 39796,
+        "v1_bytes": 2397075,
+        "v2_bytes": 2397771
+      },
+      "total_ms": 79565,
+      "v1Error": null,
+      "v2Error": null
+    }
+  ]
+}

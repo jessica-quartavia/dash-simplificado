@@ -160,3 +160,20 @@ test("gráfico de primeiro mecanismo não entra na UI", () => {
   assert.equal("firstImplementationRanges" in publicPayload, false);
   assert.equal("distributions" in publicPayload, false);
 });
+
+test("buildOnboardingPayload expõe summary.completedOnboarding para auditoria", () => {
+  const payload = buildOnboardingPayload({
+    now,
+    clients: [{ id: "1", codigo: "A1", name: "Ana", status: "ativo", data_inicio_ciclo: "2026-01-01" }],
+    calendlyRows: [{ client_id: "1", start_time: "2026-02-01T12:00:00.000Z", event_name: "Reunião" }],
+    manualRows: [],
+    attendanceRows: [{ calendly_event_uri: "x", status: "compareceu" }],
+    implRows: [],
+    cancellations: [],
+    journeys: [],
+    financialRows: [],
+    mechanisms: [],
+  });
+  assert.equal(typeof payload.summary?.completedOnboarding, "number");
+  assert.equal(payload.summary.completedOnboarding, payload.clients.filter((r) => r.completedOnboarding === true).length);
+});

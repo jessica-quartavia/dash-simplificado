@@ -17,6 +17,7 @@ import {
   summarizeMechanismRows,
 } from "../../lib/analytics/mechanism-metrics.mjs";
 import { buildMechanismsPayload, toPublicMechanismsPayload } from "../../lib/analytics/mechanisms.mjs";
+import { excludedClientIds } from "../../lib/analytics/data-exclusions.mjs";
 import { consolidateMechanismsPayload } from "../../lib/analytics/mechanisms/mechanisms-consolidation.mjs";
 
 const now = new Date("2026-08-19T12:00:00.000Z");
@@ -198,4 +199,27 @@ test("payload público inclui metadados consolidados sem PII de matching", () =>
   assert.equal(publicPayload.clients[0].entryDate, undefined);
   assert.equal(publicPayload.clients[0].userEmail, undefined);
   assert.ok(publicPayload.metadata.consolidationQuality);
+});
+
+test("client_mecanismos de cliente excluído é filtrado antes do BASE QV (fidelidade V1)", () => {
+  const clientsRaw = [
+    { id: "1", codigo: "A1", name: "Ana", status: "ativo", engenheiro_patrimonial: "EP1" },
+    { id: "ex", codigo: "X1", name: "liliane reus", email: "casoisolado32@gmail.com", status: "ativo", engenheiro_patrimonial: "EP1" },
+  ];
+  const removedIds = excludedClientIds(clientsRaw);
+  const cmRowsAll = [
+    { id: "ok", client_id: "1", mecanismo_id: "m1", status: "concluido", created_at: "2026-08-01", implemented_at: "2026-08-10" },
+    { id: "bad", client_id: "ex", mecanismo_id: "m1", status: "concluido", created_at: "2026-08-01", implemented_at: "2026-08-10" },
+  ];
+  const cmRows = cmRowsAll.filter((row) => !removedIds.has(String(row.client_id || "")));
+  const payload = buildMechanismsPayload({
+    now,
+    clients: clientsRaw.filter((c) => !removedIds.has(String(c.id))),
+    cancellations: [],
+    mechanisms: [{ id: "m1", name: "Previdência", categoria: "Proteção", mercado: null }],
+    financialRows: [],
+    cmRows,
+  });
+  assert.equal(payload.clients.length, 1);
+  assert.equal(payload.clients[0].clientId, "1");
 });

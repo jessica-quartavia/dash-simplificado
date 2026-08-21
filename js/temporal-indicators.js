@@ -100,6 +100,8 @@ function currentView() {
   const activeSignalBars = (filtered.activeRisk?.signals || [])
     .filter((item) => item.count > 0)
     .map((item) => ({ label: item.label, count: item.count, percent: item.percent }));
+  const signalIntensityBars = (filtered.activeRisk?.signalCountDistribution || [])
+    .filter((item) => item.count > 0);
   return {
     summary: filtered.summary,
     preCancellation: filtered.preCancellation,
@@ -108,6 +110,7 @@ function currentView() {
     insights,
     preSignalBars,
     activeSignalBars,
+    signalIntensityBars,
   };
 }
 
@@ -188,7 +191,7 @@ function exportRecencyTable(rows, format) {
 function renderSuccess() {
   const content = $("page-content");
   if (!content) return;
-  const { summary, preCancellation, activeRisk, recencyRows, insights, preSignalBars, activeSignalBars } = currentView();
+  const { summary, preCancellation, activeRisk, recencyRows, insights, preSignalBars, activeSignalBars, signalIntensityBars } = currentView();
   const pages = Math.max(1, Math.ceil(recencyRows.length / state.pageSize));
   if (state.page > pages) state.page = pages;
   const start = (state.page - 1) * state.pageSize;
@@ -233,8 +236,9 @@ function renderSuccess() {
     <section class="section-block">
       <h2>Risco em clientes ativos</h2>
       <p>${fmt.format(activeRisk.clientsWithSignals || 0)} de ${fmt.format(activeRisk.analyzedActiveClients || 0)} ativos (${pctLabel(activeRisk.clientsWithSignalsPercent)}) com sinais recentes para monitoramento.</p>
-      <div class="chart-grid chart-grid-single">
+      <div class="chart-grid">
         <article class="chart-card"><h3>Sinais em carteira ativa</h3><div id="tiChartActiveRisk"></div></article>
+        <article class="chart-card"><h3>Clientes por quantidade de sinais</h3><p>Cada cliente ativo é contado uma única vez em sua faixa</p><div id="tiChartActiveRiskIntensity"></div></article>
       </div>
     </section>
 
@@ -276,6 +280,9 @@ function renderSuccess() {
 
   $("tiChartPreCancel") && ($("tiChartPreCancel").innerHTML = hBars(preSignalBars));
   $("tiChartActiveRisk") && ($("tiChartActiveRisk").innerHTML = hBars(activeSignalBars));
+  $("tiChartActiveRiskIntensity") && ($("tiChartActiveRiskIntensity").innerHTML = signalIntensityBars.length
+    ? hBars(signalIntensityBars)
+    : `<p class="placeholder-note">Sem clientes ativos com sinais.</p>`);
 
   const tbody = $("tiRows");
   if (tbody) {

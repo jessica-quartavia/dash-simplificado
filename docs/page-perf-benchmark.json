@@ -1,0 +1,98 @@
+{
+  "generatedAt": "2026-08-21T13:37:38.646Z",
+  "results": [
+    {
+      "page": "executive_summary",
+      "total_ms": 36866,
+      "payload_bytes": 46509,
+      "request_count": 30,
+      "dedup_hits": 21,
+      "sources": [
+        {
+          "source": "clients",
+          "request_count": 4,
+          "dedup_hits": 6,
+          "total_rows": 3429,
+          "fetch_ms": 25355
+        },
+        {
+          "source": "cancellations",
+          "request_count": 1,
+          "dedup_hits": 5,
+          "total_rows": 419,
+          "fetch_ms": 7172
+        },
+        {
+          "source": "client_financial_data",
+          "request_count": 4,
+          "dedup_hits": 4,
+          "total_rows": 3045,
+          "fetch_ms": 19067
+        },
+        {
+          "source": "client_meetings",
+          "request_count": 7,
+          "dedup_hits": 2,
+          "total_rows": 6925,
+          "fetch_ms": 28869
+        },
+        {
+          "source": "manual_meetings",
+          "request_count": 2,
+          "dedup_hits": 1,
+          "total_rows": 1329,
+          "fetch_ms": 7220
+        },
+        {
+          "source": "meeting_attendance",
+          "request_count": 5,
+          "dedup_hits": 1,
+          "total_rows": 4787,
+          "fetch_ms": 27166
+        },
+        {
+          "source": "client_implementation_meeting_date",
+          "request_count": 1,
+          "dedup_hits": 1,
+          "total_rows": 102,
+          "fetch_ms": 4812
+        },
+        {
+          "source": "client_mecanismos",
+          "request_count": 2,
+          "dedup_hits": 1,
+          "total_rows": 1087,
+          "fetch_ms": 9355
+        },
+        {
+          "source": "mecanismos",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 19,
+          "fetch_ms": 6089
+        },
+        {
+          "source": "nps_responses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 292,
+          "fetch_ms": 17930
+        },
+        {
+          "source": "csat_responses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 590,
+          "fetch_ms": 12064
+        },
+        {
+          "source": "nps_sends",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 379,
+          "fetch_ms": 6884
+        }
+      ]
+    }
+  ]
+}
