@@ -7,6 +7,10 @@
 --
 -- Substitui ownership (009) e alinha tabela + Storage.
 -- Idempotente.
+--
+-- Paths reais gravados pela API:
+--   reports/YYYY/MM/<uuid>_<safe_filename>
+-- Ex.: reports/2026/08/abc123_relatorio.pdf
 
 -- ---------------------------------------------------------------------------
 -- Tabela analytics.reports
@@ -25,22 +29,27 @@ CREATE POLICY reports_authenticated_delete
 -- ---------------------------------------------------------------------------
 -- Storage bucket analytics-reports — DELETE authenticated only
 -- ---------------------------------------------------------------------------
+-- Supabase Storage costuma retornar HTTP 400 (não 403) quando RLS nega DELETE.
+-- Policy ampla no bucket (como 006): paths da API sempre ficam em analytics-reports.
 
 DROP POLICY IF EXISTS analytics_reports_authenticated_delete_owned ON storage.objects;
 DROP POLICY IF EXISTS analytics_reports_authenticated_delete ON storage.objects;
+DROP POLICY IF EXISTS analytics_reports_authenticated_delete_corporate ON storage.objects;
 CREATE POLICY analytics_reports_authenticated_delete_corporate
   ON storage.objects
   FOR DELETE
   TO authenticated
-  USING (
-    bucket_id = 'analytics-reports'
-    AND (storage.foldername(name))[1] = 'reports'
-  );
+  USING (bucket_id = 'analytics-reports');
 
 -- Diagnóstico sugerido (read-only):
 -- SELECT id, title, created_by, responsible_email, status, storage_path
 -- FROM analytics.reports
 -- ORDER BY created_at DESC;
+--
+-- SELECT policyname, cmd, qual
+-- FROM pg_policies
+-- WHERE schemaname = 'storage' AND tablename = 'objects'
+--   AND policyname LIKE 'analytics_reports%';
 
 -- Após aplicar, validar:
 -- DELETE /api/reports?id=<uuid> → HTTP 200 + { ok: true, message: "Relatório excluído." }

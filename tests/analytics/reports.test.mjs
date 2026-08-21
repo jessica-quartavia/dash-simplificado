@@ -305,6 +305,10 @@ test("DELETE falha no Storage retorna categoria amigável", async () => {
       error.status = 403;
       error.code = "storage_delete_failed";
       error.category = "storage_delete_failed";
+      error.storageCode = "AccessDenied";
+      error.storageMessage = "new row violates row-level security policy";
+      error.bucket = "analytics-reports";
+      error.storagePath = "reports/2026/08/z.pdf";
       throw error;
     },
     deleteById: async () => {},
@@ -319,6 +323,45 @@ test("DELETE falha no Storage retorna categoria amigável", async () => {
   assert.equal(payload.code, "storage_delete_failed");
   assert.ok(payload.request_id);
   assert.ok(payload.error_category);
+});
+
+test("DELETE storage 400 expõe diagnóstico em dev", async () => {
+  const prev = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  try {
+    const store = {
+      findById: async () => ({
+        id: "rep-400",
+        storage_path: "reports/2026/08/z.pdf",
+        status: "published",
+        created_by: CORP_USER.id,
+      }),
+      deleteFile: async () => {
+        const error = new Error("storage rls");
+        error.status = 400;
+        error.code = "storage_delete_failed";
+        error.storageCode = "AccessDenied";
+        error.storageMessage = "new row violates row-level security policy";
+        error.bucket = "analytics-reports";
+        error.storagePath = "reports/2026/08/z.pdf";
+        throw error;
+      },
+      deleteById: async () => {},
+      toPublicRow: reportsStore.toPublicRow.bind(reportsStore),
+    };
+    const response = await handleReportsRequest(new Request("http://localhost/api/reports?id=rep-400", { method: "DELETE" }), {
+      ...mockAuth(),
+      reportsStore: store,
+    });
+    assert.equal(response.status, 400);
+    const payload = await response.json();
+    assert.equal(payload.storage_status, 400);
+    assert.equal(payload.bucket, "analytics-reports");
+    assert.equal(payload.storage_path, "reports/2026/08/z.pdf");
+    assert.ok(payload.storage_message);
+  } finally {
+    process.env.NODE_ENV = prev;
+  }
 });
 
 test("DELETE remove registro mesmo se storage já não existir", async () => {

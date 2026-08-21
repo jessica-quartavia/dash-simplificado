@@ -3684,6 +3684,183 @@
   max-width: none;
 }
 
+.statistical-page .sc-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle, #333);
+  border-radius: 8px;
+  background: var(--surface-elevated, rgba(255, 255, 255, 0.03));
+}
+
+.statistical-page .sc-toc-link {
+  font-size: 0.82rem;
+  color: var(--text-muted, #aaa);
+  text-decoration: none;
+}
+
+.statistical-page .sc-toc-link:hover {
+  color: var(--accent, #f47920);
+}
+
+.statistical-page .sc-cohort-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin-bottom: 12px;
+}
+
+.statistical-page .sc-cohort-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+}
+
+.statistical-page .sc-cohort-table-wrap {
+  overflow: auto;
+  max-width: 100%;
+}
+
+.statistical-page .sc-cohort-table-wrap th:first-child,
+.statistical-page .sc-cohort-table-wrap td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface, #1a1a1a);
+}
+
+.statistical-page .sc-predict-table .sc-col-obs,
+.statistical-page .sc-predict-table td:last-child {
+  min-width: 220px;
+  max-width: 420px;
+}
+
+.statistical-page .sc-inline-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.statistical-page .sc-subtitle {
+  font-size: 0.95rem;
+  margin: 1rem 0 0.5rem;
+  font-weight: 600;
+}
+
+.statistical-page .sc-health-block {
+  margin-bottom: 1rem;
+}
+
+.statistical-page .sc-health-table-wrap {
+  overflow-x: auto;
+}
+
+.statistical-page .sc-health-disclaimer {
+  font-size: 0.82rem;
+  margin-top: 0.5rem;
+}
+
+.statistical-page .sc-diff-host {
+  margin: 0.5rem 0 1rem;
+}
+
+.statistical-page .sc-diff-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+  font-size: 0.82rem;
+  margin-bottom: 0.75rem;
+}
+
+.statistical-page .sc-diff-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.statistical-page .sc-diff-swatch--active {
+  background: var(--color-success, #16a34a);
+}
+
+.statistical-page .sc-diff-swatch--cancelled {
+  background: var(--color-danger, #dc2626);
+}
+
+.statistical-page .sc-diff-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.statistical-page .sc-diff-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.statistical-page .sc-diff-label {
+  font-size: 0.85rem;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statistical-page .sc-diff-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.statistical-page .sc-diff-bar-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 18px;
+}
+
+.statistical-page .sc-diff-bar {
+  display: block;
+  height: 14px;
+  border-radius: 3px;
+  min-width: 4px;
+  max-width: 100%;
+}
+
+.statistical-page .sc-diff-bar--active {
+  background: var(--color-success, #16a34a);
+}
+
+.statistical-page .sc-diff-bar--cancelled {
+  background: var(--color-danger, #dc2626);
+}
+
+.statistical-page .sc-diff-bar-value {
+  font-size: 0.8rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.statistical-page .sc-association-track span.is-warn {
+  background: var(--color-warning, #f59e0b);
+}
+
+@media (max-width: 1366px) {
+  .statistical-page .sc-diff-row {
+    grid-template-columns: minmax(100px, 160px) 1fr;
+  }
+}
+
 .matrix-row-label-clamp {
   display: -webkit-box;
   -webkit-line-clamp: 2;

@@ -46,9 +46,10 @@ console.log(
       checklist: {
         applySql: "sql/analytics/010_reports_delete_corporate.sql",
         tablePolicy: "FOR DELETE TO authenticated USING (status = 'published')",
-        storagePolicy: "bucket analytics-reports + folder reports/",
+        storagePolicy: "bucket_id = analytics-reports (DELETE authenticated; sem filtro de pasta)",
         anonDelete: "REVOKE DELETE FROM anon",
         handlerOwnershipCheck: "removido — RLS corporativa decide",
+        storage400Note: "Supabase Storage costuma retornar HTTP 400 quando RLS nega DELETE",
       },
       sqlPreview: sql010.split("\n").slice(0, 12).join("\n"),
       liveDelete: reportIdArg

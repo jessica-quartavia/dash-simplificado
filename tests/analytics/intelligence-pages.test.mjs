@@ -137,10 +137,10 @@ test("dashboard router registra novas páginas", () => {
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/ep-performance"], "ep_performance");
 });
 
-test("page contracts — EP com período; temporal/statistical sem período global", () => {
+test("page contracts — EP e statistical com período; temporal sem período global", () => {
   assert.equal(pageShowsPeriodUi("ep_performance"), true);
   assert.equal(pageShowsPeriodUi("temporal_indicators"), false);
-  assert.equal(pageShowsPeriodUi("statistical_crosses"), false);
+  assert.equal(pageShowsPeriodUi("statistical_crosses"), true);
   for (const pageId of ["ep_performance", "temporal_indicators", "statistical_crosses"]) {
     assert.ok(getPageFilterContract(pageId));
   }
@@ -151,7 +151,7 @@ test("page contracts — EP com período; temporal/statistical sem período glob
 
 test("Statistical V1 fidelity checklist presente no frontend", () => {
   const js = readFileSync(resolve(root, "js/statistical-crosses.js"), "utf8");
-  assert.match(js, /Principais pontos de atenção/i);
+  assert.match(js, /Principais descobertas/i);
   assert.match(js, /Kaplan|sobreviv/i);
   assert.match(js, /correla/i);
   assert.match(js, /coorte|cohort/i);
