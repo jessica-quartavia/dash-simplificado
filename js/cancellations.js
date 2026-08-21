@@ -2,9 +2,13 @@ import { onPageChange, getCurrentPageId } from "./navigation.js";
 import { analyticalStatusDisplayLabel } from "../lib/analytics/analytical-cancellation.mjs";
 import {
   STATUS_FILTER_OPTIONS,
+  CANCELLATION_STAGE_FILTER_OPTIONS,
+  NO_RESPONSIBLE_LABEL,
   defaultCancellationFilters,
   filterCancellationClients,
   sortCancellationClients,
+  collectCancellationReasonCategories,
+  collectCancellationResponsibles,
 } from "../lib/analytics/cancellations-filters.mjs";
 import {
   branchFunnelCounts,
@@ -52,6 +56,29 @@ const FILTER_FIELDS = [
   { kind: "search", id: "cxSearch", key: "search" },
   { kind: "period", id: "cxPeriod", fromId: "cxFrom", toId: "cxTo" },
   { kind: "select", id: "cxStatus", key: "status", label: "Status", options: STATUS_FILTER_OPTIONS },
+  {
+    kind: "select",
+    id: "cxStage",
+    key: "cancellationStage",
+    label: "Etapa de cancelamento",
+    options: CANCELLATION_STAGE_FILTER_OPTIONS,
+  },
+  {
+    kind: "select",
+    id: "cxReasonCategory",
+    key: "reasonCategory",
+    label: "Categoria motivo",
+    dynamic: true,
+    allLabel: "Todos",
+  },
+  {
+    kind: "select",
+    id: "cxResponsible",
+    key: "responsible",
+    label: "Responsável",
+    dynamic: true,
+    allLabel: "Todos",
+  },
   { kind: "select", id: "cxEngineer", key: "engineer", label: "EP", dynamic: true, allLabel: "Todos" },
   { kind: "select", id: "cxSegment", key: "segment", label: "Segmento", dynamic: true, allLabel: "Todos" },
   { kind: "select", id: "cxProgram", key: "program", label: "Programa", dynamic: true, allLabel: "Todos" },
@@ -72,6 +99,9 @@ function filtersFromForm() {
     from: $("cxFrom")?.value || "",
     to: $("cxTo")?.value || "",
     status: $("cxStatus")?.value || "all",
+    cancellationStage: $("cxStage")?.value || "all",
+    reasonCategory: $("cxReasonCategory")?.value || "all",
+    responsible: $("cxResponsible")?.value || "all",
     engineer: $("cxEngineer")?.value || "all",
     segment: $("cxSegment")?.value || "all",
     program: normalizeProgramFilter($("cxProgram")?.value || "all"),
@@ -188,6 +218,18 @@ function semesterBars(series) {
 
 function populateFilterOptions() {
   const clients = state.payload?.clients || [];
+  fillDynamicSelect(
+    $("cxReasonCategory"),
+    collectCancellationReasonCategories(clients),
+    "Todos",
+    state.filters.reasonCategory,
+  );
+  fillDynamicSelect(
+    $("cxResponsible"),
+    collectCancellationResponsibles(clients),
+    "Todos",
+    state.filters.responsible,
+  );
   fillDynamicSelect($("cxEngineer"), uniqueSorted(clients.map((c) => c.engineer)), "Todos", state.filters.engineer);
   fillDynamicSelect($("cxSegment"), uniqueSorted(clients.map((c) => c.segment)), "Todos", state.filters.segment);
   fillDynamicSelect($("cxProgram"), programSelectOptions(clients), "Todos", state.filters.program);
@@ -380,6 +422,9 @@ function renderFilters() {
     onBodyReady: (body) => {
       if (state.payload) populateFilterOptions();
       $("cxStatus") && ($("cxStatus").value = state.filters.status);
+      $("cxStage") && ($("cxStage").value = state.filters.cancellationStage || "all");
+      $("cxReasonCategory") && ($("cxReasonCategory").value = state.filters.reasonCategory || "all");
+      $("cxResponsible") && ($("cxResponsible").value = state.filters.responsible || "all");
       $("cxEngineer") && ($("cxEngineer").value = state.filters.engineer);
       $("cxSegment") && ($("cxSegment").value = state.filters.segment);
       $("cxProgram") && ($("cxProgram").value = state.filters.program);

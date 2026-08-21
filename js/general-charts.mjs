@@ -16,6 +16,21 @@ const STATUS_COLORS = {
   "No-show": "#e85d3a",
   Cancelada: "#737373",
   "Sem confirmação": "#c4c4c4",
+  Promotores: "#0a0a0a",
+  Neutros: "#c4c4c4",
+  Detratores: "#e85d3a",
+  "Satisfeitos (5)": "#0a0a0a",
+  "Não satisfeitos (1-4)": "#737373",
+  Resolvido: "#0a0a0a",
+  Aberto: "#d18426",
+  Pendente: "#c4c4c4",
+  Novo: "#737373",
+  Urgente: "#e85d3a",
+  Alta: "#d18426",
+  Média: "#737373",
+  Baixa: "#c4c4c4",
+  "App Pharus": "#0a0a0a",
+  "QV360 Web": "#737373",
 };
 
 export function escapeHtml(value) {
@@ -26,21 +41,73 @@ export function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
-export function hBars(items, limit) {
-  const list = limit ? items.slice(0, limit) : items;
+function colorForLabel(label, fallback = "#737373") {
+  return STATUS_COLORS[label] || fallback;
+}
+
+/** Botão padrão Ver mais / Ver menos para gráficos densos. */
+export function chartExpandButton(chartId, { expanded = false, hidden = false } = {}) {
+  if (hidden) return "";
+  return `<button type="button" class="btn btn-chart btn-chart-expand" data-chart-expand="${escapeHtml(chartId)}" aria-expanded="${expanded ? "true" : "false"}">${expanded ? "Ver menos" : "Ver mais"}</button>`;
+}
+
+/** Renderiza hBars com limite inicial e metadados para expansão. */
+export function hBarsExpandable(items, chartId, { limit = 8, expanded = false, compact = false } = {}) {
+  const list = Array.isArray(items) ? items : [];
+  const canExpand = list.length > limit;
+  const visible = expanded || !canExpand ? list : list.slice(0, limit);
+  return {
+    html: hBars(visible, { compact, wrapLabels: true }),
+    canExpand,
+    total: list.length,
+    limit,
+    chartId,
+    buttonHtml: chartExpandButton(chartId, { expanded, hidden: !canExpand }),
+  };
+}
+
+export function hBars(items, limitOrOptions) {
+  const options =
+    typeof limitOrOptions === "number" ? { limit: limitOrOptions } : limitOrOptions || {};
+  const list = options.limit ? items.slice(0, options.limit) : items;
   const max = Math.max(...list.map((i) => i.count), 1);
   if (!list.length) return `<p class="placeholder-note">Sem dados</p>`;
-  return list
+  const layoutClass = options.compact ? " hbar-layout--compact" : " hbar-layout--wide";
+  const wrapLabels = options.wrapLabels !== false;
+  return `<div class="hbar-list${layoutClass}">${list
     .map((i) => {
       const metric = `${i.count.toLocaleString("pt-BR")} · ${Number(i.percent).toLocaleString("pt-BR")}%`;
       const width = (i.count / max) * 100;
+      const labelClass = wrapLabels ? "hbar-label hbar-label--wrap" : "hbar-label";
       return `<div class="hbar" title="${escapeHtml(i.label)}: ${escapeHtml(metric)}">
-        <div class="hbar-label" title="${escapeHtml(i.label)}">${escapeHtml(i.label)}</div>
+        <div class="${labelClass}" title="${escapeHtml(i.label)}">${escapeHtml(i.label)}</div>
         <div class="hbar-track"><span style="width:${width}%"></span></div>
         <div class="hbar-val">${escapeHtml(metric)}</div>
       </div>`;
     })
-    .join("");
+    .join("")}</div>`;
+}
+
+export function rankedBars(items, { limit = 3, note = "" } = {}) {
+  const list = (items || []).slice(0, limit);
+  if (!list.length) return `<p class="placeholder-note">Sem dados</p>`;
+  const max = Math.max(...list.map((i) => i.count), 1);
+  return `<ol class="ranked-bar-list">${list
+    .map((item, index) => {
+      const width = (item.count / max) * 100;
+      const metric = `${Number(item.count).toLocaleString("pt-BR")} · ${Number(item.percent ?? 0).toLocaleString("pt-BR")}%`;
+      return `<li class="ranked-bar-item">
+        <span class="ranked-bar-item__rank">${index + 1}</span>
+        <div class="ranked-bar-item__body">
+          <div class="ranked-bar-item__head">
+            <span class="ranked-bar-item__label" title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</span>
+            <strong class="ranked-bar-item__metric">${escapeHtml(metric)}</strong>
+          </div>
+          <div class="ranked-bar-item__track"><span style="width:${width}%"></span></div>
+        </div>
+      </li>`;
+    })
+    .join("")}</ol>${note ? `<p class="chart-note">${escapeHtml(note)}</p>` : ""}`;
 }
 
 export function donut(items) {
@@ -52,7 +119,7 @@ export function donut(items) {
   const arcs = items
     .map((item) => {
       const len = (item.count / total) * c;
-      const stroke = STATUS_COLORS[item.label] || "#737373";
+      const stroke = colorForLabel(item.label);
       const circle = `<circle cx="60" cy="60" r="${radius}" fill="none" stroke="${stroke}" stroke-width="14" stroke-dasharray="${len} ${c - len}" stroke-dashoffset="${-offset}" transform="rotate(-90 60 60)"></circle>`;
       offset += len;
       return circle;
@@ -60,7 +127,7 @@ export function donut(items) {
     .join("");
   const legend = items
     .map((item) => {
-      const color = STATUS_COLORS[item.label] || "#737373";
+      const color = colorForLabel(item.label);
       return `<div><i style="background:${color}"></i>${escapeHtml(item.label)} — ${item.count.toLocaleString("pt-BR")} (${Number(item.percent).toLocaleString("pt-BR")}%)</div>`;
     })
     .join("");

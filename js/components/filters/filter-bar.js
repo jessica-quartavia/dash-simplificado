@@ -35,6 +35,13 @@ export function renderFilterBar({
         : optionHtml(field.options, filters[field.key]);
       return `<label>${escapeHtml(field.label)}<select id="${escapeHtml(field.id)}">${options}</select></label>`;
     }
+    if (field.kind === "number") {
+      const val = filters[field.key] ?? field.default ?? "";
+      const min = field.min != null ? ` min="${field.min}"` : "";
+      const max = field.max != null ? ` max="${field.max}"` : "";
+      const step = field.step != null ? ` step="${field.step}"` : "";
+      return `<label>${escapeHtml(field.label)}<input id="${escapeHtml(field.id)}" type="number"${min}${max}${step} value="${escapeHtml(String(val))}" title="${escapeHtml(field.title || "")}" /></label>`;
+    }
     return "";
   });
   const error = periodInvalid
@@ -96,6 +103,18 @@ export function bindFilterBar({
           onChange: () => onChange?.(),
         }),
       );
+      continue;
+    }
+    if (field.kind === "number") {
+      const el = host.querySelector(`#${field.id}`);
+      if (!el) continue;
+      const handler = () => onChange?.();
+      el.addEventListener("input", handler);
+      el.addEventListener("change", handler);
+      cleanups.push(() => {
+        el.removeEventListener("input", handler);
+        el.removeEventListener("change", handler);
+      });
       continue;
     }
     const el = field.id ? host.querySelector(`#${field.id}`) : null;

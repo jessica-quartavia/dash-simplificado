@@ -28,6 +28,8 @@ const state = {
   type: "all",
   selectedFile: null,
   openReportId: null,
+  deleteReportId: null,
+  deleting: false,
 };
 
 let eventsBound = false;
@@ -142,8 +144,14 @@ function renderReportCard(report) {
         <span>${escapeHtml(dateTimeBR(report.createdAt))}</span>
       </div>
       <div class="reports-card-actions">
+        <button type="button" class="btn btn-secondary reports-download-btn" data-download-report="${escapeHtml(report.id)}" data-file-name="${escapeHtml(report.fileName || "")}">
+          Baixar
+        </button>
         <button type="button" class="btn btn-secondary reports-open-btn" data-open-report="${escapeHtml(report.id)}">
-          Abrir relatório
+          Abrir
+        </button>
+        <button type="button" class="btn btn-secondary btn-icon reports-delete-btn" data-delete-report="${escapeHtml(report.id)}" aria-label="Excluir relatório" title="Excluir">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m-1 0v14H9V6h6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
     </article>
@@ -182,6 +190,44 @@ function renderContent() {
     <div id="reports-toast" class="reports-toast" hidden></div>
   `;
   renderToast();
+}
+
+function renderDeleteModal() {
+  const existing = document.getElementById("reports-delete-modal");
+  if (existing) existing.remove();
+  if (!state.deleteReportId) return;
+
+  const report = state.reports.find((item) => item.id === state.deleteReportId);
+  const root = document.getElementById("overlay-root");
+  if (!root) return;
+
+  root.setAttribute("aria-hidden", "false");
+  root.innerHTML = `
+    <div class="reports-modal-backdrop" data-reports-delete-dismiss></div>
+    <div class="reports-modal reports-delete-modal" role="dialog" aria-modal="true" aria-labelledby="reports-delete-title">
+      <header class="reports-modal-head">
+        <h2 id="reports-delete-title">Excluir relatório?</h2>
+      </header>
+      <p class="reports-delete-copy">Essa ação removerá o relatório e seu arquivo.</p>
+      <div class="reports-form-actions">
+        <button type="button" class="btn btn-secondary" data-reports-delete-dismiss>Cancelar</button>
+        <button type="button" class="btn btn-primary reports-delete-confirm" id="reports-delete-confirm"${state.deleting ? " disabled" : ""}>${state.deleting ? "Excluindo…" : "Excluir"}</button>
+      </div>
+    </div>
+  `;
+}
+
+function closeDeleteModal() {
+  state.deleteReportId = null;
+  state.deleting = false;
+  const root = document.getElementById("overlay-root");
+  if (!root) return;
+  if (state.selectedFile) {
+    renderModal();
+    return;
+  }
+  root.innerHTML = "";
+  root.setAttribute("aria-hidden", "true");
 }
 
 function renderModal() {
@@ -272,6 +318,10 @@ function mapApiError(payload, status) {
   if (status === 401) return reportsErrorMessage("unauthorized");
   if (status === 404 && (payload?.code === "reports_api_unavailable" || payload?.code === "local_api_unavailable")) {
     return "Rota /api/reports indisponível no servidor local. Reinicie com npm run dev.";
+  }
+  if (status === 403 || payload?.code === "forbidden") {
+    const extra = payload?.error_category ? ` (${payload.error_category})` : "";
+    return `${payload?.error || "Sem permissão para excluir este relatório."}${extra}`;
   }
   if (payload?.code && reportsErrorMessage(payload.code) !== "Não foi possível consultar os relatórios.") {
     return reportsErrorMessage(payload.code);
@@ -386,6 +436,51 @@ async function submitPublish(event) {
   }
 }
 
+async function downloadReport(reportId, fileName) {
+  if (state.openReportId) return;
+  state.openReportId = reportId;
+  try {
+    const response = await authenticatedFetch(`/api/reports?open=${encodeURIComponent(reportId)}`);
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(mapApiError(payload, response.status));
+    if (!payload.url) throw new Error("Não foi possível gerar o link seguro.");
+    const anchor = document.createElement("a");
+    anchor.href = payload.url;
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    anchor.download = fileName || payload.fileName || "relatorio";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+  } catch (error) {
+    setToast(error instanceof Error ? error.message : "Não foi possível baixar o relatório.", "error");
+  } finally {
+    state.openReportId = null;
+  }
+}
+
+async function deleteReport(reportId) {
+  if (state.deleting) return;
+  state.deleting = true;
+  renderDeleteModal();
+  try {
+    const response = await authenticatedFetch(`/api/reports?id=${encodeURIComponent(reportId)}`, {
+      method: "DELETE",
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(mapApiError(payload, response.status));
+    state.reports = state.reports.filter((item) => item.id !== reportId);
+    closeDeleteModal();
+    renderContent();
+    setToast(payload.message || "Relatório excluído com sucesso.");
+  } catch (error) {
+    setToast(error instanceof Error ? error.message : "Não foi possível excluir o relatório.", "error");
+  } finally {
+    state.deleting = false;
+    if (state.deleteReportId) renderDeleteModal();
+  }
+}
+
 async function openReport(reportId) {
   if (state.openReportId) return;
   state.openReportId = reportId;
@@ -403,9 +498,20 @@ async function openReport(reportId) {
 }
 
 function onContentClick(event) {
+  const downloadBtn = event.target.closest("[data-download-report]");
+  if (downloadBtn) {
+    downloadReport(downloadBtn.getAttribute("data-download-report"), downloadBtn.getAttribute("data-file-name"));
+    return;
+  }
   const openBtn = event.target.closest("[data-open-report]");
   if (openBtn) {
     openReport(openBtn.getAttribute("data-open-report"));
+    return;
+  }
+  const deleteBtn = event.target.closest("[data-delete-report]");
+  if (deleteBtn) {
+    state.deleteReportId = deleteBtn.getAttribute("data-delete-report");
+    renderDeleteModal();
     return;
   }
   if (event.target.id === "reports-empty-publish") {
@@ -431,6 +537,14 @@ function onDocumentClick(event) {
   }
   if (event.target.closest("[data-reports-dismiss]")) {
     if (!state.publishing) closeModal();
+    return;
+  }
+  if (event.target.closest("[data-reports-delete-dismiss]")) {
+    if (!state.deleting) closeDeleteModal();
+    return;
+  }
+  if (event.target.id === "reports-delete-confirm" && state.deleteReportId) {
+    void deleteReport(state.deleteReportId);
     return;
   }
   if (event.target.id === "reports-form" || event.target.closest("#reports-form")) {
@@ -474,6 +588,7 @@ function unmountReports() {
   if (!state.mounted) return;
   state.mounted = false;
   closeModal();
+  closeDeleteModal();
   unbindEvents();
   state.loading = false;
   state.publishing = false;

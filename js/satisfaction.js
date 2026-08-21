@@ -3,6 +3,10 @@ import {
   defaultSatisfactionFilters,
   filterSatisfactionClients,
   sortSatisfactionClients,
+  SATISFACTION_QUARTER_OPTIONS,
+  NPS_CLASSIFICATION_FILTER_OPTIONS,
+  HAS_CSAT_FILTER_OPTIONS,
+  LAST_NPS_BAND_OPTIONS,
 } from "../lib/analytics/satisfaction-filters.mjs";
 import {
   distributionsFromSatisfactionRows,
@@ -46,6 +50,34 @@ let pageRefresh = null;
 
 const FILTER_FIELDS = [
   { kind: "search", id: "sfSearch", key: "search" },
+  {
+    kind: "select",
+    id: "sfQuarter",
+    key: "quarter",
+    label: "Trimestre",
+    options: SATISFACTION_QUARTER_OPTIONS,
+  },
+  {
+    kind: "select",
+    id: "sfNpsClass",
+    key: "npsClassification",
+    label: "Classificação NPS",
+    options: NPS_CLASSIFICATION_FILTER_OPTIONS,
+  },
+  {
+    kind: "select",
+    id: "sfHasCsat",
+    key: "hasCsat",
+    label: "Possui CSAT",
+    options: HAS_CSAT_FILTER_OPTIONS,
+  },
+  {
+    kind: "select",
+    id: "sfLastNps",
+    key: "lastNpsBand",
+    label: "Último NPS",
+    options: LAST_NPS_BAND_OPTIONS,
+  },
   { kind: "select", id: "sfEngineer", key: "engineer", label: "EP", dynamic: true, allLabel: "Todos" },
   { kind: "select", id: "sfProgram", key: "program", label: "Programa", dynamic: true, allLabel: "Todos" },
 ];
@@ -61,6 +93,10 @@ function uniqueSorted(values) {
 function filtersFromForm() {
   return {
     search: $("sfSearch")?.value || "",
+    quarter: $("sfQuarter")?.value || "latest",
+    npsClassification: $("sfNpsClass")?.value || "all",
+    hasCsat: $("sfHasCsat")?.value || "all",
+    lastNpsBand: $("sfLastNps")?.value || "all",
     engineer: $("sfEngineer")?.value || "all",
     program: normalizeProgramFilter($("sfProgram")?.value || "all"),
   };
@@ -251,6 +287,10 @@ function renderFilters() {
     innerHtml: renderFilterBar({ fields, filters: state.filters }),
     onBodyReady: (body) => {
       if (state.payload) populateFilterOptions();
+      $("sfQuarter") && ($("sfQuarter").value = state.filters.quarter || "latest");
+      $("sfNpsClass") && ($("sfNpsClass").value = state.filters.npsClassification || "all");
+      $("sfHasCsat") && ($("sfHasCsat").value = state.filters.hasCsat || "all");
+      $("sfLastNps") && ($("sfLastNps").value = state.filters.lastNpsBand || "all");
       $("sfEngineer") && ($("sfEngineer").value = state.filters.engineer);
       $("sfProgram") && ($("sfProgram").value = state.filters.program);
       unbindFilters = bindFilterBar({

@@ -2,6 +2,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
+    { "source": "/api/executive-summary", "destination": "/api/dashboard?page=executive_summary" },
     { "source": "/api/general-data", "destination": "/api/dashboard?page=general" },
     { "source": "/api/onboarding", "destination": "/api/dashboard?page=journey" },
     { "source": "/api/meetings", "destination": "/api/dashboard?page=meetings" },
@@ -11,6 +12,12 @@
     { "source": "/api/satisfaction", "destination": "/api/dashboard?page=satisfaction" },
     { "source": "/api/cancellations", "destination": "/api/dashboard?page=cancellations" },
     { "source": "/api/renewal", "destination": "/api/dashboard?page=renewal" },
+    { "source": "/api/ep-performance", "destination": "/api/dashboard?page=ep_performance" },
+    { "source": "/api/temporal-indicators", "destination": "/api/dashboard?page=temporal_indicators" },
+    { "source": "/api/statistical-crosses", "destination": "/api/dashboard?page=statistical_crosses" },
+    { "source": "/api/quality", "destination": "/api/dashboard?page=quality" },
+    { "source": "/api/platform-usage", "destination": "/api/dashboard?page=platform_usage" },
+    { "source": "/api/support", "destination": "/api/dashboard?page=support" },
     { "source": "/api/analytics/catalog", "destination": "/api/analytics?action=catalog" },
     { "source": "/api/analytics/snapshot/refresh", "destination": "/api/analytics?action=refresh" },
     { "source": "/api/analytics/snapshot", "destination": "/api/analytics?action=snapshot" }

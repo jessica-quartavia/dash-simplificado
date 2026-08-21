@@ -204,12 +204,98 @@ test("storage path organizado e filename sanitizado", () => {
   assert.equal(path, "reports/2026/08/abc_relatorio-clientes.pdf");
 });
 
+test("DELETE remove registro e arquivo do storage", async () => {
+  let deletedStoragePath = null;
+  let deletedId = null;
+  const store = {
+    findById: async () => ({
+      id: "rep-1",
+      storage_path: "reports/2026/08/id_relatorio.pdf",
+      file_name: "relatorio.pdf",
+      status: "published",
+      created_by: CORP_USER.id,
+    }),
+    deleteFile: async ({ storagePath }) => {
+      deletedStoragePath = storagePath;
+    },
+    deleteById: async (id) => {
+      deletedId = id;
+    },
+    toPublicRow: reportsStore.toPublicRow.bind(reportsStore),
+  };
+  const response = await handleReportsRequest(new Request("http://localhost/api/reports?id=rep-1", { method: "DELETE" }), {
+    ...mockAuth(),
+    reportsStore: store,
+  });
+  assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.equal(payload.ok, true);
+  assert.equal(deletedStoragePath, "reports/2026/08/id_relatorio.pdf");
+  assert.equal(deletedId, "rep-1");
+});
+
+test("DELETE sem id retorna 400", async () => {
+  const response = await handleReportsRequest(new Request("http://localhost/api/reports", { method: "DELETE" }), mockAuth());
+  assert.equal(response.status, 400);
+});
+
+test("DELETE por outro usuário retorna 403", async () => {
+  const store = {
+    findById: async () => ({
+      id: "rep-x",
+      storage_path: "reports/2026/08/x.pdf",
+      status: "published",
+      created_by: "00000000-0000-0000-0000-000000000099",
+    }),
+    deleteFile: async () => {},
+    deleteById: async () => {},
+    toPublicRow: reportsStore.toPublicRow.bind(reportsStore),
+  };
+  const response = await handleReportsRequest(new Request("http://localhost/api/reports?id=rep-x", { method: "DELETE" }), {
+    ...mockAuth(),
+    reportsStore: store,
+  });
+  assert.equal(response.status, 403);
+  const payload = await response.json();
+  assert.equal(payload.code, "forbidden");
+  assert.ok(payload.request_id);
+});
+
+test("DELETE remove registro mesmo se storage já não existir", async () => {
+  let deletedId = null;
+  const store = {
+    findById: async () => ({
+      id: "rep-2",
+      storage_path: "reports/2026/08/missing.pdf",
+      file_name: "missing.pdf",
+      status: "published",
+      created_by: CORP_USER.id,
+    }),
+    deleteFile: async () => {},
+    deleteById: async (id) => {
+      deletedId = id;
+    },
+    toPublicRow: reportsStore.toPublicRow.bind(reportsStore),
+  };
+  const response = await handleReportsRequest(new Request("http://localhost/api/reports?id=rep-2", { method: "DELETE" }), {
+    ...mockAuth(),
+    reportsStore: store,
+  });
+  assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.equal(deletedId, "rep-2");
+  assert.match(payload.message, /excluído/i);
+});
+
 test("frontend readonly responsável e router", () => {
   const source = readFileSync(resolve(root, "js/reports.js"), "utf8");
   const app = readFileSync(resolve(root, "js/app.js"), "utf8");
   assert.match(source, /readonly/);
   assert.match(source, /getUserEmail/);
   assert.match(source, /onPageChange/);
+  assert.match(source, /Baixar/);
+  assert.match(source, /Excluir relatório/);
+  assert.match(source, /method: "DELETE"/);
   assert.match(app, /bootReports/);
 });
 

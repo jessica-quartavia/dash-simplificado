@@ -20,6 +20,8 @@ const browserSyntaxTargets = [
   "js/onboarding.js",
   "js/patrimonial-plan.js",
   "js/mechanisms.js",
+  "js/platform-usage.js",
+  "js/support.js",
   "js/navigation.js",
   "js/pages.js",
   "js/page-navigation.js",

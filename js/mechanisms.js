@@ -120,6 +120,7 @@ function currentSummary() {
   const summary = summarizeMechanismRows(rows, {
     catalog: state.payload?.catalog || [],
     portfolioCount: portfolioSize(portfolio),
+    consolidationQuality: state.payload?.metadata?.consolidationQuality || null,
   });
   summary.months = filterMechanismMonthSeries(state.payload?.clients || [], state.filters);
   summary.byEngineer = summarizeEngineerBars(rows, portfolio);
@@ -137,7 +138,8 @@ function kpiCard(label, value, note, options = {}) {
   if (options.compact) classes.push("kpi-card-compact");
   if (options.highlight) classes.push("kpi-card-highlight");
   if (options.featured) classes.push("kpi-card-featured");
-  return `<article class="${classes.join(" ")}">
+  const titleAttr = options.title ? ` title="${escapeHtml(options.title)}"` : "";
+  return `<article class="${classes.join(" ")}"${titleAttr}>
     <div class="kpi-label">${escapeHtml(label)}</div>
     <div class="kpi-value">${value}</div>
     ${note ? `<div class="kpi-note">${escapeHtml(note)}</div>` : ""}
@@ -182,6 +184,55 @@ function populateFilterOptions(host) {
   fillMultiSelectOptions(host, mechanismField, mechanismOptions, state.filters.mechanism);
 }
 
+function clientsWithMechanismsLabel(summary, quality) {
+  const mode = summary?.consolidationMode || quality?.clients?.consolidationMode;
+  if (mode === "partial") return "Clientes únicos com mecanismos (parcial)";
+  if (mode === "full") return "Clientes únicos com mecanismos";
+  return "Clientes com mecanismos";
+}
+
+function consolidatedTooltip(metadata) {
+  const sources = metadata?.sources || ["BASE QV"];
+  const temporal = metadata?.consolidationQuality?.temporalScope?.note || "";
+  return `Visão consolidada ${sources.join(" + ")}. ${temporal}`.trim();
+}
+
+function renderQualityAccordion(quality) {
+  if (!quality) return "";
+  const clients = quality.clients || {};
+  const links = quality.links || {};
+  const types = quality.mechanisms || {};
+  const crosswalk = quality.mechanismCrosswalk || {};
+  const confirmed = (crosswalk.confirmed || [])
+    .slice(0, 8)
+    .map((row) => `<li>${escapeHtml(row.baseQv)} → ${escapeHtml(row.appPharus)} · ${escapeHtml(row.canonicalName || row.decision)}</li>`)
+    .join("");
+  const probable = (crosswalk.probable || [])
+    .slice(0, 6)
+    .map((row) => `<li>${escapeHtml(row.baseQv)} ↔ ${escapeHtml(row.appPharus)} · revisar</li>`)
+    .join("");
+
+  return `
+    <details class="mech-quality-panel">
+      <summary>Qualidade da consolidação das fontes</summary>
+      <div class="mech-quality-panel__body">
+        <div class="mech-quality-grid">
+          <article><span>matchedInBoth</span><strong>${fmt.format(clients.matchedInBoth ?? clients.presentInBothSources ?? 0)}</strong></article>
+          <article><span>baseQvOnly</span><strong>${fmt.format(clients.baseQvOnly ?? clients.qvOnly ?? 0)}</strong></article>
+          <article><span>unmatchedAppPharus</span><strong>${fmt.format(clients.unmatchedAppPharus ?? clients.pharusOnly ?? 0)}</strong></article>
+          <article><span>ambiguous (fora)</span><strong>${fmt.format(clients.ambiguous ?? clients.ambiguousMatches ?? 0)}</strong></article>
+          <article><span>consolidatedUniquePeople</span><strong>${fmt.format(clients.consolidatedUniquePeople ?? clients.consolidated ?? 0)}</strong></article>
+          <article><span>modo</span><strong>${escapeHtml(clients.consolidationMode || "—")}</strong></article>
+          <article><span>rawSum (risco dup.)</span><strong>${fmt.format(clients.rawSum ?? 0)}</strong></article>
+          <article><span>Overlap vínculos</span><strong>${fmt.format(links.overlapRemoved || 0)}</strong></article>
+        </div>
+        ${confirmed ? `<h4>Mecanismos equivalentes confirmados</h4><ul class="mech-quality-list">${confirmed}</ul>` : ""}
+        ${probable ? `<h4>Mecanismos possivelmente equivalentes</h4><ul class="mech-quality-list">${probable}</ul>` : ""}
+        <p class="mech-quality-note">Catálogo consolidado: ${fmt.format(types.consolidatedCatalog || 0)} tipos (${fmt.format(types.baseQvCatalog || 0)} BASE QV + ${fmt.format(types.pharusCatalog || 0)} App Pharus).</p>
+      </div>
+    </details>`;
+}
+
 function renderSuccess() {
   const content = $("page-content");
   if (!content) return;
@@ -191,30 +242,37 @@ function renderSuccess() {
   const start = (state.page - 1) * state.pageSize;
   const pageRows = rows.slice(start, start + state.pageSize);
   const retro = state.payload?.metadata?.retroactiveNote || "";
+  const meta = state.payload?.metadata || {};
+  const quality = meta.consolidationQuality;
+  const percentScope = quality?.implementationPercentScope?.primaryLabel || "";
+  const temporalNote = quality?.temporalScope?.note || "";
+  const sourceTip = consolidatedTooltip(meta);
 
   content.innerHTML = `
     ${state.error ? `<p class="page-inline-error">${escapeHtml(state.error)}</p>` : ""}
     <section class="section-block">
-      <h2>Visão da implementação</h2>
-      <p>Vínculos únicos cliente × mecanismo na BASE QV, no recorte filtrado. O padrão é clientes ativos.</p>
+      <h2>Implementação de Mecanismos</h2>
+      <p>Visão consolidada — BASE QV + App Pharus. Vínculos deduplicados por cliente e mecanismo canônico.</p>
       <div class="kpi-row kpi-row-primary">
-        ${kpiCard("Mecanismos implementados", fmt.format(summary.implementedMechanisms), "Status implementado após deduplicação", { highlight: true, featured: true })}
-        ${kpiCard("Em andamento", fmt.format(summary.inProgressMechanisms), "Status em andamento")}
-        ${kpiCard("Percentual implementado", pctLabel(summary.implementationPercent), `${fmt.format(summary.implementedMechanisms)} de ${fmt.format(summary.availableMechanisms)} vínculos`)}
-        ${kpiCard("Mecanismo mais utilizado", escapeHtml(summary.topMechanismName), `${fmt.format(summary.topMechanismClients)} clientes`)}
+        ${kpiCard(clientsWithMechanismsLabel(summary, quality), fmt.format(summary.clientsWithMechanisms), coverageLine(summary.coverage), { highlight: true, featured: true, title: sourceTip })}
+        ${kpiCard("Clientes com mecanismo implementado", fmt.format(summary.clientsWithImplementedMechanism), `${pctLabel(summary.implementationPercent)} do recorte`, { highlight: true, title: sourceTip })}
+        ${kpiCard("Mecanismos implementados", fmt.format(summary.implementedMechanisms), "Vínculos distintos (cliente + mecanismo)", { title: sourceTip })}
+        ${kpiCard("Em andamento", fmt.format(summary.inProgressMechanisms), "Somente status consolidável", { title: sourceTip })}
+        ${kpiCard("Implementações recentes", fmt.format(summary.recentClients), temporalNote || "Últimos 30 dias (BASE QV — implemented_at)", { title: sourceTip })}
       </div>
     </section>
 
     <section class="section-block">
-      <h2>Cobertura</h2>
-      <p>A lacuna faz parte da leitura. Números baixos não são omitidos.</p>
+      <h2>Catálogo consolidado</h2>
       <div class="kpi-row">
-        ${kpiCard("Clientes com mecanismos — BASE QV", fmt.format(summary.clientsWithMechanisms), coverageLine(summary.coverage))}
-        ${kpiCard("Tipos de mecanismos", fmt.format(summary.typesUsed), `${fmt.format(summary.catalogSize)} no catálogo`)}
-        ${kpiCard("Tipos sem utilização", fmt.format(summary.typesUnused), `${fmt.format(summary.typesUnused)} de ${fmt.format(summary.catalogSize)} tipos do catálogo`)}
-        ${kpiCard("Clientes com implementação recente", fmt.format(summary.recentClients), retro, { compact: true })}
+        ${kpiCard("Tipos de mecanismos", fmt.format(summary.catalogSize), `${fmt.format(summary.typesUsed)} tipos utilizados`, { title: "Catálogo consolidado entre BASE QV e App Pharus." })}
+        ${kpiCard("Tipos sem utilização", fmt.format(summary.typesUnused), `${fmt.format(summary.typesUnused)} de ${fmt.format(summary.catalogSize)} tipos`, { compact: true })}
+        ${kpiCard("Mecanismo mais utilizado", escapeHtml(summary.topMechanismName), `${fmt.format(summary.topMechanismClients)} clientes distintos`, { compact: true, title: sourceTip })}
+        ${kpiCard("Percentual implementado", pctLabel(summary.implementationPercent), `${fmt.format(summary.clientsWithImplementedMechanism)} de ${fmt.format(summary.clientsWithMechanisms)} clientes · ${percentScope}`, { compact: true, title: sourceTip })}
       </div>
     </section>
+
+    ${renderQualityAccordion(quality)}
 
     <section class="section-block">
       <h2>Perfil dos mecanismos</h2>
@@ -230,7 +288,7 @@ function renderSuccess() {
       <h2>Evolução</h2>
       <article class="chart-card">
         <h3>Implementações por mês</h3>
-        <p>${escapeHtml(retro)}</p>
+        <p>${escapeHtml(temporalNote || retro)}</p>
         <div id="mkChartMonths"></div>
       </article>
     </section>
@@ -411,7 +469,7 @@ function renderStateView() {
     return;
   }
   if (state.loading && !state.payload) {
-    content.innerHTML = `<div class="gd-status" role="status"><strong>Carregando mecanismos</strong><span>Consultando a BASE QV…</span></div>`;
+    content.innerHTML = `<div class="gd-status" role="status"><strong>Carregando mecanismos</strong><span>Consolidando BASE QV e App Pharus…</span></div>`;
     return;
   }
   if (state.payload && !portfolioSize(state.payload.portfolio || [])) {

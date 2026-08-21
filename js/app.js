@@ -9,7 +9,14 @@ import { bootFinancialUpdates } from "./financial-updates.js";
 import { bootSatisfaction } from "./satisfaction.js";
 import { bootCancellations } from "./cancellations.js";
 import { bootRenewal } from "./renewal.js";
+import { bootEpPerformance } from "./ep-performance.js";
+import { bootTemporalIndicators } from "./temporal-indicators.js";
 import { bootReports } from "./reports.js";
+import { bootStatisticalCrosses } from "./statistical-crosses.js";
+import { bootQuality } from "./quality.js";
+import { bootExecutiveSummary } from "./executive-summary.js";
+import { bootPlatformUsage } from "./platform-usage.js";
+import { bootSupport } from "./support.js";
 import { bootScrollToTop } from "./components/scroll-to-top.js";
 
 let navigationReady = false;
@@ -49,6 +56,7 @@ function startPortal() {
   navigationReady = true;
   bootLog("shell mounting");
   safeBoot("navigation", bootNavigation);
+  safeBoot("executive-summary", bootExecutiveSummary);
   safeBoot("general-data", bootGeneralData);
   safeBoot("meetings", bootMeetings);
   safeBoot("onboarding", bootOnboarding);
@@ -58,7 +66,13 @@ function startPortal() {
   safeBoot("satisfaction", bootSatisfaction);
   safeBoot("cancellations", bootCancellations);
   safeBoot("renewal", bootRenewal);
+  safeBoot("ep-performance", bootEpPerformance);
+  safeBoot("temporal-indicators", bootTemporalIndicators);
   safeBoot("reports", bootReports);
+  safeBoot("statistical-crosses", bootStatisticalCrosses);
+  safeBoot("quality", bootQuality);
+  safeBoot("platform-usage", bootPlatformUsage);
+  safeBoot("support", bootSupport);
   document.getElementById("app")?.setAttribute("data-ready", "true");
   bootLog("shell mounted");
   safeBoot("scroll-top", bootScrollToTop);

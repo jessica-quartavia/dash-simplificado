@@ -21,8 +21,14 @@ body[data-auth="authenticated"] #auth-root {
 
 #portal-root {
   min-height: 100vh;
+  --sidebar-width: 260px;
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  transition: grid-template-columns 180ms ease;
+}
+
+body.sidebar-collapsed #portal-root {
+  --sidebar-width: 48px;
 }
 
 .sidebar {
@@ -35,12 +41,120 @@ body[data-auth="authenticated"] #auth-root {
   position: sticky;
   top: 0;
   overflow: auto;
+  width: var(--sidebar-width);
+  transition: width 180ms ease, padding 180ms ease;
+}
+
+.sidebar-collapse-toggle {
+  position: absolute;
+  top: 10px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  z-index: 2;
+  padding: 0;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  line-height: 1;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.sidebar-collapse-toggle:hover {
+  color: var(--foreground);
+  border-color: color-mix(in srgb, var(--color-coral) 35%, var(--border));
+  background: var(--surface-secondary);
+}
+
+.sidebar-collapse-icon {
+  display: block;
+  transition: transform 180ms ease;
+}
+
+body.sidebar-collapsed .sidebar-collapse-icon {
+  transform: rotate(180deg);
+}
+
+body.sidebar-collapsed .sidebar {
+  padding-inline: 6px;
+  overflow: hidden;
+}
+
+body.sidebar-collapsed .sidebar-brand {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  height: auto;
+  overflow: visible;
+  margin-bottom: var(--space-2);
+  padding: 4px 0 8px;
+  border-bottom: 0;
+  display: flex;
+  justify-content: center;
+}
+
+body.sidebar-collapsed .sidebar-brand-text {
+  display: none;
+}
+
+body.sidebar-collapsed .sidebar-logo {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+body.sidebar-collapsed .sidebar-nav {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+body.sidebar-collapsed .sidebar-collapse-toggle {
+  position: static;
+  margin: 6px auto 10px;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #portal-root,
+  .sidebar,
+  .sidebar-collapse-icon {
+    transition: none;
+  }
 }
 
 .sidebar-brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   padding: 0 var(--space-1) var(--space-3);
   border-bottom: 1px solid var(--border);
   margin-bottom: var(--space-3);
+}
+
+.sidebar-logo {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.sidebar-brand-text {
+  min-width: 0;
+  flex: 1;
 }
 
 .sidebar-brand strong {
@@ -71,6 +185,70 @@ body[data-auth="authenticated"] #auth-root {
   color: var(--muted);
   margin: 0 0 var(--space-1);
   padding: 0 var(--space-1);
+}
+
+.nav-group-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.nav-group-toggle:hover {
+  background: var(--surface-secondary);
+  color: var(--foreground);
+}
+
+.nav-group-chevron {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.nav-group.is-open .nav-group-chevron {
+  transform: rotate(45deg);
+}
+
+.nav-group .nav-list {
+  overflow: hidden;
+  transition: max-height 0.18s ease, opacity 0.18s ease;
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+  padding: 0 0 0 8px;
+}
+
+.nav-group.is-open .nav-list {
+  max-height: 640px;
+  opacity: 1;
+  margin: 2px 0 var(--space-2);
+}
+
+.nav-group .nav-list[hidden] {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-group-chevron,
+  .nav-group .nav-list {
+    transition: none;
+  }
 }
 
 .nav-list {
@@ -296,11 +474,25 @@ body[data-auth="authenticated"] #auth-root {
 .page-view[data-page="meetings"] .page-content,
 .page-view[data-page="patrimonial_plan"] .page-content,
 .page-view[data-page="mechanisms"] .page-content,
-.page-view[data-page="journey"] .page-content {
+.page-view[data-page="journey"] .page-content,
+.page-view[data-page="executive_summary"] .page-content {
   background: transparent;
   border: none;
   box-shadow: none;
   padding: 0;
+}
+
+.page-view[data-page="executive_summary"] .page-content {
+  min-height: 0;
+}
+
+.page-view[data-page="executive_summary"] .page-filters {
+  display: none;
+  margin: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
 }
 
 .placeholder-note {
@@ -319,6 +511,29 @@ body[data-auth="authenticated"] #auth-root {
 @media (max-width: 1024px) {
   #portal-root {
     grid-template-columns: 1fr;
+  }
+
+  body.sidebar-collapsed #portal-root {
+    --sidebar-width: min(280px, 86vw);
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar-collapse-toggle {
+    display: none;
+  }
+
+  body.sidebar-collapsed .sidebar-brand,
+  body.sidebar-collapsed .sidebar-nav {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  body.sidebar-collapsed .sidebar {
+    width: min(280px, 86vw);
+    padding: var(--space-3) var(--space-2) var(--space-4);
   }
 
   .nav-toggle {

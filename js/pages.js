@@ -26,7 +26,8 @@ export const PAGES = [
     navLabel: "Resumo Executivo",
     title: "Resumo Executivo",
     eyebrow: "Visão geral",
-    description: "Síntese da carteira e dos sinais mais relevantes para decisão.",
+    description: "Visão consolidada dos principais indicadores da jornada do cliente.",
+    implemented: true,
   },
   {
     id: "general",
@@ -105,8 +106,11 @@ export const PAGES = [
     group: "journey",
     navLabel: "Uso da Plataforma",
     title: "Uso da Plataforma",
+    titleSuffix: "🔧",
+    constructionNotice: "Este dashboard está em construção e pode passar por ajustes durante a validação.",
     eyebrow: "Jornada",
     description: "Acesso, recência e frequência de uso da plataforma.",
+    implemented: true,
   },
   {
     id: "financial_updates",
@@ -126,8 +130,11 @@ export const PAGES = [
     group: "journey",
     navLabel: "Acionamentos",
     title: "Acionamentos",
+    titleSuffix: "🔧",
+    constructionNotice: "Este dashboard está em construção e pode passar por ajustes durante a validação.",
     eyebrow: "Jornada",
     description: "Volume, temas e andamento dos acionamentos.",
+    implemented: true,
   },
   {
     id: "satisfaction",
@@ -171,6 +178,7 @@ export const PAGES = [
     title: "Performance do Engenheiro Patrimonial",
     eyebrow: "Gestão",
     description: "Cobertura e sinais por carteira de engenheiro patrimonial.",
+    implemented: true,
   },
   {
     id: "temporal_indicators",
@@ -181,6 +189,7 @@ export const PAGES = [
     title: "Indicadores Temporais",
     eyebrow: "Inteligência",
     description: "Mudanças recentes, recência e sinais de atenção.",
+    implemented: true,
   },
   {
     id: "statistical_crosses",
@@ -190,7 +199,8 @@ export const PAGES = [
     navLabel: "Análises Estatísticas",
     title: "Análises Estatísticas",
     eyebrow: "Inteligência",
-    description: "Associações, sobrevivência e descobertas da carteira. A metodologia completa será migrada nesta página.",
+    description: "Associações, sobrevivência e descobertas da carteira.",
+    implemented: true,
   },
   {
     id: "quality",
@@ -200,7 +210,9 @@ export const PAGES = [
     navLabel: "Qualidade dos Dados",
     title: "Qualidade dos Dados",
     eyebrow: "Sistema",
-    description: "Completude, lacunas e impacto analítico das bases.",
+    description:
+      "Esta página é utilizada pelo time de Inteligência para analisar cobertura, disponibilidade e confiabilidade dos dados utilizados no portal — identificar lacunas de preenchimento, entender cobertura e apoiar priorização de melhorias.",
+    implemented: true,
   },
 ];
 

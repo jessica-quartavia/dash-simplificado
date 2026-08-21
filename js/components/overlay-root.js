@@ -115,12 +115,26 @@ export function measurePopoverSize(popover, fallbackWidth = 300, fallbackHeight 
   return { width, height };
 }
 
+export function eventPathIncludes(event, nodes = []) {
+  const list = (nodes || []).filter(Boolean);
+  if (!list.length) return false;
+  const path = typeof event?.composedPath === "function" ? event.composedPath() : [];
+  if (path.length) return list.some((node) => path.includes(node));
+  const target = event?.target;
+  return Boolean(target && list.some((node) => node === target || node.contains?.(target)));
+}
+
 export function createOverlayBackdrop(onDismiss) {
   const backdrop = document.createElement("div");
   backdrop.className = "drp-backdrop";
   backdrop.dataset.drpBackdrop = "";
   backdrop.setAttribute("aria-hidden", "true");
-  backdrop.addEventListener("click", onDismiss);
+  const dismiss = (event) => {
+    event?.preventDefault?.();
+    onDismiss?.(event);
+  };
+  backdrop.addEventListener("pointerdown", dismiss);
+  backdrop.addEventListener("click", dismiss);
   return backdrop;
 }
 

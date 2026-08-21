@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   ANALYTICAL_STATUS,
+  buildAnalyticalCancellationMap,
   getAnalyticalCancellation,
   isActiveClient,
   isCancelledClient,
@@ -115,4 +116,30 @@ test("distrato texto Assinado sem data → Cancelado efetivado sem data", () => 
 test("Não assinado não conta como distrato efetivado", () => {
   const fromCancel = getAnalyticalCancellation({ distrato: "Não assinado" });
   assert.equal(fromCancel.isCancelled, false);
+});
+
+test("archived não entra no mapa analítico padrão", () => {
+  const archived = getAnalyticalCancellation({
+    churn_efetivado_at: "2024-05-01",
+    archived_at: "2024-06-01",
+  });
+  assert.equal(archived.isCancelled, false);
+});
+
+test("data_churn sozinha efetiva cancelamento", () => {
+  const consolidated = resolveConsolidatedCancellation(null, { data_churn: "2024-02-15" });
+  assert.equal(consolidated.isCancelled, true);
+  assert.equal(consolidated.source, "clients.data_churn");
+});
+
+test("cliente não é contado duas vezes na união", () => {
+  const cancellations = [
+    { client_id: "1", churn_efetivado_at: "2024-01-01", archived_at: null },
+    { client_id: "1", distrato_assinado_at: "2024-02-01", archived_at: null },
+  ];
+  const clients = [{ id: "1", data_churn: "2024-03-01" }];
+  const { map, audit } = buildAnalyticalCancellationMap(cancellations, clients);
+  assert.equal(map.size, 1);
+  assert.equal(audit.totalDistinct, 1);
+  assert.ok(audit.multipleSources >= 1);
 });

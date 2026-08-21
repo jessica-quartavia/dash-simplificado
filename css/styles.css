@@ -40,8 +40,8 @@
   --space-6: 48px;
   --space-8: 64px;
 
-  --radius: 8px;
-  --radius-sm: 6px;
+  --radius-sm: 8px;
+  --radius: 12px;
   --radius-pill: 9999px;
 
   --shadow-soft: 0 1px 2px rgb(10 10 10 / 0.04);

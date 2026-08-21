@@ -116,7 +116,13 @@ test("analytics retorna 404 para action inexistente", async () => {
 test("dashboard handlers map é explícito (sem import dinâmico arbitrário)", () => {
   assert.equal(DASHBOARD_PAGE_HANDLERS.general.handler, handleGeneralDataRequest);
   assert.equal(DASHBOARD_PAGE_HANDLERS.meetings.handler, handleMeetingsRequest);
-  assert.equal(Object.keys(DASHBOARD_PAGE_HANDLERS).length, 9);
+  assert.equal(Object.keys(DASHBOARD_PAGE_HANDLERS).length, 16);
+  assert.equal(DASHBOARD_LEGACY_PATHS["/api/ep-performance"], "ep_performance");
+  assert.equal(DASHBOARD_LEGACY_PATHS["/api/temporal-indicators"], "temporal_indicators");
+  assert.equal(DASHBOARD_LEGACY_PATHS["/api/statistical-crosses"], "statistical_crosses");
+  assert.equal(DASHBOARD_LEGACY_PATHS["/api/quality"], "quality");
+  assert.equal(DASHBOARD_LEGACY_PATHS["/api/platform-usage"], "platform_usage");
+  assert.equal(DASHBOARD_LEGACY_PATHS["/api/support"], "support");
   assert.equal(Object.keys(ANALYTICS_ACTION_HANDLERS).length, 3);
 });
 

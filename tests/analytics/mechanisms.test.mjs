@@ -17,6 +17,7 @@ import {
   summarizeMechanismRows,
 } from "../../lib/analytics/mechanism-metrics.mjs";
 import { buildMechanismsPayload, toPublicMechanismsPayload } from "../../lib/analytics/mechanisms.mjs";
+import { consolidateMechanismsPayload } from "../../lib/analytics/mechanisms/mechanisms-consolidation.mjs";
 
 const now = new Date("2026-08-19T12:00:00.000Z");
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -42,7 +43,7 @@ function fixturePayload() {
       { id: "old", client_id: "1", mecanismo_id: "m1", status: "apto", created_at: "2026-01-01", implemented_at: null },
       { id: "new", client_id: "1", mecanismo_id: "m1", status: "concluido", created_at: "2026-08-01", implemented_at: "2026-08-10" },
       { id: "p2", client_id: "1", mecanismo_id: "m2", status: "iniciado", created_at: "2026-07-01", implemented_at: null },
-      { id: "b1", client_id: "2", mecanismo_id: "m1", status: "implementado", created_at: "2026-02-01", implemented_at: "2026-02-10" },
+      { id: "b1", client_id: "2", mecanismo_id: "m1", status: "concluido", created_at: "2026-02-01", implemented_at: "2026-02-10" },
       { id: "c1", client_id: "3", mecanismo_id: "m3", status: "apto", created_at: "2026-03-01", implemented_at: null },
     ],
   });
@@ -90,13 +91,12 @@ test("dedupe client_id + mecanismo_id mantém o mais recente", () => {
   assert.equal(kept.status, "concluido");
 });
 
-test("status oficial: disponível = vínculos; implementado e em andamento pelo compute da V1", () => {
+test("status oficial BASE QV: concluido=Implementado; apto e em andamento reconhecidos", () => {
   assert.equal(normalizeMechanismStatus("apto").label, "Apto");
-  assert.equal(normalizeMechanismStatus("eligible").label, "Apto");
   assert.equal(normalizeMechanismStatus("iniciado").label, "Em andamento");
   assert.equal(normalizeMechanismStatus("em andamento").label, "Em andamento");
   assert.equal(normalizeMechanismStatus("concluido").label, "Implementado");
-  assert.equal(normalizeMechanismStatus("implementado").label, "Implementado");
+  assert.equal(normalizeMechanismStatus("implementado").label, "Não informado");
   assert.equal(normalizeMechanismStatus("xyz").label, "Não informado");
 
   const payload = fixturePayload();
@@ -108,17 +108,30 @@ test("status oficial: disponível = vínculos; implementado e em andamento pelo 
   const summary = summarizeMechanismRows(rows, { catalog: payload.catalog, portfolioCount: 3 });
   assert.equal(summary.availableMechanisms, 3);
   assert.equal(summary.implementedMechanisms, 2);
+  assert.equal(summary.clientsWithImplementedMechanism, 2);
   assert.equal(summary.inProgressMechanisms, 1);
-  assert.equal(summary.implementationPercent, 66.7);
+  assert.equal(summary.implementationPercent, 100);
 });
 
-test("percentual implementado usa vínculos, não clientes", () => {
+test("percentual implementado usa clientes, não vínculos", () => {
   const summary = summarizeMechanismRows(
-    [{ available: 4, implemented: 1, inProgress: 0, mechanisms: [] }],
+    [{
+      clientId: "1",
+      available: 4,
+      implemented: 1,
+      mechanisms: [
+        { status: "Implementado", mechanismId: "m1" },
+        { status: "Apto", mechanismId: "m2" },
+        { status: "Apto", mechanismId: "m3" },
+        { status: "Apto", mechanismId: "m4" },
+      ],
+    }],
     { catalog: [], portfolioCount: 10 },
   );
-  assert.equal(summary.implementationPercent, 25);
+  assert.equal(summary.implementationPercent, 100);
+  assert.equal(summary.implementationPercentLinks, 25);
   assert.equal(summary.clientsWithMechanisms, 1);
+  assert.equal(summary.clientsWithImplementedMechanism, 1);
 });
 
 test("filtros recortam clientes e o denominador de cobertura", () => {
@@ -148,6 +161,8 @@ test("EP usa a carteira do engenheiro como denominador", () => {
 test("métricas Não Levar não vão para a UI nem para o payload público de tempos", () => {
   const ui = readFileSync(resolve(ROOT, "js/mechanisms.js"), "utf8");
   assert.equal(ui.includes("Tempo médio até a primeira implementação"), false);
+  assert.equal(ui.includes("mkSource"), false);
+  assert.equal(ui.includes('label: "Fonte"'), false);
   assert.equal(ui.includes("Tempo até a primeira implementação"), false);
   assert.equal(ui.includes("Dias desde a última implementação"), false);
   assert.equal(ui.includes("Somente clientes ativos"), false);
@@ -167,13 +182,20 @@ test("métricas Não Levar não vão para a UI nem para o payload público de te
   ]);
 });
 
-test("payload público não envia joins internos nem consulta Pharus", () => {
+test("payload público inclui metadados consolidados sem PII de matching", () => {
   const payload = fixturePayload();
-  const publicPayload = toPublicMechanismsPayload(payload);
+  const consolidated = consolidateMechanismsPayload({
+    baseQvPayload: payload,
+    pharusPayload: null,
+    clientsRaw: [{ id: "1", email: "a@test.com" }],
+  });
+  const publicPayload = toPublicMechanismsPayload(consolidated);
   assert.equal(publicPayload.defaultStatusFilter, "active");
-  assert.equal(publicPayload.metadata.pharusConsulted, false);
+  assert.equal(publicPayload.metadata.consolidated, true);
   assert.equal(publicPayload.metadata.sources.includes("BASE QV"), true);
   assert.ok(publicPayload.clients[0].mechanisms[0].mechanismId);
   assert.equal(publicPayload.clients[0].mechanisms[0].rawStatus, undefined);
   assert.equal(publicPayload.clients[0].entryDate, undefined);
+  assert.equal(publicPayload.clients[0].userEmail, undefined);
+  assert.ok(publicPayload.metadata.consolidationQuality);
 });

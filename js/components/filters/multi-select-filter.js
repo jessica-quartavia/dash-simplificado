@@ -10,9 +10,16 @@ import {
 } from "../../../lib/analytics/filters/multiselect.mjs";
 import {
   ensureOverlayRoot,
+  eventPathIncludes,
   mountPopoverPortal,
+  positionAnchoredPopover,
   unmountPopoverPortal,
 } from "../overlay-root.js";
+import {
+  closeOpenDropdown,
+  registerOpenDropdown,
+  unregisterOpenDropdown,
+} from "../dropdown-coordinator.js";
 
 function hiddenInput(id, value) {
   return `<input type="hidden" id="${escapeHtml(id)}" value="${escapeHtml(value || "")}" />`;
@@ -82,7 +89,7 @@ export function renderMultiSelectFilter({
   `;
 }
 
-function updateSummary(root, field, filters) {
+function updateSummary(root, field) {
   const summaryEl = root.querySelector("[data-msf-summary]");
   if (!summaryEl) return;
   const selected = readMultiSelectFieldValue(field);
@@ -96,9 +103,15 @@ function updateSummary(root, field, filters) {
   allBtn?.classList.toggle("is-active", selected.length === 0);
 }
 
-function closePopover(root, state) {
+/** Exportado para testes — clique dentro do trigger/popover/backdrop não fecha. */
+export function isMultiselectInsideEvent(event, { root, trigger, popover, backdrop } = {}) {
+  return eventPathIncludes(event, [root, trigger, popover, backdrop]);
+}
+
+function closePopover(root, field, state, { focusTrigger = false } = {}) {
   if (!state.open) return;
   state.open = false;
+  unregisterOpenDropdown(state.controller);
   const trigger = root.querySelector("[data-msf-trigger]");
   const popover = root.querySelector("[data-msf-popover]");
   trigger?.setAttribute("aria-expanded", "false");
@@ -109,27 +122,51 @@ function closePopover(root, state) {
   });
   state.overlayRoot = null;
   state.backdrop = null;
-  document.removeEventListener("keydown", state.onKeyDown);
+  document.removeEventListener("pointerdown", state.onPointerDown, true);
+  document.removeEventListener("keydown", state.onKeyDown, true);
+  window.removeEventListener("scroll", state.onViewportChange, true);
+  window.removeEventListener("resize", state.onViewportChange);
+  if (focusTrigger) trigger?.focus?.();
 }
 
 function openPopover(root, field, state) {
   const trigger = root.querySelector("[data-msf-trigger]");
   const popover = root.querySelector("[data-msf-popover]");
   if (!trigger || !popover) return;
+
+  closeOpenDropdown();
   state.open = true;
   trigger.setAttribute("aria-expanded", "true");
   const mounted = mountPopoverPortal({
     anchor: trigger,
     popover,
     overlayRoot: ensureOverlayRoot(),
-    onDismiss: () => closePopover(root, state),
+    onDismiss: () => closePopover(root, field, state),
   });
   state.overlayRoot = mounted.overlayRoot;
   state.backdrop = mounted.backdrop;
-  state.onKeyDown = (event) => {
-    if (event.key === "Escape") closePopover(root, state);
+
+  state.onPointerDown = (event) => {
+    if (!state.open) return;
+    if (isMultiselectInsideEvent(event, { root, trigger, popover, backdrop: state.backdrop })) return;
+    closePopover(root, field, state);
   };
-  document.addEventListener("keydown", state.onKeyDown);
+  state.onKeyDown = (event) => {
+    if (event.key !== "Escape" || !state.open) return;
+    event.preventDefault();
+    event.stopPropagation();
+    closePopover(root, field, state, { focusTrigger: true });
+  };
+  state.onViewportChange = () => {
+    if (!state.open || popover.hidden) return;
+    positionAnchoredPopover({ anchor: trigger, popover });
+  };
+
+  document.addEventListener("pointerdown", state.onPointerDown, true);
+  document.addEventListener("keydown", state.onKeyDown, true);
+  window.addEventListener("scroll", state.onViewportChange, true);
+  window.addEventListener("resize", state.onViewportChange);
+  registerOpenDropdown(state.controller);
 }
 
 export function bindMultiSelectFilter({
@@ -142,31 +179,52 @@ export function bindMultiSelectFilter({
     || host?.querySelector?.("[data-msf-root]");
   if (!root) return () => {};
 
-  const state = { open: false, overlayRoot: null, backdrop: null, onKeyDown: null };
-  updateSummary(root, field, filters);
+  const state = {
+    open: false,
+    overlayRoot: null,
+    backdrop: null,
+    onPointerDown: null,
+    onKeyDown: null,
+    onViewportChange: null,
+    controller: {
+      close: () => closePopover(root, field, state),
+    },
+  };
+
+  ensureOverlayRoot();
+  const popover = root.querySelector("[data-msf-popover]");
+  if (popover && popover.parentNode === root) {
+    ensureOverlayRoot().appendChild(popover);
+    popover.hidden = true;
+  }
+
+  updateSummary(root, field);
 
   const trigger = root.querySelector("[data-msf-trigger]");
-  const popover = root.querySelector("[data-msf-popover]");
   const allBtn = root.querySelector("[data-msf-all]");
 
-  const applySelection = (nextValues) => {
+  const applySelection = (nextValues, { notify = true } = {}) => {
     writeMultiSelectFieldValue(field, nextValues);
-    updateSummary(root, field, filters);
-    closePopover(root, state);
-    onChange?.(nextValues);
+    updateSummary(root, field);
+    if (notify) onChange?.(nextValues);
   };
 
   const onTriggerClick = (event) => {
     event.preventDefault();
-    if (state.open) closePopover(root, state);
+    event.stopPropagation();
+    if (state.open) closePopover(root, field, state);
     else openPopover(root, field, state);
   };
 
-  const onAllClick = () => applySelection([]);
+  const onAllClick = (event) => {
+    event.preventDefault();
+    applySelection([]);
+  };
 
   const onOptionChange = (event) => {
     const checkbox = event.target;
     if (!checkbox?.matches?.("[data-msf-option]")) return;
+    event.stopPropagation();
     const current = new Set(readMultiSelectFieldValue(field));
     const value = checkbox.value;
     if (checkbox.checked) current.add(value);
@@ -174,15 +232,21 @@ export function bindMultiSelectFilter({
     applySelection([...current]);
   };
 
+  const onPopoverPointerDown = (event) => {
+    event.stopPropagation();
+  };
+
   trigger?.addEventListener("click", onTriggerClick);
   allBtn?.addEventListener("click", onAllClick);
   popover?.addEventListener("change", onOptionChange);
+  popover?.addEventListener("pointerdown", onPopoverPointerDown);
 
   return () => {
-    closePopover(root, state);
+    closePopover(root, field, state);
     trigger?.removeEventListener("click", onTriggerClick);
     allBtn?.removeEventListener("click", onAllClick);
     popover?.removeEventListener("change", onOptionChange);
+    popover?.removeEventListener("pointerdown", onPopoverPointerDown);
   };
 }
 
@@ -210,5 +274,5 @@ export function fillMultiSelectOptions(host, field, options, currentValues) {
       })
       .join("");
   }
-  updateSummary(root, field, {});
+  updateSummary(root, field);
 }

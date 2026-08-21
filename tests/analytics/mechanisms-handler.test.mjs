@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { handleMechanismsRequest } from "../../lib/analytics/mechanisms-handler.mjs";
+import { consolidateMechanismsPayload } from "../../lib/analytics/mechanisms/mechanisms-consolidation.mjs";
 
 function request() {
   return new Request("http://localhost/api/mechanisms", {
@@ -50,20 +51,26 @@ test("sucesso devolve payload enxuto com default Ativos", async () => {
   const response = await handleMechanismsRequest(request(), {
     requireCorporateAuth: async () => null,
     dataConfigurationError: () => null,
-    computeMechanismsPayload: async () => ({
-      generatedAt: "2026-08-19T12:00:00.000Z",
-      catalog: [{ id: "m1", name: "Previdência", dimension: "Proteção" }],
-      portfolio: [{ engineer: "EP1", segment: "PRIVATE", analyticalStatus: "Ativo", count: 10 }],
-      clients: [{
-        clientId: "1",
-        clientName: "Ana",
-        analyticalStatus: "Ativo",
-        available: 1,
-        implemented: 1,
-        mechanisms: [{ mechanismId: "m1", name: "Previdência", status: "Implementado", dimension: "Proteção", implementedMonth: "2026-08" }],
-        daysToFirstImplementation: 12,
-      }],
-      timing: { totalMs: 12, pharusConsulted: false, pharusMs: 0 },
+    computeMechanismsPayload: async () => consolidateMechanismsPayload({
+      baseQvPayload: {
+        generatedAt: "2026-08-19T12:00:00.000Z",
+        defaultStatusFilter: "active",
+        catalog: [{ id: "m1", name: "Previdência", dimension: "Proteção" }],
+        portfolio: [{ engineer: "EP1", segment: "PRIVATE", analyticalStatus: "Ativo", count: 10 }],
+        clients: [{
+          clientId: "1",
+          clientName: "Ana",
+          analyticalStatus: "Ativo",
+          available: 1,
+          implemented: 1,
+          inProgress: 0,
+          eligible: 0,
+          mechanisms: [{ mechanismId: "m1", name: "Previdência", status: "Implementado", dimension: "Proteção", implementedMonth: "2026-08", sources: ["base_qv"] }],
+        }],
+        metadata: { sources: ["BASE QV"], consolidated: true },
+      },
+      pharusPayload: null,
+      clientsRaw: [{ id: "1" }],
     }),
   });
   assert.equal(response.status, 200);
@@ -71,5 +78,5 @@ test("sucesso devolve payload enxuto com default Ativos", async () => {
   assert.equal(body.defaultStatusFilter, "active");
   assert.equal(body.clients[0].clientId, "1");
   assert.equal(body.clients[0].daysToFirstImplementation, undefined);
-  assert.equal(body.timing.pharusConsulted, false);
+  assert.equal(body.metadata.consolidated, true);
 });

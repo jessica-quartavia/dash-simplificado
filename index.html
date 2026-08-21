@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Analytics QuartaVia</title>
-    <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -41,9 +42,22 @@
     <div id="portal-root" hidden>
       <div class="nav-backdrop" id="nav-backdrop"></div>
       <aside class="sidebar" id="sidebar">
+        <button
+          type="button"
+          class="sidebar-collapse-toggle"
+          id="sidebar-collapse-toggle"
+          aria-label="Ocultar menu lateral"
+          aria-expanded="true"
+          title="Ocultar menu lateral"
+        >
+          <span class="sidebar-collapse-icon" aria-hidden="true">‹</span>
+        </button>
         <div class="sidebar-brand">
-          <strong>Analytics QuartaVia</strong>
-          <span>Jornada do Cliente</span>
+          <img class="sidebar-logo" src="favicon.ico" alt="" width="28" height="28" decoding="async" />
+          <div class="sidebar-brand-text">
+            <strong>Analytics QuartaVia</strong>
+            <span>Jornada do Cliente</span>
+          </div>
         </div>
         <nav id="sidebar-nav" class="sidebar-nav" aria-label="Navegação principal"></nav>
       </aside>
