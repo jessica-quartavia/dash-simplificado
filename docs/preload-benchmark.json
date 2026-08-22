@@ -1,0 +1,54 @@
+{
+  "rows": [
+    {
+      "pageId": "executive_summary",
+      "label": "executive_summary",
+      "coldMs": 8500,
+      "preloadSimMs": 8,
+      "warmOpenMs": 1,
+      "gainPct": 100
+    },
+    {
+      "pageId": "general",
+      "label": "general",
+      "coldMs": 120,
+      "preloadSimMs": 14,
+      "warmOpenMs": 0,
+      "gainPct": 100
+    },
+    {
+      "pageId": "meetings",
+      "label": "meetings",
+      "coldMs": 7400,
+      "preloadSimMs": 14,
+      "warmOpenMs": 0,
+      "gainPct": 100
+    },
+    {
+      "pageId": "mechanisms",
+      "label": "mechanisms",
+      "coldMs": 2100,
+      "preloadSimMs": 15,
+      "warmOpenMs": 0,
+      "gainPct": 100
+    },
+    {
+      "pageId": "cancellations",
+      "label": "cancellations",
+      "coldMs": 900,
+      "preloadSimMs": 15,
+      "warmOpenMs": 0,
+      "gainPct": 100
+    },
+    {
+      "pageId": "satisfaction",
+      "label": "satisfaction",
+      "coldMs": 400,
+      "preloadSimMs": 15,
+      "warmOpenMs": 0,
+      "gainPct": 100
+    }
+  ],
+  "preloadTotalMs": 604,
+  "concurrency": 1
+}

@@ -42,7 +42,8 @@ const els = {};
 const AUTH_CACHE_KEY = "qv:authAccess";
 const AUTH_CACHE_TTL_MS = 60 * 60 * 1000;
 const INTENDED_HASH_KEY = "qv:intendedHash";
-const GET_SESSION_TIMEOUT_MS = 20000;
+const GET_SESSION_TIMEOUT_MS = 15000;
+const BOOT_AUTH_TIMEOUT_MS = 15000;
 
 const isDev =
   location.hostname === "localhost" ||
@@ -55,7 +56,7 @@ function $(id) {
 
 function logAuthDiag(label, extra = {}) {
   if (!isDev) return;
-  console.info(`[AuthDiag] ${label}`, extra);
+  console.info(`[Boot] ${label}`, extra);
 }
 
 function setAuthState(next) {
@@ -252,6 +253,7 @@ function renderLoginPage(message = "") {
   if (els.app) els.app.hidden = true;
   showPanel("login");
   setLoginMessage(message);
+  hideAuthErrorActions();
   resetGoogleButton();
 }
 
@@ -271,11 +273,13 @@ function renderAuthError(message, { allowRetry = true } = {}) {
   if (els.gate) els.gate.hidden = false;
   if (els.app) els.app.hidden = true;
   showPanel("login");
-  setLoginMessage(message || "Erro ao verificar o acesso.");
-  if (allowRetry && authSupabase?.auth) {
-    bootReady = true;
+  setLoginMessage(message || "Não foi possível verificar o acesso.");
+  if (allowRetry) {
+    showAuthErrorActions();
+    bootReady = Boolean(authSupabase?.auth);
     resetGoogleButton();
   } else {
+    hideAuthErrorActions();
     bootReady = false;
     setGoogleButtonEnabled(false);
   }
@@ -345,10 +349,43 @@ function setLoginMessage(text) {
   if (!text) {
     els.message.hidden = true;
     els.message.textContent = "";
+    hideAuthErrorActions();
     return;
   }
   els.message.hidden = false;
   els.message.textContent = text;
+}
+
+function ensureAuthErrorActions() {
+  if (els.errorActions) return;
+  const wrap = document.createElement("div");
+  wrap.id = "auth-error-actions";
+  wrap.className = "auth-error-actions";
+  wrap.hidden = true;
+  wrap.innerHTML = `
+    <button type="button" class="btn btn-secondary" id="auth-retry">Tentar novamente</button>
+    <button type="button" class="btn btn-ghost" id="auth-gate-sign-out">Sair</button>
+  `;
+  els.login?.appendChild(wrap);
+  els.errorActions = wrap;
+  $("auth-retry")?.addEventListener("click", () => {
+    hideAuthErrorActions();
+    void bootAuth(bootOptions);
+  });
+  $("auth-gate-sign-out")?.addEventListener("click", () => {
+    void signOut().finally(() => {
+      window.location.assign(`${window.location.pathname}${window.location.search}`);
+    });
+  });
+}
+
+function showAuthErrorActions() {
+  ensureAuthErrorActions();
+  if (els.errorActions) els.errorActions.hidden = false;
+}
+
+function hideAuthErrorActions() {
+  if (els.errorActions) els.errorActions.hidden = true;
 }
 
 function friendlyAuthError(err) {
@@ -364,7 +401,7 @@ function friendlyAuthError(err) {
     return "Configuração de autenticação inválida.";
   }
   if (code === "AUTH_TIMEOUT" || lower.includes("excedeu")) {
-    return "A verificação de sessão demorou demais. Recarregue a página.";
+    return "Não foi possível verificar seu acesso. Tente novamente.";
   }
   if (lower.includes("popup") && (lower.includes("closed") || lower.includes("cancel"))) {
     return "Login cancelado. Tente novamente.";
@@ -741,10 +778,23 @@ export async function bootAuth(options = {}) {
   cacheElements();
   bindUi();
   renderAuthLoading();
+  logAuthDiag("start");
 
+  try {
+    await withTimeout(bootAuthInner(), BOOT_AUTH_TIMEOUT_MS, "bootAuth");
+  } catch (err) {
+    lastBootError = err;
+    bootReady = Boolean(authSupabase?.auth);
+    console.error("[auth] boot failed:", err);
+    renderAuthError(friendlyAuthError(err), { allowRetry: true });
+  }
+}
+
+async function bootAuthInner() {
   const callbackError = detectAuthCallbackError();
 
   try {
+    logAuthDiag("auth config start");
     const config = await loadPublicConfig();
     const createClient = resolveCreateClient();
     authSupabase = createClient(config.authSupabaseUrl, config.authSupabaseAnonKey, {
@@ -755,19 +805,20 @@ export async function bootAuth(options = {}) {
         flowType: "pkce",
       },
     });
+    logAuthDiag("auth client ready");
 
     bindAuthListener();
 
+    logAuthDiag("getSession start");
     const sessionResult = await withTimeout(
       authSupabase.auth.getSession(),
       GET_SESSION_TIMEOUT_MS,
       "getSession",
     );
+    logAuthDiag("getSession done", { hasSession: Boolean(sessionResult?.data?.session) });
 
     const { data, error } = sessionResult;
     if (error) throw error;
-
-    logAuthDiag("session resolved", { hasSession: Boolean(data.session) });
 
     cleanAuthParamsFromUrl();
     bootReady = true;
@@ -777,6 +828,13 @@ export async function bootAuth(options = {}) {
       return;
     }
 
+    if (!data.session) {
+      logAuthDiag("no session — login");
+      renderLoginPage("");
+      return;
+    }
+
+    logAuthDiag("corporate check");
     const cache = readAuthCache();
     const cacheFresh =
       cache &&
@@ -795,20 +853,20 @@ export async function bootAuth(options = {}) {
 
     const verifiedSession = await verifyStoredSession(data.session);
     if (!verifiedSession) {
+      if (authState === "error" || authState === "unauthorizedDomain") return;
       if (!data.session && !callbackError) renderLoginPage("");
       return;
     }
 
     const applied = await applySession(verifiedSession);
     if (applied.ok) {
-      logAuthDiag("corporate access ok");
+      logAuthDiag("mount shell pending");
       notifyAuthenticated();
     }
   } catch (err) {
     lastBootError = err;
     bootReady = Boolean(authSupabase?.auth);
-    console.error("[auth] boot failed:", err);
-    renderAuthError(friendlyAuthError(err), { allowRetry: Boolean(authSupabase?.auth) });
+    throw err;
   }
 }
 

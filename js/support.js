@@ -135,6 +135,14 @@ function renderExpandableChart(containerId, toggleId, chartKey, items) {
   if (toggle) toggle.innerHTML = chart.buttonHtml;
 }
 
+function renderClientCell(ticket) {
+  const label = ticket.clientDisplay || ticket.clientLabel || "Não identificado";
+  const muted = label === "—";
+  const cls = muted ? "support-client-cell support-client-cell--muted" : "support-client-cell";
+  const titleAttr = label.length > 28 ? ` title="${escapeHtml(label)}"` : "";
+  return `<td class="${cls}"${titleAttr}><span class="support-client-cell__text">${escapeHtml(label)}</span></td>`;
+}
+
 function resolutionLabel(hours) {
   if (hours == null || !Number.isFinite(Number(hours))) return "Sem Dados";
   return `${fmt.format(Math.round(Number(hours)))} h`;
@@ -164,8 +172,7 @@ function renderSuccess() {
         ${kpiCard("Urgentes", fmt.format(summary.urgentTickets))}
         ${kpiCard("Tempo médio de resolução", resolutionLabel(summary.medianResolutionHours))}
       </div>
-      <div class="kpi-row kpi-row-secondary">
-        ${kpiCard("Escalou problema", fmt.format(summary.escalatedTickets), "Prioridade Urgente ou Alta")}
+      <div class="kpi-row kpi-row-secondary support-kpi-row--compact">
         ${kpiCard("Top área", summary.topArea || "—", summary.topAreaCount ? `${fmt.format(summary.topAreaCount)} tickets` : "")}
         ${kpiCard("Top tipo", summary.topType || "—", summary.topTypeCount ? `${fmt.format(summary.topTypeCount)} tickets` : "")}
       </div>
@@ -214,7 +221,7 @@ function renderSuccess() {
               <th data-sort="priority">Prioridade</th>
               <th data-sort="status">Status</th>
               <th data-sort="requester">Solicitante</th>
-              <th data-sort="primaryClientName">Cliente</th>
+              <th data-sort="clientDisplay">Cliente</th>
               <th>Título</th>
             </tr>
           </thead>
@@ -226,7 +233,7 @@ function renderSuccess() {
               <td>${escapeHtml(t.priority)}</td>
               <td>${escapeHtml(t.status)}</td>
               <td>${escapeHtml(t.requester)}</td>
-              <td>${escapeHtml(t.primaryClientName || t.clientLabel || (t.clientIdentified ? "Identificado" : "—"))}</td>
+              ${renderClientCell(t)}
               <td>${escapeHtml(t.title)}</td>
             </tr>`).join("")}
           </tbody>

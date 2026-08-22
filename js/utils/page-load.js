@@ -25,6 +25,9 @@ const CACHE_TTL_MS = {
 const pageCache = new Map();
 const inflight = new Map();
 let fetchAbortController = null;
+let preloadAbortController = null;
+let foregroundFetches = 0;
+const foregroundListeners = new Set();
 
 function perfEnabled() {
   return typeof location !== "undefined" && location.search.includes("perfDebug=1");
@@ -43,6 +46,47 @@ export function resetPageFetchContext() {
   fetchAbortController = new AbortController();
 }
 
+export function resetPreloadFetchContext() {
+  preloadAbortController?.abort();
+  preloadAbortController = new AbortController();
+}
+
+function getPreloadSignal() {
+  if (!preloadAbortController) resetPreloadFetchContext();
+  return preloadAbortController.signal;
+}
+
+export function isForegroundBusy() {
+  return foregroundFetches > 0;
+}
+
+export function subscribeForegroundBusy(listener) {
+  if (typeof listener !== "function") return () => {};
+  foregroundListeners.add(listener);
+  listener(foregroundFetches);
+  return () => foregroundListeners.delete(listener);
+}
+
+function notifyForegroundBusy(count) {
+  for (const listener of foregroundListeners) {
+    try {
+      listener(count);
+    } catch (error) {
+      console.error("[page-load] foreground listener", error);
+    }
+  }
+}
+
+function bumpForeground(delta) {
+  foregroundFetches = Math.max(0, foregroundFetches + delta);
+  notifyForegroundBusy(foregroundFetches);
+}
+
+function dispatchPageReady(pageId) {
+  if (typeof document === "undefined") return;
+  document.dispatchEvent(new CustomEvent("page:ready", { detail: { pageId } }));
+}
+
 export function getFetchSignal() {
   if (!fetchAbortController) resetPageFetchContext();
   return fetchAbortController.signal;
@@ -56,6 +100,35 @@ export function clearPageCache(pageId = null) {
   for (const key of pageCache.keys()) {
     if (key.startsWith(`${pageId}::`)) pageCache.delete(key);
   }
+}
+
+export function clearAllPageCacheAndInflight() {
+  pageCache.clear();
+  inflight.clear();
+  resetPageFetchContext();
+  resetPreloadFetchContext();
+}
+
+export function isPageCacheValid(pageId, url) {
+  const key = cacheKey(pageId, url);
+  const cached = pageCache.get(key);
+  return Boolean(cached && Date.now() - cached.timestamp < cacheTtl(pageId));
+}
+
+export function getPageInflight(pageId, url) {
+  return inflight.get(cacheKey(pageId, url)) || null;
+}
+
+export function getPageCacheMeta(pageId, url) {
+  const key = cacheKey(pageId, url);
+  const cached = pageCache.get(key);
+  if (!cached) return null;
+  return {
+    cachedAt: cached.timestamp,
+    ageMs: Date.now() - cached.timestamp,
+    ttlMs: cacheTtl(pageId),
+    valid: Date.now() - cached.timestamp < cacheTtl(pageId),
+  };
 }
 
 function assertNavigationFresh(pageId, generationAtStart) {
@@ -77,17 +150,23 @@ export function canCommitToPage(pageId, generationAtStart) {
 
 const FORCE_FETCH_OPTIONS = { cache: "no-store" };
 
-export async function fetchPageJson(url, { force = false, pageId = null } = {}) {
-  const activePageId = pageId || getCurrentPageId();
-  const generationAtStart = getPageGeneration();
-  const key = cacheKey(activePageId, url);
+async function fetchPageJsonInternal(url, {
+  pageId,
+  force = false,
+  preload = false,
+  generationAtStart = null,
+  assertNavigation = true,
+  signal = null,
+} = {}) {
+  const key = cacheKey(pageId, url);
   const started = performance.now();
 
   if (!force) {
     const cached = pageCache.get(key);
-    if (cached && Date.now() - cached.timestamp < cacheTtl(activePageId)) {
+    if (cached && Date.now() - cached.timestamp < cacheTtl(pageId)) {
       if (perfEnabled()) {
-        console.info(`[Perf] page=${activePageId} cache=hit url=${url} ageMs=${Date.now() - cached.timestamp}`);
+        const tag = preload ? "preload" : "page";
+        console.info(`[Perf] ${tag}=${pageId} cache=hit url=${url} ageMs=${Date.now() - cached.timestamp}`);
       }
       return structuredClone(cached.data);
     }
@@ -99,16 +178,18 @@ export async function fetchPageJson(url, { force = false, pageId = null } = {}) 
   }
 
   const target = force ? `${url}${url.includes("?") ? "&" : "?"}force=1&_=${Date.now()}` : url;
-  const signal = getFetchSignal();
+  const fetchSignal = signal || (preload ? getPreloadSignal() : getFetchSignal());
 
   const promise = (async () => {
     const response = await authenticatedFetch(target, {
-      signal,
+      signal: fetchSignal,
       ...(force ? FORCE_FETCH_OPTIONS : {}),
     });
     const networkMs = Math.round(performance.now() - started);
     const payload = await response.json().catch(() => ({}));
-    assertNavigationFresh(activePageId, generationAtStart);
+    if (assertNavigation) {
+      assertNavigationFresh(pageId, generationAtStart ?? getPageGeneration());
+    }
 
     if (!response.ok) {
       const err = new Error(payload.error || "Não foi possível carregar os dados.");
@@ -121,8 +202,9 @@ export async function fetchPageJson(url, { force = false, pageId = null } = {}) 
     pageCache.set(key, { data: payload, timestamp: Date.now() });
     const bytes = JSON.stringify(payload).length;
     if (perfEnabled()) {
+      const tag = preload ? "preload" : "page";
       console.info(
-        `[Perf] page=${activePageId} network=${networkMs}ms bytes=${bytes} url=${url}${force ? " force=1" : ""}`,
+        `[Perf] ${tag}=${pageId} network=${networkMs}ms bytes=${bytes} url=${url}${force ? " force=1" : ""}`,
       );
     }
     return payload;
@@ -141,6 +223,37 @@ export async function fetchPageJson(url, { force = false, pageId = null } = {}) 
 
   inflight.set(key, promise);
   return promise;
+}
+
+export async function fetchPageJson(url, { force = false, pageId = null } = {}) {
+  const activePageId = pageId || getCurrentPageId();
+  const generationAtStart = getPageGeneration();
+  bumpForeground(1);
+  try {
+    return await fetchPageJsonInternal(url, {
+      pageId: activePageId,
+      force,
+      preload: false,
+      generationAtStart,
+      assertNavigation: true,
+    });
+  } finally {
+    bumpForeground(-1);
+    if (!isForegroundBusy() && activePageId === getCurrentPageId()) {
+      dispatchPageReady(activePageId);
+    }
+  }
+}
+
+/** Preload silencioso — compartilha cache/inflight, sem force e sem assert de navegação. */
+export async function fetchPageJsonPreload(url, { pageId }) {
+  if (!pageId) throw new Error("pageId obrigatório para preload.");
+  return fetchPageJsonInternal(url, {
+    pageId,
+    force: false,
+    preload: true,
+    assertNavigation: false,
+  });
 }
 
 export function mapLoadError(error) {

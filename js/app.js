@@ -1,23 +1,4 @@
 import { bootAuth } from "./auth.mjs";
-import { bootNavigation } from "./navigation.js";
-import { bootGeneralData } from "./general-data.js";
-import { bootMeetings } from "./meetings.js";
-import { bootOnboarding } from "./onboarding.js";
-import { bootPatrimonialPlan } from "./patrimonial-plan.js";
-import { bootMechanisms } from "./mechanisms.js";
-import { bootFinancialUpdates } from "./financial-updates.js";
-import { bootSatisfaction } from "./satisfaction.js";
-import { bootCancellations } from "./cancellations.js";
-import { bootRenewal } from "./renewal.js";
-import { bootEpPerformance } from "./ep-performance.js";
-import { bootTemporalIndicators } from "./temporal-indicators.js";
-import { bootReports } from "./reports.js";
-import { bootStatisticalCrosses } from "./statistical-crosses.js";
-import { bootQuality } from "./quality.js";
-import { bootExecutiveSummary } from "./executive-summary.js";
-import { bootPlatformUsage } from "./platform-usage.js";
-import { bootSupport } from "./support.js";
-import { bootScrollToTop } from "./components/scroll-to-top.js";
 
 let navigationReady = false;
 
@@ -39,6 +20,14 @@ function safeBoot(label, fn) {
   }
 }
 
+async function safeBootAsync(label, fn) {
+  try {
+    await fn();
+  } catch (error) {
+    console.error(`[Boot] ${label} failed`, error);
+  }
+}
+
 function bootAssistantNonBlocking() {
   void import("./assistant/assistant-ui.js")
     .then(({ bootAssistant }) => {
@@ -51,40 +40,57 @@ function bootAssistantNonBlocking() {
     });
 }
 
-function startPortal() {
+async function startPortal() {
   if (navigationReady) return;
   navigationReady = true;
-  bootLog("shell mounting");
+  bootLog("mount shell");
+
+  await import("./page-preloader.js").then(({ bootPagePreloader }) => bootPagePreloader());
+
+  const { bootNavigation } = await import("./navigation.js");
   safeBoot("navigation", bootNavigation);
-  safeBoot("executive-summary", bootExecutiveSummary);
-  safeBoot("general-data", bootGeneralData);
-  safeBoot("meetings", bootMeetings);
-  safeBoot("onboarding", bootOnboarding);
-  safeBoot("patrimonial-plan", bootPatrimonialPlan);
-  safeBoot("mechanisms", bootMechanisms);
-  safeBoot("financial-updates", bootFinancialUpdates);
-  safeBoot("satisfaction", bootSatisfaction);
-  safeBoot("cancellations", bootCancellations);
-  safeBoot("renewal", bootRenewal);
-  safeBoot("ep-performance", bootEpPerformance);
-  safeBoot("temporal-indicators", bootTemporalIndicators);
-  safeBoot("reports", bootReports);
-  safeBoot("statistical-crosses", bootStatisticalCrosses);
-  safeBoot("quality", bootQuality);
-  safeBoot("platform-usage", bootPlatformUsage);
-  safeBoot("support", bootSupport);
+
+  const pageBoots = [
+    ["executive-summary", () => import("./executive-summary.js").then((m) => m.bootExecutiveSummary())],
+    ["general-data", () => import("./general-data.js").then((m) => m.bootGeneralData())],
+    ["meetings", () => import("./meetings.js").then((m) => m.bootMeetings())],
+    ["onboarding", () => import("./onboarding.js").then((m) => m.bootOnboarding())],
+    ["patrimonial-plan", () => import("./patrimonial-plan.js").then((m) => m.bootPatrimonialPlan())],
+    ["mechanisms", () => import("./mechanisms.js").then((m) => m.bootMechanisms())],
+    ["financial-updates", () => import("./financial-updates.js").then((m) => m.bootFinancialUpdates())],
+    ["satisfaction", () => import("./satisfaction.js").then((m) => m.bootSatisfaction())],
+    ["cancellations", () => import("./cancellations.js").then((m) => m.bootCancellations())],
+    ["renewal", () => import("./renewal.js").then((m) => m.bootRenewal())],
+    ["ep-performance", () => import("./ep-performance.js").then((m) => m.bootEpPerformance())],
+    ["temporal-indicators", () => import("./temporal-indicators.js").then((m) => m.bootTemporalIndicators())],
+    ["reports", () => import("./reports.js").then((m) => m.bootReports())],
+    ["statistical-crosses", () => import("./statistical-crosses.js").then((m) => m.bootStatisticalCrosses())],
+    ["quality", () => import("./quality.js").then((m) => m.bootQuality())],
+    ["platform-usage", () => import("./platform-usage.js").then((m) => m.bootPlatformUsage())],
+    ["support", () => import("./support.js").then((m) => m.bootSupport())],
+  ];
+
+  await Promise.all(pageBoots.map(([label, boot]) => safeBootAsync(label, boot)));
+
   document.getElementById("app")?.setAttribute("data-ready", "true");
   bootLog("shell mounted");
-  safeBoot("scroll-top", bootScrollToTop);
+  safeBoot("scroll-top", () => {
+    void import("./components/scroll-to-top.js").then(({ bootScrollToTop }) => bootScrollToTop());
+  });
   bootAssistantNonBlocking();
+  bootLog("done");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  bootLog("auth start");
+  bootLog("start");
   void bootAuth({
-    onAuthenticated: startPortal,
+    onAuthenticated: () => {
+      bootLog("corporate check ok");
+      void startPortal();
+    },
     onSignedOut: () => {
       navigationReady = false;
+      void import("./page-preloader.js").then(({ shutdownPagePreloader }) => shutdownPagePreloader());
     },
   });
 });

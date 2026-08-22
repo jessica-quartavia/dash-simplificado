@@ -159,9 +159,9 @@ test("destino das intenções usa ramificação exclusiva oficial", () => {
   assert.equal(result.closure?.matchesUniverse, true);
 });
 
-test("Resumo Executivo não expõe filtros na UI", () => {
+test("Resumo Executivo expõe filtro Programa na UI", () => {
   const contract = getPageFilterContract("executive_summary");
-  assert.deepEqual(contract.uiFilters, []);
+  assert.deepEqual(contract.uiFilters, ["program"]);
 });
 
 test("frozen_clients usa carteira total sem active-first", () => {
@@ -243,12 +243,12 @@ test("top mecanismos agrupa Outros", () => {
 });
 
 test("executive summary API url e filtros sem período", () => {
-  assert.match(buildExecutiveSummaryApiUrl({ program: "pharus" }), /page=executive_summary/);
+  assert.match(buildExecutiveSummaryApiUrl({ program: "pharus" }), /program=Pharus/);
   assert.match(buildExecutiveSummaryApiUrl({}, { force: true }), /force=1/);
   const contract = getPageFilterContract("executive_summary");
   assert.ok(contract);
   assert.equal(contract.period.required, false);
-  assert.deepEqual(contract.uiFilters, []);
+  assert.deepEqual(contract.uiFilters, ["program"]);
 });
 
 test("payload estruturado por blocos sem sources brutos", () => {
@@ -292,6 +292,22 @@ test("buildExecutiveSections mantém compatibilidade de blocos", () => {
 test("clientes aptos para renovação permanece pendente", () => {
   assert.equal(RENEWAL_ELIGIBLE_RULE_STATUS.found, false);
   assert.match(RENEWAL_ELIGIBLE_RULE_STATUS.message, /NOT FOUND/);
+});
+
+test("filtro Programa afeta população geral via clients.programa", () => {
+  const pharusOnly = buildExecutiveContexts(mockSources, { ...defaultExecutiveSummaryFilters(), program: "Pharus" });
+  assert.equal(pharusOnly.general.summary.activeClients, 1);
+  const davosOnly = buildExecutiveContexts(mockSources, { ...defaultExecutiveSummaryFilters(), program: "Davos" });
+  assert.equal(davosOnly.general.summary.activeClients, 0);
+  assert.equal(davosOnly.general.portfolioSummary.frozenClients, 1);
+});
+
+test("EP renovação expõe maior e menor no recorte", () => {
+  const metrics = extractExecutiveMetrics(buildExecutiveContexts(mockSources, defaultExecutiveSummaryFilters()));
+  assert.equal(metrics.top_ep_renewed_share.value.high.engineer, "EP1");
+  assert.equal(metrics.top_ep_renewed_share.value.low.engineer, "EP2");
+  assert.equal(metrics.top_ep_implementation_share.value.high.engineer, "EP2");
+  assert.equal(metrics.top_ep_implementation_share.value.low.engineer, "EP1");
 });
 
 test("executiveFiltersToDomain não inclui período global", () => {

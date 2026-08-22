@@ -3,7 +3,9 @@ import {
   defaultExecutiveSummaryFilters,
   buildExecutiveSummaryApiUrl,
 } from "../lib/analytics/executive-summary-filters.mjs";
+import { normalizeProgramFilter, programSelectOptions } from "../lib/analytics/filters/program.mjs";
 import { createPageRefresh } from "./components/page-refresh.js";
+import { mountPageFilters } from "./components/filters/filter-shell.js";
 import { fetchPageJson, mapLoadError } from "./utils/page-load.js";
 import { escapeHtml } from "./general-charts.mjs";
 import { renderExecutiveDashboard } from "./executive-summary-layout.mjs";
@@ -22,9 +24,41 @@ const state = {
 let eventsBound = false;
 let pageRefresh = null;
 let unbindChartExpand = () => {};
+let unbindFilterMount = () => {};
 
 function $(id) {
   return document.getElementById(id);
+}
+
+function renderFilters() {
+  const host = $("page-filters");
+  if (!host) return;
+  unbindFilterMount();
+  const options = programSelectOptions();
+  const optionHtml = [`<option value="all">Todos</option>`]
+    .concat(options.map((program) => `<option value="${escapeHtml(program)}">${escapeHtml(program)}</option>`))
+    .join("");
+  unbindFilterMount = mountPageFilters({
+    host,
+    pageId: "executive_summary",
+    innerHtml: `
+      <div class="filter-bar filter-bar--compact executive-filter-bar">
+        <label class="filter-field" for="exProgram">
+          <span class="filter-field__label">Programa</span>
+          <select id="exProgram" class="filter-field__control">${optionHtml}</select>
+        </label>
+      </div>`,
+    onBodyReady: (body) => {
+      const select = body.querySelector("#exProgram");
+      if (select) select.value = state.filters.program || "all";
+      const onProgramChange = () => {
+        state.filters.program = normalizeProgramFilter(select?.value || "all");
+        void loadData();
+      };
+      select?.addEventListener("change", onProgramChange);
+      return () => select?.removeEventListener("change", onProgramChange);
+    },
+  });
 }
 
 function renderPage() {
@@ -88,6 +122,7 @@ export function bootExecutiveSummary() {
       state.mounted = true;
       bindEvents();
     }
+    renderFilters();
     void loadData();
   });
   if (getCurrentPageId() === "executive_summary") {
@@ -95,6 +130,7 @@ export function bootExecutiveSummary() {
       state.mounted = true;
       bindEvents();
     }
+    renderFilters();
     void loadData();
   }
 }

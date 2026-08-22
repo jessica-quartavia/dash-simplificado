@@ -47,7 +47,8 @@ test("Pesquisa — 7 indicadores, CES ausente", () => {
   });
   assert.equal(payload.summary.nps, 0);
   assert.equal(payload.summary.latestNps, 8);
-  assert.equal(payload.methodology.npsRule.includes("created_at desc"), true);
+  assert.match(payload.methodology.npsRule, /submitted_at desc/);
+  assert.equal(payload.benchmarks.total.n, 1);
   assert.equal("ces" in payload.summary, false);
 });
 

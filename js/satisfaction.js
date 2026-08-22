@@ -11,6 +11,7 @@ import {
 } from "../lib/analytics/satisfaction-filters.mjs";
 import {
   distributionsFromSatisfactionRows,
+  resolveSatisfactionNpsKpi,
   summarizeSatisfactionRows,
 } from "../lib/analytics/satisfaction-metrics.mjs";
 import { resolveVisibleFilterFields } from "../lib/analytics/filters/page-contracts.mjs";
@@ -28,6 +29,18 @@ import { mountPageFilters } from "./components/filters/filter-shell.js";
 import { createPageRefresh } from "./components/page-refresh.js";
 import { exportFilteredTable } from "./utils/page-table-export.js";
 import { fetchPageJson, mapLoadError } from "./utils/page-load.js";
+
+const isDevLog =
+  typeof location !== "undefined" &&
+  (location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1" ||
+    location.search.includes("bootdebug=1"));
+
+function devLog(label, detail) {
+  if (!isDevLog) return;
+  if (detail !== undefined) console.info(`[Satisfaction] ${label}`, detail);
+  else console.info(`[Satisfaction] ${label}`);
+}
 
 const fmt = new Intl.NumberFormat("pt-BR");
 
@@ -119,8 +132,10 @@ function currentSummary() {
     state.sortDir,
   );
   const population = state.payload?.population?.totalClients ?? scopeInputsTotal(state.payload);
-  const summary = summarizeSatisfactionRows(rows, population);
-  const dist = distributionsFromSatisfactionRows(rows, state.payload?.distributions || {});
+  const csatSummary = summarizeSatisfactionRows(rows, population);
+  const npsKpi = resolveSatisfactionNpsKpi(state.payload, scoped);
+  const summary = { ...csatSummary, ...npsKpi };
+  const dist = distributionsFromSatisfactionRows(rows, state.payload?.distributions || {}, npsKpi);
   return { rows, summary, dist, selectedQuarter: scoped.selectedQuarter };
 }
 
@@ -163,12 +178,15 @@ function kpiCard(label, value, note, options = {}) {
   </article>`;
 }
 
-function formatNpsSublegend(summary) {
-  const pharus = summary?.npsPharus?.nps;
-  const davos = summary?.npsDavos?.nps;
-  const pharusLabel = pharus == null ? "—" : fmt.format(pharus);
-  const davosLabel = davos == null ? "—" : fmt.format(davos);
-  return `<div class="kpi-sublegend">Pharus ${pharusLabel} · Davos ${davosLabel}</div>`;
+function formatNpsSublegend(benchmarks) {
+  const pharus = benchmarks?.pharus;
+  const davos = benchmarks?.davos;
+  const pharusLabel = pharus?.nps == null ? "—" : fmt.format(pharus.nps);
+  const davosLabel = davos?.nps == null ? "—" : fmt.format(davos.nps);
+  const pharusN = pharus?.n ?? 0;
+  const davosN = davos?.n ?? 0;
+  const title = `Pharus: ${fmt.format(pharusN)} respostas · Davos: ${fmt.format(davosN)} respostas`;
+  return `<div class="kpi-sublegend" title="${escapeHtml(title)}">Pharus ${pharusLabel} · Davos ${davosLabel}</div>`;
 }
 
 function populateFilterOptions(host = document) {
@@ -183,8 +201,8 @@ function renderSuccess() {
   const content = $("page-content");
   if (!content) return;
   const { rows, summary, dist } = currentSummary();
-  const globalSummary = state.payload?.summary || {};
-  const npsSublegend = formatNpsSublegend(globalSummary);
+  const benchmarks = state.payload?.benchmarks || {};
+  const npsSublegend = formatNpsSublegend(benchmarks);
   const pages = Math.max(1, Math.ceil(rows.length / state.pageSize));
   if (state.page > pages) state.page = pages;
   const start = (state.page - 1) * state.pageSize;
@@ -199,7 +217,7 @@ function renderSuccess() {
       <h2>Indicadores</h2>
       <p>NPS calculado como % promotores menos % detratores. CSAT considera nota 5 como satisfeito.</p>
       <div class="kpi-row kpi-row-compact">
-        ${kpiCard("NPS", summary.nps == null ? "—" : fmt.format(summary.nps), "Promotores% − detratores%", {
+        ${kpiCard("NPS", summary.nps == null ? "—" : fmt.format(summary.nps), "Promotores − Detratores", {
           sublegend: npsSublegend,
           coverage: `Cobertura NPS: ${pctLabel(summary.npsCoveragePercent)} da carteira`,
         })}
@@ -254,8 +272,12 @@ function renderSuccess() {
     </section>
   `;
 
-  if ($("sfChartNps")) $("sfChartNps").innerHTML = vBars(dist.npsClassification.filter((i) => i.count > 0));
-  if ($("sfChartCsat")) $("sfChartCsat").innerHTML = donut(dist.csatSatisfaction.filter((i) => i.count > 0));
+  if ($("sfChartNps")) {
+    $("sfChartNps").innerHTML = vBars((dist.npsClassification || []).filter((i) => i.count > 0));
+  }
+  if ($("sfChartCsat")) {
+    $("sfChartCsat").innerHTML = donut((dist.csatSatisfaction || []).filter((i) => i.count > 0));
+  }
 
   const tbody = $("sfRows");
   if (tbody) {
@@ -358,7 +380,7 @@ function renderStateView() {
     return;
   }
   if (state.error && !state.payload) {
-    renderErrorView("Não foi possível carregar os dados.", state.error);
+    renderErrorView("Não foi possível carregar a Pesquisa de Satisfação.", state.error);
     return;
   }
   if (state.loading && !state.payload) {
@@ -366,10 +388,16 @@ function renderStateView() {
     return;
   }
   try {
+    devLog("render start");
     renderSuccess();
+    devLog("render complete");
   } catch (error) {
     console.error("[Satisfação] render", error);
-    renderErrorView("Não foi possível carregar os dados.", error instanceof Error ? error.message : "Falha ao montar a página.");
+    devLog("error", error instanceof Error ? error.message : error);
+    renderErrorView(
+      "Não foi possível carregar a Pesquisa de Satisfação.",
+      error instanceof Error ? error.message : "Falha ao montar a página.",
+    );
   }
 }
 
@@ -377,7 +405,13 @@ const onFilterChange = createFilterChangeHandler({
   state,
   filtersFromForm,
   renderFilters,
-  renderSuccess,
+  renderSuccess: () => {
+    if (!state.payload) {
+      renderStateView();
+      return;
+    }
+    renderSuccess();
+  },
 });
 
 function ensurePageRefresh() {
@@ -407,21 +441,31 @@ async function loadSatisfaction({ force = false } = {}) {
     setActions(true);
     return;
   }
+
   state.loading = true;
   state.error = null;
   state.errorCode = null;
   if (force) state.payload = null;
-  ensurePageRefresh().setLoading(true);
-  renderFilters();
-  renderStateView();
+
   try {
-    state.payload = await fetchPageJson("/api/satisfaction", { force });
+    devLog("mount");
+    ensurePageRefresh().setLoading(true);
+    devLog("filters mounted");
+    renderFilters();
+    renderStateView();
+    devLog("request start");
+    state.payload = await fetchPageJson("/api/satisfaction", { force, pageId: "satisfaction" });
+    devLog("request response", { clients: state.payload?.clients?.length ?? 0 });
     ensurePageRefresh().markSuccess();
   } catch (error) {
     const mapped = mapLoadError(error);
-    if (mapped.stale) return;
+    if (mapped.stale) {
+      devLog("stale navigation — ignorando resposta");
+      return;
+    }
     state.errorCode = mapped.errorCode;
     state.error = mapped.error;
+    devLog("error", mapped);
     if (force && state.payload) {
       ensurePageRefresh().markError(state.error);
     } else {
@@ -432,8 +476,17 @@ async function loadSatisfaction({ force = false } = {}) {
     state.loading = false;
     setActions(true);
     if (state.mounted) {
-      renderFilters();
-      renderStateView();
+      try {
+        renderFilters();
+        renderStateView();
+      } catch (renderError) {
+        console.error("[Satisfação] render pós-load", renderError);
+        state.error = renderError instanceof Error ? renderError.message : "Falha ao montar a página.";
+        renderErrorView(
+          "Não foi possível carregar a Pesquisa de Satisfação.",
+          state.error,
+        );
+      }
     }
   }
 }
@@ -443,6 +496,7 @@ function unmountSatisfaction() {
 }
 
 function mountSatisfaction() {
+  if (state.mounted && state.loading) return;
   state.mounted = true;
   setActions(false);
   void loadSatisfaction();
@@ -451,6 +505,7 @@ function mountSatisfaction() {
 export function bootSatisfaction() {
   if (eventsBound) return;
   eventsBound = true;
+  devLog("boot");
   onPageChange((page) => {
     if (page.id === "satisfaction") mountSatisfaction();
     else if (state.mounted) unmountSatisfaction();

@@ -8,7 +8,7 @@ import {
 } from "./pages.js";
 import { closeOpenDropdown } from "./components/dropdown-coordinator.js";
 import { initSidebarCollapse } from "./components/sidebar-collapse.js";
-import { resetPageFetchContext } from "./utils/page-load.js";
+import { resetPageFetchContext, isForegroundBusy } from "./utils/page-load.js";
 
 const INTENDED_HASH_KEY = "qv:intendedHash";
 
@@ -170,6 +170,14 @@ export function navigateTo(pageId, { updateHash = true } = {}) {
     } catch (error) {
       console.error("[nav] page change listener", error);
     }
+  }
+  if (typeof document !== "undefined") {
+    document.dispatchEvent(new CustomEvent("page:navigate", { detail: { pageId: page.id } }));
+    queueMicrotask(() => {
+      if (!isForegroundBusy()) {
+        document.dispatchEvent(new CustomEvent("page:ready", { detail: { pageId: page.id, cached: true } }));
+      }
+    });
   }
   if (!isPageImplemented(page.id)) {
     renderUnimplementedPageShell();

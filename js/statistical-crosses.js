@@ -598,48 +598,38 @@ function renderDiscoveryRankingBars(rows) {
   }).join("");
 }
 
-function healthStrengthLabel(candidate) {
-  const auc = candidate?.univariateAuc;
-  const assoc = Math.abs(candidate?.associationChurn || 0);
-  if ((auc != null && auc >= 0.7) || assoc >= 0.5) return "Alta";
-  if ((auc != null && auc >= 0.55) || assoc >= 0.3) return "Moderada";
-  return "Fraca";
-}
+const HEALTH_SCORE_VARIABLES = [
+  {
+    variable: "Reuniões",
+    riskReading: "Menos reunião = maior risco",
+    rationale: "Baixa frequência de interação pode indicar menor engajamento na jornada do cliente.",
+  },
+  {
+    variable: "Possui mecanismo",
+    riskReading: "Não possui mecanismo = maior risco",
+    rationale: "Ausência de mecanismo pode indicar menor evolução na entrega de valor.",
+  },
+];
 
-function healthDirectionLabel(candidate, predictiveById) {
-  const pred = predictiveById?.get(candidate?.id);
-  if (pred?.direction === "positive") return "↑ maior = maior risco";
-  if (pred?.direction === "negative") return "↓ aumento = menor risco";
-  const assoc = candidate?.associationChurn;
-  if (assoc == null) return "—";
-  if (assoc > 0) return "↑ maior = maior risco";
-  if (assoc < 0) return "proteção";
-  return "—";
-}
-
-function renderHealthScoreCandidatesBlock(candidates, predictiveRanking = []) {
-  const list = (candidates || []).slice(0, 6);
-  const predictiveById = new Map((predictiveRanking || []).map((r) => [r.id, r]));
-  const rows = list.length
-    ? list.map((c) => `<tr>
-        <td>${escapeHtml(c.label || c.id || "—")}</td>
-        <td>${escapeHtml(healthStrengthLabel(c))}</td>
-        <td>${escapeHtml(healthDirectionLabel(c, predictiveById))}</td>
-        <td class="num">${c.coveragePercent != null ? pctLabel(c.coveragePercent) : "—"}</td>
-        <td class="sc-reading">${escapeHtml(c.justification || "Evidência no ranking preditivo e associações do recorte.")}</td>
-      </tr>`).join("")
-    : `<tr><td colspan="5">Sem candidatos elegíveis com cobertura/estabilidade suficientes neste recorte.</td></tr>`;
+function renderHealthScoreCandidatesBlock() {
+  const rows = HEALTH_SCORE_VARIABLES.map(
+    (item) => `<tr>
+        <th scope="row">${escapeHtml(item.variable)}</th>
+        <td>${escapeHtml(item.riskReading)}</td>
+        <td>${escapeHtml(item.rationale)}</td>
+      </tr>`,
+  ).join("");
 
   return `<section class="section-block sc-health-block" id="scSecHealthCandidates">
     <h2>Variáveis mais relevantes para Health Score</h2>
-    <p class="note-muted">Seleção analítica a partir dos resultados estatísticos atuais — sem pesos nem score final.</p>
+    <p class="note-muted sc-health-intro">Composição inicial com duas variáveis para leitura objetiva de risco.</p>
     <div class="table-wrap sc-health-table-wrap">
       <table class="gd-table sc-health-table">
-        <thead><tr><th>Variável</th><th>Força</th><th>Direção</th><th class="num">Cobertura</th><th>Por que considerar</th></tr></thead>
+        <thead><tr><th scope="col">Variável</th><th scope="col">Leitura de risco</th><th scope="col">Por que considerar</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <p class="note-muted sc-health-disclaimer">Seleção exploratória para composição futura do Health Score. Associação estatística não implica causalidade.</p>
+    <p class="note-muted sc-health-disclaimer">Seleção inicial para composição do Health Score. Neste momento, o score prioriza sinais de engajamento em reuniões e presença de mecanismo na jornada.</p>
   </section>`;
 }
 
@@ -978,14 +968,13 @@ function renderSuccess() {
     ? ` Card renovados: ${fmt.format(s.renewedClients ?? 0)} (paridade Renovações). ${fmt.format(audit.excludedCount)} renovado(s) fora do recorte ativo/cancelados.`
     : "";
   const diffRows = p.activeVsCancelled || p.groupDifferences || [];
-  const healthCandidates = p.healthScoreCandidates || p.exploratory?.healthScoreCandidates || [];
   const activeSignals = p.activeRiskSignals || {};
 
   content.innerHTML = `<div class="statistical-page">${state.error ? `<p class="page-inline-error">${escapeHtml(state.error)}</p>` : ""}
 
     ${renderMethodologyNotice(STATISTICAL_METHODOLOGY_NOTE, STATISTICAL_METHODOLOGY_DETAILS, STATISTICAL_INSIGHTS_SNAPSHOT_FOOTNOTE)}
 
-    ${renderHealthScoreCandidatesBlock(healthCandidates, pred?.ranking)}
+    ${renderHealthScoreCandidatesBlock()}
 
     ${renderExecutiveReadingBlock(getInsightsForBlock)}
 

@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { beforeEach, test } from "node:test";
+import { resetAnalyticsCache } from "../../lib/cache/analytics-cache.mjs";
 import { handleMeetingsRequest } from "../../lib/analytics/meetings-handler.mjs";
+
+beforeEach(() => {
+  resetAnalyticsCache();
+});
 
 function request(headers = {}) {
   return new Request("http://localhost/api/meetings", { headers });

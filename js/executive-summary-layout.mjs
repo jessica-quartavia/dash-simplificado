@@ -98,13 +98,32 @@ function renderSplitBar(promoters, detractors, neutrals) {
     </div>`;
 }
 
-function renderEpCard({ title, engineer, percent, detail }) {
+function renderEpRankRow(direction, label, entry, detail) {
+  const dirClass = direction === "high" ? "executive-ep-rank__row--high" : "executive-ep-rank__row--low";
+  const icon = direction === "high" ? "↑" : "↓";
   return `
-    <article class="executive-kpi executive-kpi--hero">
-      <span class="executive-kpi__label">${escapeHtml(title)}</span>
-      <strong class="executive-kpi__name">${engineer ? escapeHtml(engineer) : "—"}</strong>
-      <strong class="executive-kpi__value">${percent != null ? pct(percent) : "—"}</strong>
-      ${detail ? `<span class="executive-kpi__meta">${escapeHtml(detail)}</span>` : ""}
+    <div class="executive-ep-rank__row ${dirClass}">
+      <span class="executive-ep-rank__dir" aria-hidden="true">${icon}</span>
+      <span class="executive-ep-rank__label">${escapeHtml(label)}</span>
+      <strong class="executive-ep-rank__name">${entry?.engineer ? escapeHtml(entry.engineer) : "—"}</strong>
+      <strong class="executive-ep-rank__value">${entry?.percent != null ? pct(entry.percent) : "—"}</strong>
+      ${detail ? `<span class="executive-ep-rank__meta">${escapeHtml(detail)}</span>` : ""}
+    </div>`;
+}
+
+function renderEpMetricCard(title, ranked, { highDetail, lowDetail } = {}) {
+  if (!ranked?.high && !ranked?.low) {
+    return `
+      <article class="executive-ep-rank executive-ep-rank--empty">
+        <h3 class="executive-ep-rank__metric">${escapeHtml(title)}</h3>
+        <p class="placeholder-note">Sem EP elegível no recorte (mín. ${ranked?.minSample ?? 10} clientes).</p>
+      </article>`;
+  }
+  return `
+    <article class="executive-ep-rank">
+      <h3 class="executive-ep-rank__metric">${escapeHtml(title)}</h3>
+      ${renderEpRankRow("high", "Maior", ranked.high, highDetail?.(ranked.high))}
+      ${renderEpRankRow("low", "Menor", ranked.low, lowDetail?.(ranked.low))}
     </article>`;
 }
 
@@ -317,7 +336,6 @@ function renderHealth(block) {
   const monthly = metric(block, "cancellation_intention_vs_effective");
   const reasons = metric(block, "top_cancellation_reasons");
   const renewals = metric(block, "total_renewals");
-  const eligible = metric(block, "renewal_eligible_clients");
   const perActive = metric(block, "renewals_per_active_client");
 
   const promoters = shares.value?.promoters;
@@ -358,14 +376,8 @@ function renderHealth(block) {
         rankedBars(reasonItems, { limit: 3, note: reasons.note || "Principais motivos categorizados." }),
         "executive-chart-card--reasons",
       )}
-      <div class="executive-grid executive-grid--mini-kpis executive-grid--renewal">
+      <div class="executive-grid executive-grid--mini-kpis executive-grid--renewal executive-grid--renewal-dual">
         ${execKpi({ label: "Quantidade de renovações", value: num(renewals.value), note: coverageNote(renewals), mini: true })}
-        ${execKpi({
-          label: "Clientes aptos para renovação",
-          value: eligible.status === "pending_rule" ? "Regra pendente" : num(eligible.value),
-          note: eligible.pending?.message ? "Pendente de validação" : "Clientes com ciclo válido",
-          mini: true,
-        })}
         ${execKpi({
           label: "Renovações por cliente ativo",
           value: perActive.value == null ? "—" : num(perActive.value),
@@ -388,22 +400,26 @@ function renderEp(block) {
   return execSection(
     "EP",
     `
-    <div class="executive-grid executive-grid--2">
-      ${renderEpCard({
-        title: "Maior % da base renovada",
-        engineer: renewedValue?.engineer,
-        percent: renewedValue?.percent,
-        detail: renewedValue
-          ? `${num(renewedValue.renewed)}/${num(renewedValue.base)} renovados${renewedValue.tied?.length ? ` · Empate: ${renewedValue.tied.join(", ")}` : ""}`
-          : "",
+    <div class="executive-grid executive-grid--ep">
+      ${renderEpMetricCard("Renovação", renewedValue, {
+        highDetail: (entry) =>
+          entry
+            ? `${num(entry.renewed)}/${num(entry.base)} renovados${entry.tied?.length ? ` · Empate: ${entry.tied.join(", ")}` : ""}`
+            : "",
+        lowDetail: (entry) =>
+          entry
+            ? `${num(entry.renewed)}/${num(entry.base)} renovados${entry.tied?.length ? ` · Empate: ${entry.tied.join(", ")}` : ""}`
+            : "",
       })}
-      ${renderEpCard({
-        title: "Maior % implantada",
-        engineer: implementedValue?.engineer,
-        percent: implementedValue?.percent,
-        detail: implementedValue
-          ? `${num(implementedValue.implementedClients)}/${num(implementedValue.base)} clientes${implementedValue.tied?.length ? ` · Empate: ${implementedValue.tied.join(", ")}` : ""}`
-          : "",
+      ${renderEpMetricCard("Implementação", implementedValue, {
+        highDetail: (entry) =>
+          entry
+            ? `${num(entry.implementedClients)}/${num(entry.base)} clientes${entry.tied?.length ? ` · Empate: ${entry.tied.join(", ")}` : ""}`
+            : "",
+        lowDetail: (entry) =>
+          entry
+            ? `${num(entry.implementedClients)}/${num(entry.base)} clientes${entry.tied?.length ? ` · Empate: ${entry.tied.join(", ")}` : ""}`
+            : "",
       })}
     </div>`,
     block.status,
@@ -411,7 +427,7 @@ function renderEp(block) {
 }
 
 function renderTemporal(block) {
-  if (!block) return execSection("Indicadores temporais", "", "error");
+  if (!block) return execSection("Atritos na jornada do cliente", "", "error");
   const signals = metric(block, "temporal_top_signals");
   const distribution = metric(block, "temporal_signal_distribution");
   const signalItems = (signals.value || []).slice(0, 5);
@@ -432,7 +448,7 @@ function renderTemporal(block) {
         </li>`,
         )
         .join("")}</ol>`
-    : `<p class="placeholder-note">Sem sinais no recorte.</p>`;
+    : `<p class="placeholder-note">Sem sinais de atrito no recorte.</p>`;
   const distItems = (distribution.value || []).map((item) => ({
     label: item.label,
     count: item.count,
@@ -440,12 +456,12 @@ function renderTemporal(block) {
   }));
 
   return execSection(
-    "Indicadores temporais",
+    "Atritos na jornada do cliente",
     `
-    <p class="executive-note">Sinais determinísticos pré-cancelamento. Associação descritiva — sem causalidade.</p>
+    <p class="executive-note executive-note--subtle">Sinais de baixa interação ou avanço na jornada associados a maior risco de cancelamento.</p>
     <div class="executive-grid executive-grid--temporal">
-      ${execChart("Principais sinais pré-cancelamento", signalHtml, "executive-chart-card--signals")}
-      ${execChart("Clientes por quantidade de sinais pré-cancelamento", hBars(distItems, { wideLabels: true, compact: true }), "executive-chart-card--distribution")}
+      ${execChart("Sinais de atrito na jornada do cliente", signalHtml, "executive-chart-card--signals")}
+      ${execChart("Clientes por quantidade de sinais de atrito", hBars(distItems, { wideLabels: true, compact: true }), "executive-chart-card--distribution")}
     </div>`,
     block.status,
   );

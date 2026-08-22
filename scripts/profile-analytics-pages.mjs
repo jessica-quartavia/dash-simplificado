@@ -6,7 +6,7 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadAuditEnv } from "../lib/analytics/fidelity-audit.mjs";
-import { resetMemoryAnalyticsCache } from "../lib/cache/analytics-cache.mjs";
+import { resetAnalyticsCache } from "../lib/cache/analytics-cache.mjs";
 import { computeWithPageCache } from "../lib/analytics/handler-cache.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -40,7 +40,7 @@ const PAGES = {
 };
 
 async function profilePage(pageId, loaderFactory) {
-  resetMemoryAnalyticsCache();
+  resetAnalyticsCache();
   const loader = await loaderFactory();
   const coldStarted = Date.now();
   const cold = await computeWithPageCache(pageId, loader, { force: true });

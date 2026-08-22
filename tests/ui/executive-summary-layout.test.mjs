@@ -87,15 +87,27 @@ const mockPayload = {
   ep: {
     status: "ok",
     metrics: {
-      top_ep_renewed_share: { value: { engineer: "EP1", percent: 55, renewed: 11, base: 20 } },
-      top_ep_implementation_share: { value: { engineer: "EP2", percent: 70, implementedClients: 14, base: 20 } },
+      top_ep_renewed_share: {
+        value: {
+          minSample: 10,
+          high: { engineer: "EP1", percent: 55, renewed: 11, base: 20 },
+          low: { engineer: "EP2", percent: 20, renewed: 3, base: 15 },
+        },
+      },
+      top_ep_implementation_share: {
+        value: {
+          minSample: 10,
+          high: { engineer: "EP2", percent: 66.7, implementedClients: 10, base: 15 },
+          low: { engineer: "EP1", percent: 60, implementedClients: 12, base: 20 },
+        },
+      },
     },
   },
   temporal: {
     status: "ok",
     metrics: {
-      temporal_top_signals: { value: [{ label: "Sinal A", count: 2, percent: 40 }] },
-      temporal_signal_distribution: { value: [{ label: "0 sinais", count: 10, percent: 50 }] },
+      temporal_top_signals: { value: [{ label: "Muitos dias desde a última reunião", count: 2, percent: 40 }] },
+      temporal_signal_distribution: { value: [{ label: "1 sinal de atrito", count: 10, percent: 50 }] },
     },
   },
 };
@@ -135,13 +147,18 @@ test("Saúde subdivide NPS, split bar, cancelamentos e renovação", () => {
   assert.match(html, /executive-grid--health-top/);
   assert.match(html, /executive-split-bar/);
   assert.match(html, /executive-grid--health-bottom/);
-  assert.match(html, /executive-grid--renewal/);
+  assert.match(html, /executive-grid--renewal-dual/);
+  assert.doesNotMatch(html, /Clientes aptos para renovação/);
 });
 
-test("EP usa dois cards hero", () => {
+test("EP usa ranking compacto com maior e menor", () => {
   const html = renderExecutiveDashboard(mockPayload);
-  assert.match(html, /executive-kpi--hero/);
-  assert.match(html, /Maior % da base renovada/);
+  assert.match(html, /executive-ep-rank/);
+  assert.match(html, /executive-grid--ep/);
+  assert.match(html, /Renovação/);
+  assert.match(html, /Implementação/);
+  assert.match(html, />Maior</);
+  assert.match(html, />Menor</);
 });
 
 test("Congelados referencia base total e destino das intenções renderiza", () => {
@@ -152,11 +169,14 @@ test("Congelados referencia base total e destino das intenções renderiza", () 
   assert.match(html, /Soma das quatro ramificações/);
 });
 
-test("Motivos e temporal usam leitura executiva", () => {
+test("Motivos e atritos usam leitura executiva", () => {
   const html = renderExecutiveDashboard(mockPayload);
   assert.match(html, /Principais motivos de cancelamento/);
   assert.match(html, /ranked-bar-list/);
   assert.match(html, /executive-signal-ranked/);
+  assert.match(html, /Atritos na jornada do cliente/);
+  assert.match(html, /Sinais de atrito na jornada do cliente/);
+  assert.match(html, /Clientes por quantidade de sinais de atrito/);
 });
 
 test("Temporal usa duas colunas", () => {

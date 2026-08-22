@@ -69,10 +69,12 @@ test("support.js UI targeted changes", () => {
   const source = readFileSync(join(ROOT, "js/support.js"), "utf8");
   assert.match(source, /Total de Acionamentos/);
   assert.match(source, /Clientes Identificados no Base QV/);
+  assert.doesNotMatch(source, /Escalou problema/);
   assert.doesNotMatch(source, /kpiCard\("Identificados no Base QV"/);
   assert.doesNotMatch(source, /Identificação/);
   assert.doesNotMatch(source, /Com cliente/);
   assert.match(source, /Acionamentos por prioridade/);
+  assert.match(source, /support-client-cell/);
 });
 
 test("financial-updates.js gráfico vertical e leader note", () => {
