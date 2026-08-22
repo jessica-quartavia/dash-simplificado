@@ -31,13 +31,14 @@ test("Cancelamento e Satisfação usam kind selectfilter", () => {
 });
 
 test("SelectFilter integra click outside e Escape via coordinator", () => {
-  const source = readFileSync(join(ROOT, "js/components/filters/select-filter.js"), "utf8");
-  assert.match(source, /closeOpenDropdown/);
-  assert.match(source, /registerOpenDropdown/);
-  assert.match(source, /event.key !== "Escape"/);
-  assert.match(source, /pointerdown/);
-  assert.match(source, /mountPopoverPortal/);
-  assert.match(source, /positionAnchoredPopover/);
+  const selectSource = readFileSync(join(ROOT, "js/components/filters/select-filter.js"), "utf8");
+  const coordinatorSource = readFileSync(join(ROOT, "js/components/dropdown-coordinator.js"), "utf8");
+  assert.match(selectSource, /closeOpenDropdown/);
+  assert.match(selectSource, /registerOpenDropdown/);
+  assert.match(selectSource, /containsEvent/);
+  assert.match(selectSource, /mountPopoverPortal/);
+  assert.match(coordinatorSource, /pointerdown/);
+  assert.match(coordinatorSource, /Escape/);
 });
 
 test("filter-bar suporta selectfilter", () => {

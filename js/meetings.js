@@ -140,8 +140,11 @@ function kpiCard(label, value, note, options = {}) {
   if (options.featured) classes.push("kpi-card-featured");
   if (options.highlight) classes.push("kpi-card-highlight");
   if (options.compact) classes.push("kpi-card-compact");
+  const methodology = options.methodology
+    ? `<button type="button" class="kpi-methodology" title="${escapeHtml(options.methodology)}" aria-label="Metodologia: ${escapeHtml(label)}">?</button>`
+    : "";
   return `<article class="${classes.join(" ")}">
-    <div class="kpi-label">${escapeHtml(label)}</div>
+    <div class="kpi-label">${escapeHtml(label)}${methodology}</div>
     <div class="kpi-value">${value}</div>
     <div class="kpi-note">${escapeHtml(note || "")}</div>
   </article>`;
@@ -307,6 +310,10 @@ function renderSuccess() {
   const scopeNote = period.active
     ? "Período selecionado · população filtrada"
     : "População filtrada";
+  const totalMeetingsNote =
+    "Base QV + reuniões manuais exclusivas. Reuniões anteriores à entrada e duplicadas são desconsideradas.";
+  const totalMeetingsMethodology =
+    "Total de reuniões registradas na BASE QV para os clientes do recorte. Reuniões manuais só são acrescentadas quando não possuem correspondência em client_meetings. Registros anteriores à entrada do cliente são excluídos.";
   const attendanceText = summary.attendanceInsufficientData || summary.attendanceRate == null
     ? "Dados insuficientes"
     : pct(summary.attendanceRate);
@@ -320,7 +327,9 @@ function renderSuccess() {
       <h2>Visão do relacionamento</h2>
       <p>Indicadores da população filtrada. O padrão da página é clientes ativos.</p>
       <div class="kpi-row">
-        ${kpiCard("Total de reuniões", fmt.format(summary.totalMeetings), scopeNote)}
+        ${kpiCard("Total de reuniões", fmt.format(summary.totalMeetings), totalMeetingsNote, {
+          methodology: totalMeetingsMethodology,
+        })}
         ${kpiCard("Clientes com reunião", fmt.format(summary.clientsWithMeeting), `${fmt.format(summary.filteredClients)} no recorte`, { featured: true })}
         ${kpiCard("Clientes sem nenhuma reunião", fmt.format(summary.clientsWithoutMeeting), "Clientes do recorte sem reunião válida")}
       </div>

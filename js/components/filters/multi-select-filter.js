@@ -113,7 +113,7 @@ function closePopover(root, field, state, { focusTrigger = false } = {}) {
   state.open = false;
   unregisterOpenDropdown(state.controller);
   const trigger = root.querySelector("[data-msf-trigger]");
-  const popover = root.querySelector("[data-msf-popover]");
+  const popover = state.popoverEl || root.querySelector("[data-msf-popover]");
   trigger?.setAttribute("aria-expanded", "false");
   unmountPopoverPortal({
     overlayRoot: state.overlayRoot,
@@ -122,8 +122,6 @@ function closePopover(root, field, state, { focusTrigger = false } = {}) {
   });
   state.overlayRoot = null;
   state.backdrop = null;
-  document.removeEventListener("pointerdown", state.onPointerDown, true);
-  document.removeEventListener("keydown", state.onKeyDown, true);
   window.removeEventListener("scroll", state.onViewportChange, true);
   window.removeEventListener("resize", state.onViewportChange);
   if (focusTrigger) trigger?.focus?.();
@@ -131,7 +129,7 @@ function closePopover(root, field, state, { focusTrigger = false } = {}) {
 
 function openPopover(root, field, state) {
   const trigger = root.querySelector("[data-msf-trigger]");
-  const popover = root.querySelector("[data-msf-popover]");
+  const popover = state.popoverEl || root.querySelector("[data-msf-popover]");
   if (!trigger || !popover) return;
 
   closeOpenDropdown();
@@ -146,26 +144,18 @@ function openPopover(root, field, state) {
   state.overlayRoot = mounted.overlayRoot;
   state.backdrop = mounted.backdrop;
 
-  state.onPointerDown = (event) => {
-    if (!state.open) return;
-    if (isMultiselectInsideEvent(event, { root, trigger, popover, backdrop: state.backdrop })) return;
-    closePopover(root, field, state);
-  };
-  state.onKeyDown = (event) => {
-    if (event.key !== "Escape" || !state.open) return;
-    event.preventDefault();
-    event.stopPropagation();
-    closePopover(root, field, state, { focusTrigger: true });
-  };
   state.onViewportChange = () => {
     if (!state.open || popover.hidden) return;
     positionAnchoredPopover({ anchor: trigger, popover });
   };
 
-  document.addEventListener("pointerdown", state.onPointerDown, true);
-  document.addEventListener("keydown", state.onKeyDown, true);
   window.addEventListener("scroll", state.onViewportChange, true);
   window.addEventListener("resize", state.onViewportChange);
+  state.controller = {
+    close: (opts = {}) => closePopover(root, field, state, opts),
+    containsEvent: (event) =>
+      isMultiselectInsideEvent(event, { root, trigger, popover, backdrop: state.backdrop }),
+  };
   registerOpenDropdown(state.controller);
 }
 
@@ -188,16 +178,17 @@ export function bindMultiSelectFilter({
     open: false,
     overlayRoot: null,
     backdrop: null,
-    onPointerDown: null,
-    onKeyDown: null,
     onViewportChange: null,
+    popoverEl: null,
     controller: {
-      close: () => closePopover(root, field, state),
+      close: (opts = {}) => closePopover(root, field, state, opts),
+      containsEvent: () => false,
     },
   };
 
   ensureOverlayRoot();
   const popover = root.querySelector("[data-msf-popover]");
+  state.popoverEl = popover;
   if (popover && popover.parentNode === root) {
     ensureOverlayRoot().appendChild(popover);
     popover.hidden = true;

@@ -89,7 +89,7 @@ function closeSelectPopover(root, state, { focusTrigger = false } = {}) {
   state.open = false;
   unregisterOpenDropdown(state.controller);
   const trigger = root.querySelector("[data-sf-trigger]");
-  const popover = root.querySelector("[data-sf-popover]");
+  const popover = state.popoverEl || root.querySelector("[data-sf-popover]");
   trigger?.setAttribute("aria-expanded", "false");
   unmountPopoverPortal({
     overlayRoot: state.overlayRoot,
@@ -98,8 +98,6 @@ function closeSelectPopover(root, state, { focusTrigger = false } = {}) {
   });
   state.overlayRoot = null;
   state.backdrop = null;
-  document.removeEventListener("pointerdown", state.onPointerDown, true);
-  document.removeEventListener("keydown", state.onKeyDown, true);
   window.removeEventListener("scroll", state.onViewportChange, true);
   window.removeEventListener("resize", state.onViewportChange);
   if (focusTrigger) trigger?.focus?.();
@@ -107,7 +105,7 @@ function closeSelectPopover(root, state, { focusTrigger = false } = {}) {
 
 function openSelectPopover(root, state) {
   const trigger = root.querySelector("[data-sf-trigger]");
-  const popover = root.querySelector("[data-sf-popover]");
+  const popover = state.popoverEl || root.querySelector("[data-sf-popover]");
   if (!trigger || !popover) return;
 
   closeOpenDropdown();
@@ -122,27 +120,19 @@ function openSelectPopover(root, state) {
   state.overlayRoot = mounted.overlayRoot;
   state.backdrop = mounted.backdrop;
 
-  state.onPointerDown = (event) => {
-    if (!state.open) return;
-    if (isSelectInsideEvent(event, { root, trigger, popover, backdrop: state.backdrop })) return;
-    closeSelectPopover(root, state);
-  };
-  state.onKeyDown = (event) => {
-    if (event.key !== "Escape" || !state.open) return;
-    event.preventDefault();
-    event.stopPropagation();
-    closeSelectPopover(root, state, { focusTrigger: true });
-  };
   state.onViewportChange = () => {
     if (!state.open) return;
     positionAnchoredPopover({ anchor: trigger, popover });
   };
 
-  document.addEventListener("pointerdown", state.onPointerDown, true);
-  document.addEventListener("keydown", state.onKeyDown, true);
   window.addEventListener("scroll", state.onViewportChange, true);
   window.addEventListener("resize", state.onViewportChange);
-  registerOpenDropdown(() => closeSelectPopover(root, state));
+  state.controller = {
+    close: (opts = {}) => closeSelectPopover(root, state, opts),
+    containsEvent: (event) =>
+      isSelectInsideEvent(event, { root, trigger, popover, backdrop: state.backdrop }),
+  };
+  registerOpenDropdown(state.controller);
   positionAnchoredPopover({ anchor: trigger, popover });
 }
 
@@ -186,11 +176,15 @@ export function bindSelectFilter({ host, field, onChange } = {}) {
     root._sfCleanup = null;
   }
 
-  const state = { open: false, overlayRoot: null, backdrop: null, controller: null };
-  state.controller = () => closeSelectPopover(root, state);
+  const state = { open: false, overlayRoot: null, backdrop: null, controller: null, popoverEl: null };
+  const popover = root.querySelector("[data-sf-popover]");
+  state.popoverEl = popover;
+  state.controller = {
+    close: (opts = {}) => closeSelectPopover(root, state, opts),
+    containsEvent: () => false,
+  };
 
   const trigger = root.querySelector("[data-sf-trigger]");
-  const popover = root.querySelector("[data-sf-popover]");
   const hidden = root.querySelector('input[type="hidden"]');
   const summary = root.querySelector("[data-sf-summary]");
 

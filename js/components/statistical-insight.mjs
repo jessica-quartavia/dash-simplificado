@@ -19,12 +19,14 @@ export function renderStatisticalInsightBlock(insight, options = {}) {
     .join("");
 
   return `<aside class="sc-insight" data-sc-insight="${escapeHtml(sectionId)}">
-    <div class="sc-insight-head">
-      <span class="sc-insight-icon" aria-hidden="true"></span>
-      <span class="sc-insight-label">Insight</span>
+    <div class="sc-insight-compact">
+      <div class="sc-insight-head">
+        <span class="sc-insight-icon" aria-hidden="true"></span>
+        <span class="sc-insight-label">INSIGHT</span>
+      </div>
+      <p class="sc-insight-summary">${escapeHtml(insight.insight)}</p>
+      <button type="button" class="sc-insight-toggle sc-insight-toggle--open" data-sc-insight-toggle aria-expanded="false" aria-controls="${panelId}">Ver análise</button>
     </div>
-    <p class="sc-insight-summary">${escapeHtml(insight.insight)}</p>
-    <button type="button" class="sc-insight-toggle" data-sc-insight-toggle aria-expanded="false" aria-controls="${panelId}">Ver análise</button>
     <div class="sc-insight-panel" id="${panelId}" hidden>
       <div class="sc-insight-section">
         <h4 class="sc-insight-section-title">Evidência</h4>
@@ -42,7 +44,7 @@ export function renderStatisticalInsightBlock(insight, options = {}) {
         <h4 class="sc-insight-section-title">Limitações</h4>
         <ul class="sc-insight-list sc-insight-list--muted">${limitations}</ul>
       </div>
-      <button type="button" class="sc-insight-toggle sc-insight-toggle--collapse" data-sc-insight-toggle aria-expanded="false" aria-controls="${panelId}">Ocultar análise</button>
+      <button type="button" class="sc-insight-toggle sc-insight-toggle--close" data-sc-insight-toggle aria-expanded="true" aria-controls="${panelId}">Ocultar análise</button>
     </div>
   </aside>`;
 }
@@ -104,9 +106,16 @@ function setInsightExpanded(insightRoot, expanded) {
   const panel = insightRoot.querySelector(".sc-insight-panel");
   if (!panel) return;
   panel.hidden = !expanded;
-  for (const toggle of insightRoot.querySelectorAll("[data-sc-insight-toggle]")) {
-    toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
-    toggle.textContent = expanded ? "Ocultar análise" : "Ver análise";
+  insightRoot.classList.toggle("sc-insight--expanded", expanded);
+  const openBtn = insightRoot.querySelector(".sc-insight-toggle--open");
+  const closeBtn = insightRoot.querySelector(".sc-insight-toggle--close");
+  if (openBtn) {
+    openBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+    openBtn.hidden = expanded;
+  }
+  if (closeBtn) {
+    closeBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+    closeBtn.hidden = !expanded;
   }
 }
 

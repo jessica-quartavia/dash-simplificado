@@ -153,12 +153,22 @@ function kpiCard(label, value, note, options = {}) {
   const coverageHtml = options.coverage
     ? `<div class="kpi-coverage">${escapeHtml(options.coverage)}</div>`
     : "";
+  const sublegendHtml = options.sublegend || "";
   return `<article class="${classes.join(" ")}">
     <div class="kpi-label">${escapeHtml(label)}</div>
     <div class="kpi-value">${value}</div>
     ${note ? `<div class="kpi-note">${escapeHtml(note)}</div>` : ""}
+    ${sublegendHtml}
     ${coverageHtml}
   </article>`;
+}
+
+function formatNpsSublegend(summary) {
+  const pharus = summary?.npsPharus?.nps;
+  const davos = summary?.npsDavos?.nps;
+  const pharusLabel = pharus == null ? "—" : fmt.format(pharus);
+  const davosLabel = davos == null ? "—" : fmt.format(davos);
+  return `<div class="kpi-sublegend">Pharus ${pharusLabel} · Davos ${davosLabel}</div>`;
 }
 
 function populateFilterOptions(host = document) {
@@ -173,6 +183,8 @@ function renderSuccess() {
   const content = $("page-content");
   if (!content) return;
   const { rows, summary, dist } = currentSummary();
+  const globalSummary = state.payload?.summary || {};
+  const npsSublegend = formatNpsSublegend(globalSummary);
   const pages = Math.max(1, Math.ceil(rows.length / state.pageSize));
   if (state.page > pages) state.page = pages;
   const start = (state.page - 1) * state.pageSize;
@@ -187,7 +199,10 @@ function renderSuccess() {
       <h2>Indicadores</h2>
       <p>NPS calculado como % promotores menos % detratores. CSAT considera nota 5 como satisfeito.</p>
       <div class="kpi-row kpi-row-compact">
-        ${kpiCard("NPS", summary.nps == null ? "—" : fmt.format(summary.nps), "Promotores% − detratores%", { coverage: `Cobertura NPS: ${pctLabel(summary.npsCoveragePercent)} da carteira` })}
+        ${kpiCard("NPS", summary.nps == null ? "—" : fmt.format(summary.nps), "Promotores% − detratores%", {
+          sublegend: npsSublegend,
+          coverage: `Cobertura NPS: ${pctLabel(summary.npsCoveragePercent)} da carteira`,
+        })}
         ${kpiCard("Data do NPS", dateBR(summary.latestNpsAt), "Última resposta registrada")}
         ${kpiCard("Respostas de NPS", fmt.format(summary.npsResponses), `${fmt.format(summary.npsDistinctClients)} clientes distintos`)}
         ${kpiCard("Último NPS", summary.latestNps == null ? "—" : fmt.format(summary.latestNps), npsClass(summary.latestNps))}
@@ -195,7 +210,6 @@ function renderSuccess() {
         ${kpiCard("CSAT satisfeitos", pctLabel(summary.csatSatisfiedPercent), "Nota 5 na escala 1–5")}
         ${kpiCard("Clientes com feedback", fmt.format(summary.clientsWithFeedback), "NPS ou CSAT vinculado", { coverage: `Cobertura: ${pctLabel(summary.feedbackCoveragePercent)} da carteira` })}
       </div>
-      <p class="chart-note">NPS Pharus: ${state.payload?.summary?.npsPharus?.nps == null ? "—" : fmt.format(state.payload.summary.npsPharus.nps)} · NPS Davos: ${state.payload?.summary?.npsDavos?.nps == null ? "—" : fmt.format(state.payload.summary.npsDavos.nps)} (referência fixa por Programa BASE QV, independente do filtro principal)</p>
     </section>
 
     <section class="section-block">

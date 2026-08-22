@@ -93,3 +93,4 @@ console.log("\nV2 directory:", {
 });
 
 if (!v1) console.log("\nV1: BLOCKED (auth corporativa no handler)");
+console.log("\nV2 population parity:", s2.populationParityStatus || "—", s2.populationParityNote || "");

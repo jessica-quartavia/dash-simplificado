@@ -68,6 +68,7 @@ async function loadV2Meetings() {
 
 function printTable(report) {
   console.log(`\n=== ${report.presetLabel} (${report.preset}) ===`);
+  console.log("Filtros auditados:", JSON.stringify(report.filtersAudit || report.filters, null, 0));
   console.log("Métrica | V1 | V2 | Delta | Status | Causa");
   for (const row of report.metrics) {
     console.log(
@@ -90,6 +91,13 @@ function printTable(report) {
   console.log(
     `Sets primeira reunião: v1=${report.sets.firstMeeting.v1Count} v2=${report.sets.firstMeeting.v2Count} intersection=${report.sets.firstMeeting.intersection} only_v1=${report.sets.firstMeeting.onlyV1} only_v2=${report.sets.firstMeeting.onlyV2}`,
   );
+  console.log(
+    `Sets meetings: v1=${report.sets.meetings?.v1Count ?? "—"} v2=${report.sets.meetings?.v2Count ?? "—"} intersection=${report.sets.meetings?.intersection ?? "—"} only_v1=${report.sets.meetings?.onlyV1 ?? "—"} only_v2=${report.sets.meetings?.onlyV2 ?? "—"}`,
+  );
+  if (report.sets.meetingDiffCauses) {
+    console.log("Causas only_v1:", report.sets.meetingDiffCauses.onlyV1);
+    console.log("Causas only_v2:", report.sets.meetingDiffCauses.onlyV2);
+  }
 }
 
 function sampleDiff(report, v1Clients, v2Clients, sample) {

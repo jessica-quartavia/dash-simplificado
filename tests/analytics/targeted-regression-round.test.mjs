@@ -45,6 +45,6 @@ test("renewal UI remove aptos", () => {
 
 test("satisfaction UI NPS Pharus/Davos", () => {
   const source = readFileSync(join(ROOT, "js/satisfaction.js"), "utf8");
-  assert.match(source, /NPS Pharus:/);
-  assert.match(source, /NPS Davos:/);
+  assert.match(source, /formatNpsSublegend/);
+  assert.match(source, /kpi-sublegend/);
 });
