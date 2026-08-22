@@ -20,6 +20,7 @@ import { handleGeneralDataRequest } from "../../lib/analytics/general-data-handl
 import { handleMeetingsRequest } from "../../lib/analytics/meetings-handler.mjs";
 import { handleMetricCatalogRequest } from "../../lib/analytics/metric-catalog-handler.mjs";
 import { handleMetricSnapshotRefreshRequest } from "../../lib/analytics/snapshot-refresh-handler.mjs";
+import { handleStatisticalSnapshotRefreshRequest } from "../../lib/analytics/statistical-snapshot-refresh-handler.mjs";
 import { handleReportsRequest } from "../../lib/analytics/reports-handler.mjs";
 import dashboardHandler from "../../api/dashboard.js";
 import analyticsHandler from "../../api/analytics.js";
@@ -69,6 +70,10 @@ test("vercel.json rewrites preservam URLs legadas de analytics", () => {
   assert.equal(rewrites["/api/analytics/catalog"], "/api/analytics?action=catalog");
   assert.equal(rewrites["/api/analytics/snapshot"], "/api/analytics?action=snapshot");
   assert.equal(rewrites["/api/analytics/snapshot/refresh"], "/api/analytics?action=refresh");
+  assert.equal(
+    rewrites["/api/analytics/statistical-snapshot/refresh"],
+    "/api/analytics?action=refresh-statistical-snapshot",
+  );
 });
 
 test("dashboard resolve todas as páginas legadas", () => {
@@ -94,11 +99,19 @@ test("dashboard resolve ?page= e retorna 404 para página inexistente", async ()
   assert.equal(res.statusCode, 404);
 });
 
-test("analytics resolve catalog, snapshot e refresh", () => {
+test("analytics resolve catalog, snapshot, refresh e statistical refresh", () => {
   assert.equal(resolveAnalyticsAction("/api/analytics/catalog", new URLSearchParams())?.action, "catalog");
   assert.equal(resolveAnalyticsAction("/api/analytics/snapshot", new URLSearchParams())?.action, "snapshot");
   assert.equal(resolveAnalyticsAction("/api/analytics/snapshot/refresh", new URLSearchParams())?.action, "refresh");
+  assert.equal(
+    resolveAnalyticsAction("/api/analytics/statistical-snapshot/refresh", new URLSearchParams())?.action,
+    "refresh-statistical-snapshot",
+  );
   assert.equal(resolveAnalyticsAction("/api/analytics", new URLSearchParams("action=refresh"))?.action, "refresh");
+  assert.equal(
+    resolveAnalyticsAction("/api/analytics", new URLSearchParams("action=refresh-statistical-snapshot"))?.action,
+    "refresh-statistical-snapshot",
+  );
 });
 
 test("analytics retorna 404 para action inexistente", async () => {
@@ -123,7 +136,7 @@ test("dashboard handlers map é explícito (sem import dinâmico arbitrário)", 
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/quality"], "quality");
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/platform-usage"], "platform_usage");
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/support"], "support");
-  assert.equal(Object.keys(ANALYTICS_ACTION_HANDLERS).length, 3);
+  assert.equal(Object.keys(ANALYTICS_ACTION_HANDLERS).length, 4);
 });
 
 test("general-data via dashboard entry retorna 401 sem auth", async () => {
@@ -158,9 +171,17 @@ test("reports e assistant permanecem entrypoints dedicados", () => {
   assert.ok(!files.includes("api/analytics/catalog.js"));
 });
 
-test("snapshot refresh via analytics exige POST no handler", async () => {
+test("metric snapshot refresh via analytics exige POST no handler", async () => {
   const response = await handleMetricSnapshotRefreshRequest(
     new Request("http://localhost/api/analytics/snapshot/refresh", { method: "GET" }),
+    { requireCorporateAuth: async () => null },
+  );
+  assert.equal(response.status, 405);
+});
+
+test("statistical snapshot refresh via analytics exige POST no handler", async () => {
+  const response = await handleStatisticalSnapshotRefreshRequest(
+    new Request("http://localhost/api/analytics?action=refresh-statistical-snapshot", { method: "GET" }),
     { requireCorporateAuth: async () => null },
   );
   assert.equal(response.status, 405);

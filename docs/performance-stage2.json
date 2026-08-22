@@ -1,0 +1,2203 @@
+{
+  "generatedAt": "2026-08-22T19:00:47.255Z",
+  "calculationVersion": "v2.2026-08-22-perf-stage2",
+  "beforeSource": "docs/performance-baseline.json",
+  "cacheProvider": "memory",
+  "results": [
+    {
+      "page_id": "statistical_crosses",
+      "label": "Análises Estatísticas",
+      "cold_ms": 26324,
+      "warm_ms": 36,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": 2913169,
+      "rest_requests": 29,
+      "rest_rows": 22140,
+      "db_fetch_ms": 5461,
+      "compute_ms": 26284,
+      "payload_bytes": 2913169,
+      "slowest_table": "client_meetings",
+      "sources": [
+        {
+          "source": "clients",
+          "request_count": 4,
+          "dedup_hits": 2,
+          "total_rows": 3429,
+          "fetch_ms": 2404
+        },
+        {
+          "source": "cancellations",
+          "request_count": 1,
+          "dedup_hits": 2,
+          "total_rows": 420,
+          "fetch_ms": 932
+        },
+        {
+          "source": "client_financial_data",
+          "request_count": 4,
+          "dedup_hits": 1,
+          "total_rows": 3060,
+          "fetch_ms": 1881
+        },
+        {
+          "source": "client_meetings",
+          "request_count": 8,
+          "dedup_hits": 0,
+          "total_rows": 7590,
+          "fetch_ms": 5461
+        },
+        {
+          "source": "manual_meetings",
+          "request_count": 2,
+          "dedup_hits": 0,
+          "total_rows": 1338,
+          "fetch_ms": 713
+        },
+        {
+          "source": "meeting_attendance",
+          "request_count": 5,
+          "dedup_hits": 0,
+          "total_rows": 4803,
+          "fetch_ms": 3576
+        },
+        {
+          "source": "client_implementation_meeting_date",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 102,
+          "fetch_ms": 290
+        },
+        {
+          "source": "client_mecanismos",
+          "request_count": 2,
+          "dedup_hits": 0,
+          "total_rows": 1087,
+          "fetch_ms": 877
+        },
+        {
+          "source": "mecanismos",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 19,
+          "fetch_ms": 556
+        },
+        {
+          "source": "nps_responses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 292,
+          "fetch_ms": 477
+        }
+      ],
+      "warm_payload_bytes": 2913169,
+      "before": {
+        "page_id": "statistical_crosses",
+        "label": "Análises Estatísticas",
+        "cold_ms": 22242,
+        "warm_ms": 23,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 0,
+        "rest_rows": 0,
+        "db_fetch_ms": 0,
+        "compute_ms": 22212,
+        "payload_bytes": 2911179,
+        "slowest_table": null,
+        "sources": [],
+        "warm_payload_bytes": 2911179,
+        "prior": null
+      },
+      "cold_gain_pct": -18.4,
+      "requests_gain_pct": null,
+      "payload_gain_pct": -0.1,
+      "primaryCause": "paginação REST (meetings/clients/attendance)"
+    },
+    {
+      "page_id": "executive_summary",
+      "label": "Resumo Executivo",
+      "cold_ms": 16282,
+      "warm_ms": 2,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": 90532,
+      "rest_requests": 36,
+      "rest_rows": 26559,
+      "db_fetch_ms": 4473,
+      "compute_ms": 16280,
+      "payload_bytes": 90552,
+      "slowest_table": "client_meetings",
+      "sources": [
+        {
+          "source": "clients",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3429,
+          "fetch_ms": 2110
+        },
+        {
+          "source": "cancellations",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 420,
+          "fetch_ms": 856
+        },
+        {
+          "source": "client_financial_data",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3060,
+          "fetch_ms": 1684
+        },
+        {
+          "source": "client_meetings",
+          "request_count": 8,
+          "dedup_hits": 0,
+          "total_rows": 7590,
+          "fetch_ms": 4473
+        },
+        {
+          "source": "manual_meetings",
+          "request_count": 2,
+          "dedup_hits": 0,
+          "total_rows": 1338,
+          "fetch_ms": 933
+        },
+        {
+          "source": "meeting_attendance",
+          "request_count": 5,
+          "dedup_hits": 0,
+          "total_rows": 4803,
+          "fetch_ms": 2171
+        },
+        {
+          "source": "client_mecanismos",
+          "request_count": 2,
+          "dedup_hits": 0,
+          "total_rows": 1087,
+          "fetch_ms": 1056
+        },
+        {
+          "source": "mecanismos",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 19,
+          "fetch_ms": 380
+        },
+        {
+          "source": "client_journeys",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3432,
+          "fetch_ms": 2210
+        },
+        {
+          "source": "client_implementation_meeting_date",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 102,
+          "fetch_ms": 379
+        },
+        {
+          "source": "nps_responses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 292,
+          "fetch_ms": 493
+        },
+        {
+          "source": "csat_responses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 591,
+          "fetch_ms": 792
+        },
+        {
+          "source": "nps_sends",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 379,
+          "fetch_ms": 530
+        },
+        {
+          "source": "cancellation_statuses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 17,
+          "fetch_ms": 356
+        }
+      ],
+      "warm_payload_bytes": 90552,
+      "before": {
+        "page_id": "executive_summary",
+        "label": "Resumo Executivo",
+        "cold_ms": 12157,
+        "warm_ms": 1,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 36,
+        "rest_rows": 26559,
+        "db_fetch_ms": 4464,
+        "compute_ms": 12156,
+        "payload_bytes": 90551,
+        "slowest_table": "client_meetings",
+        "sources": [
+          {
+            "source": "clients",
+            "request_count": 4,
+            "dedup_hits": 0,
+            "total_rows": 3429,
+            "fetch_ms": 2357
+          },
+          {
+            "source": "cancellations",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 420,
+            "fetch_ms": 776
+          },
+          {
+            "source": "client_financial_data",
+            "request_count": 4,
+            "dedup_hits": 0,
+            "total_rows": 3060,
+            "fetch_ms": 1865
+          },
+          {
+            "source": "client_meetings",
+            "request_count": 8,
+            "dedup_hits": 0,
+            "total_rows": 7590,
+            "fetch_ms": 4464
+          },
+          {
+            "source": "manual_meetings",
+            "request_count": 2,
+            "dedup_hits": 0,
+            "total_rows": 1338,
+            "fetch_ms": 968
+          },
+          {
+            "source": "meeting_attendance",
+            "request_count": 5,
+            "dedup_hits": 0,
+            "total_rows": 4803,
+            "fetch_ms": 2277
+          },
+          {
+            "source": "client_mecanismos",
+            "request_count": 2,
+            "dedup_hits": 0,
+            "total_rows": 1087,
+            "fetch_ms": 752
+          },
+          {
+            "source": "mecanismos",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 19,
+            "fetch_ms": 361
+          },
+          {
+            "source": "client_journeys",
+            "request_count": 4,
+            "dedup_hits": 0,
+            "total_rows": 3432,
+            "fetch_ms": 1712
+          },
+          {
+            "source": "client_implementation_meeting_date",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 102,
+            "fetch_ms": 318
+          },
+          {
+            "source": "nps_responses",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 292,
+            "fetch_ms": 1128
+          },
+          {
+            "source": "csat_responses",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 591,
+            "fetch_ms": 2169
+          },
+          {
+            "source": "nps_sends",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 379,
+            "fetch_ms": 474
+          },
+          {
+            "source": "cancellation_statuses",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 17,
+            "fetch_ms": 389
+          }
+        ],
+        "warm_payload_bytes": 90551,
+        "prior": null
+      },
+      "cold_gain_pct": -33.9,
+      "requests_gain_pct": 0,
+      "payload_gain_pct": 0,
+      "primaryCause": "paginação REST (meetings/clients/attendance)"
+    },
+    {
+      "page_id": "ep_performance",
+      "label": "Performance por EP",
+      "cold_ms": 15511,
+      "warm_ms": 160,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": 807346,
+      "rest_requests": 36,
+      "rest_rows": 26559,
+      "db_fetch_ms": 4550,
+      "compute_ms": 15355,
+      "payload_bytes": 9913943,
+      "slowest_table": "client_meetings",
+      "sources": [
+        {
+          "source": "clients",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3429,
+          "fetch_ms": 2275
+        },
+        {
+          "source": "cancellations",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 420,
+          "fetch_ms": 800
+        },
+        {
+          "source": "client_financial_data",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3060,
+          "fetch_ms": 1678
+        },
+        {
+          "source": "client_meetings",
+          "request_count": 8,
+          "dedup_hits": 0,
+          "total_rows": 7590,
+          "fetch_ms": 4550
+        },
+        {
+          "source": "manual_meetings",
+          "request_count": 2,
+          "dedup_hits": 0,
+          "total_rows": 1338,
+          "fetch_ms": 902
+        },
+        {
+          "source": "meeting_attendance",
+          "request_count": 5,
+          "dedup_hits": 0,
+          "total_rows": 4803,
+          "fetch_ms": 2757
+        },
+        {
+          "source": "client_mecanismos",
+          "request_count": 2,
+          "dedup_hits": 0,
+          "total_rows": 1087,
+          "fetch_ms": 796
+        },
+        {
+          "source": "mecanismos",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 19,
+          "fetch_ms": 344
+        },
+        {
+          "source": "client_journeys",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3432,
+          "fetch_ms": 1938
+        },
+        {
+          "source": "client_implementation_meeting_date",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 102,
+          "fetch_ms": 286
+        },
+        {
+          "source": "nps_responses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 292,
+          "fetch_ms": 513
+        },
+        {
+          "source": "csat_responses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 591,
+          "fetch_ms": 561
+        },
+        {
+          "source": "nps_sends",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 379,
+          "fetch_ms": 478
+        },
+        {
+          "source": "cancellation_statuses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 17,
+          "fetch_ms": 291
+        }
+      ],
+      "warm_payload_bytes": 9913943,
+      "before": {
+        "page_id": "ep_performance",
+        "label": "Performance por EP",
+        "cold_ms": 13114,
+        "warm_ms": 214,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 36,
+        "rest_rows": 26559,
+        "db_fetch_ms": 4421,
+        "compute_ms": 12929,
+        "payload_bytes": 9886626,
+        "slowest_table": "client_meetings",
+        "sources": [
+          {
+            "source": "clients",
+            "request_count": 4,
+            "dedup_hits": 0,
+            "total_rows": 3429,
+            "fetch_ms": 2123
+          },
+          {
+            "source": "cancellations",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 420,
+            "fetch_ms": 829
+          },
+          {
+            "source": "client_financial_data",
+            "request_count": 4,
+            "dedup_hits": 0,
+            "total_rows": 3060,
+            "fetch_ms": 1490
+          },
+          {
+            "source": "client_meetings",
+            "request_count": 8,
+            "dedup_hits": 0,
+            "total_rows": 7590,
+            "fetch_ms": 4421
+          },
+          {
+            "source": "manual_meetings",
+            "request_count": 2,
+            "dedup_hits": 0,
+            "total_rows": 1338,
+            "fetch_ms": 871
+          },
+          {
+            "source": "meeting_attendance",
+            "request_count": 5,
+            "dedup_hits": 0,
+            "total_rows": 4803,
+            "fetch_ms": 2345
+          },
+          {
+            "source": "client_mecanismos",
+            "request_count": 2,
+            "dedup_hits": 0,
+            "total_rows": 1087,
+            "fetch_ms": 817
+          },
+          {
+            "source": "mecanismos",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 19,
+            "fetch_ms": 338
+          },
+          {
+            "source": "client_journeys",
+            "request_count": 4,
+            "dedup_hits": 0,
+            "total_rows": 3432,
+            "fetch_ms": 1822
+          },
+          {
+            "source": "client_implementation_meeting_date",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 102,
+            "fetch_ms": 281
+          },
+          {
+            "source": "nps_responses",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 292,
+            "fetch_ms": 809
+          },
+          {
+            "source": "csat_responses",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 591,
+            "fetch_ms": 1062
+          },
+          {
+            "source": "nps_sends",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 379,
+            "fetch_ms": 471
+          },
+          {
+            "source": "cancellation_statuses",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 17,
+            "fetch_ms": 258
+          }
+        ],
+        "warm_payload_bytes": 9886626,
+        "prior": null
+      },
+      "cold_gain_pct": -18.3,
+      "requests_gain_pct": 0,
+      "payload_gain_pct": -0.3,
+      "primaryCause": "paginação REST (meetings/clients/attendance)"
+    },
+    {
+      "page_id": "meetings",
+      "label": "Reuniões",
+      "cold_ms": 12530,
+      "warm_ms": 321,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": 6091337,
+      "rest_requests": 21,
+      "rest_rows": 17682,
+      "db_fetch_ms": 4712,
+      "compute_ms": 12174,
+      "payload_bytes": 20259390,
+      "slowest_table": "client_meetings",
+      "sources": [
+        {
+          "source": "clients",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3429,
+          "fetch_ms": 2306
+        },
+        {
+          "source": "client_meetings",
+          "request_count": 8,
+          "dedup_hits": 0,
+          "total_rows": 7590,
+          "fetch_ms": 4712
+        },
+        {
+          "source": "manual_meetings",
+          "request_count": 2,
+          "dedup_hits": 0,
+          "total_rows": 1338,
+          "fetch_ms": 718
+        },
+        {
+          "source": "meeting_attendance",
+          "request_count": 5,
+          "dedup_hits": 0,
+          "total_rows": 4803,
+          "fetch_ms": 2244
+        },
+        {
+          "source": "client_implementation_meeting_date",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 102,
+          "fetch_ms": 171
+        },
+        {
+          "source": "cancellations",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 420,
+          "fetch_ms": 807
+        }
+      ],
+      "warm_payload_bytes": 20259390,
+      "before": {
+        "page_id": "meetings",
+        "label": "Reuniões",
+        "cold_ms": 10769,
+        "warm_ms": 199,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 0,
+        "rest_rows": 0,
+        "db_fetch_ms": 0,
+        "compute_ms": 10586,
+        "payload_bytes": 20258219,
+        "slowest_table": null,
+        "sources": [],
+        "warm_payload_bytes": 20258219,
+        "prior": null
+      },
+      "cold_gain_pct": -16.4,
+      "requests_gain_pct": null,
+      "payload_gain_pct": 0,
+      "primaryCause": "paginação REST (meetings/clients/attendance)"
+    },
+    {
+      "page_id": "quality",
+      "label": "Qualidade",
+      "cold_ms": 8469,
+      "warm_ms": 1,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": null,
+      "rest_requests": 34,
+      "rest_rows": 26163,
+      "db_fetch_ms": 4390,
+      "compute_ms": 8453,
+      "payload_bytes": 38526,
+      "slowest_table": "client_meetings",
+      "sources": [
+        {
+          "source": "clients",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3429,
+          "fetch_ms": 2131
+        },
+        {
+          "source": "client_financial_data",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3060,
+          "fetch_ms": 1873
+        },
+        {
+          "source": "client_journeys",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3432,
+          "fetch_ms": 2137
+        },
+        {
+          "source": "client_meetings",
+          "request_count": 8,
+          "dedup_hits": 0,
+          "total_rows": 7590,
+          "fetch_ms": 4390
+        },
+        {
+          "source": "manual_meetings",
+          "request_count": 2,
+          "dedup_hits": 0,
+          "total_rows": 1338,
+          "fetch_ms": 1286
+        },
+        {
+          "source": "meeting_attendance",
+          "request_count": 5,
+          "dedup_hits": 0,
+          "total_rows": 4803,
+          "fetch_ms": 2610
+        },
+        {
+          "source": "client_implementation_meeting_date",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 102,
+          "fetch_ms": 293
+        },
+        {
+          "source": "client_mecanismos",
+          "request_count": 2,
+          "dedup_hits": 0,
+          "total_rows": 1087,
+          "fetch_ms": 877
+        },
+        {
+          "source": "mecanismos",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 19,
+          "fetch_ms": 300
+        },
+        {
+          "source": "nps_responses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 292,
+          "fetch_ms": 596
+        },
+        {
+          "source": "csat_responses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 591,
+          "fetch_ms": 647
+        },
+        {
+          "source": "cancellations",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 420,
+          "fetch_ms": 997
+        }
+      ],
+      "warm_payload_bytes": 38526,
+      "before": {
+        "page_id": "quality",
+        "label": "Qualidade",
+        "cold_ms": 8402,
+        "warm_ms": 0,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 34,
+        "rest_rows": 26163,
+        "db_fetch_ms": 5873,
+        "compute_ms": 8402,
+        "payload_bytes": 38528,
+        "slowest_table": "client_meetings",
+        "sources": [
+          {
+            "source": "clients",
+            "request_count": 4,
+            "dedup_hits": 0,
+            "total_rows": 3429,
+            "fetch_ms": 3244
+          },
+          {
+            "source": "client_financial_data",
+            "request_count": 4,
+            "dedup_hits": 0,
+            "total_rows": 3060,
+            "fetch_ms": 1833
+          },
+          {
+            "source": "client_journeys",
+            "request_count": 4,
+            "dedup_hits": 0,
+            "total_rows": 3432,
+            "fetch_ms": 2137
+          },
+          {
+            "source": "client_meetings",
+            "request_count": 8,
+            "dedup_hits": 0,
+            "total_rows": 7590,
+            "fetch_ms": 5873
+          },
+          {
+            "source": "manual_meetings",
+            "request_count": 2,
+            "dedup_hits": 0,
+            "total_rows": 1338,
+            "fetch_ms": 1620
+          },
+          {
+            "source": "meeting_attendance",
+            "request_count": 5,
+            "dedup_hits": 0,
+            "total_rows": 4803,
+            "fetch_ms": 3134
+          },
+          {
+            "source": "client_implementation_meeting_date",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 102,
+            "fetch_ms": 342
+          },
+          {
+            "source": "client_mecanismos",
+            "request_count": 2,
+            "dedup_hits": 0,
+            "total_rows": 1087,
+            "fetch_ms": 1324
+          },
+          {
+            "source": "mecanismos",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 19,
+            "fetch_ms": 359
+          },
+          {
+            "source": "nps_responses",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 292,
+            "fetch_ms": 993
+          },
+          {
+            "source": "csat_responses",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 591,
+            "fetch_ms": 1151
+          },
+          {
+            "source": "cancellations",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 420,
+            "fetch_ms": 893
+          }
+        ],
+        "warm_payload_bytes": 38528,
+        "prior": null
+      },
+      "cold_gain_pct": -0.8,
+      "requests_gain_pct": 0,
+      "payload_gain_pct": 0,
+      "primaryCause": "paginação REST (meetings/clients/attendance)"
+    },
+    {
+      "page_id": "temporal_indicators",
+      "label": "Indicadores Temporais",
+      "cold_ms": 6522,
+      "warm_ms": 246,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": 2612160,
+      "rest_requests": 27,
+      "rest_rows": 22019,
+      "db_fetch_ms": 4904,
+      "compute_ms": 6242,
+      "payload_bytes": 23274133,
+      "slowest_table": "client_meetings",
+      "sources": [
+        {
+          "source": "clients",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3429,
+          "fetch_ms": 2454
+        },
+        {
+          "source": "cancellations",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 420,
+          "fetch_ms": 859
+        },
+        {
+          "source": "client_meetings",
+          "request_count": 8,
+          "dedup_hits": 0,
+          "total_rows": 7590,
+          "fetch_ms": 4904
+        },
+        {
+          "source": "manual_meetings",
+          "request_count": 2,
+          "dedup_hits": 0,
+          "total_rows": 1338,
+          "fetch_ms": 1048
+        },
+        {
+          "source": "meeting_attendance",
+          "request_count": 5,
+          "dedup_hits": 0,
+          "total_rows": 4803,
+          "fetch_ms": 3081
+        },
+        {
+          "source": "client_mecanismos",
+          "request_count": 2,
+          "dedup_hits": 0,
+          "total_rows": 1087,
+          "fetch_ms": 1193
+        },
+        {
+          "source": "client_financial_data",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3060,
+          "fetch_ms": 1780
+        },
+        {
+          "source": "nps_responses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 292,
+          "fetch_ms": 616
+        }
+      ],
+      "warm_payload_bytes": 23274133,
+      "before": {
+        "page_id": "temporal_indicators",
+        "label": "Indicadores Temporais",
+        "cold_ms": 5779,
+        "warm_ms": 239,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 27,
+        "rest_rows": 22019,
+        "db_fetch_ms": 4466,
+        "compute_ms": 5543,
+        "payload_bytes": 23343704,
+        "slowest_table": "client_meetings",
+        "sources": [
+          {
+            "source": "clients",
+            "request_count": 4,
+            "dedup_hits": 0,
+            "total_rows": 3429,
+            "fetch_ms": 2601
+          },
+          {
+            "source": "cancellations",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 420,
+            "fetch_ms": 569
+          },
+          {
+            "source": "client_meetings",
+            "request_count": 8,
+            "dedup_hits": 0,
+            "total_rows": 7590,
+            "fetch_ms": 4466
+          },
+          {
+            "source": "manual_meetings",
+            "request_count": 2,
+            "dedup_hits": 0,
+            "total_rows": 1338,
+            "fetch_ms": 729
+          },
+          {
+            "source": "meeting_attendance",
+            "request_count": 5,
+            "dedup_hits": 0,
+            "total_rows": 4803,
+            "fetch_ms": 2439
+          },
+          {
+            "source": "client_mecanismos",
+            "request_count": 2,
+            "dedup_hits": 0,
+            "total_rows": 1087,
+            "fetch_ms": 887
+          },
+          {
+            "source": "client_financial_data",
+            "request_count": 4,
+            "dedup_hits": 0,
+            "total_rows": 3060,
+            "fetch_ms": 1672
+          },
+          {
+            "source": "nps_responses",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 292,
+            "fetch_ms": 910
+          }
+        ],
+        "warm_payload_bytes": 23343704,
+        "prior": null
+      },
+      "cold_gain_pct": -12.9,
+      "requests_gain_pct": 0,
+      "payload_gain_pct": 0.3,
+      "primaryCause": "paginação REST (meetings/clients/attendance)"
+    },
+    {
+      "page_id": "cancellations",
+      "label": "Cancelamento",
+      "cold_ms": 5211,
+      "warm_ms": 20,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": null,
+      "rest_requests": 36,
+      "rest_rows": 26559,
+      "db_fetch_ms": 4620,
+      "compute_ms": 5182,
+      "payload_bytes": 2422322,
+      "slowest_table": "client_meetings",
+      "sources": [
+        {
+          "source": "clients",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3429,
+          "fetch_ms": 2093
+        },
+        {
+          "source": "cancellations",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 420,
+          "fetch_ms": 810
+        },
+        {
+          "source": "client_financial_data",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3060,
+          "fetch_ms": 1711
+        },
+        {
+          "source": "client_meetings",
+          "request_count": 8,
+          "dedup_hits": 0,
+          "total_rows": 7590,
+          "fetch_ms": 4620
+        },
+        {
+          "source": "manual_meetings",
+          "request_count": 2,
+          "dedup_hits": 0,
+          "total_rows": 1338,
+          "fetch_ms": 910
+        },
+        {
+          "source": "meeting_attendance",
+          "request_count": 5,
+          "dedup_hits": 0,
+          "total_rows": 4803,
+          "fetch_ms": 2506
+        },
+        {
+          "source": "client_mecanismos",
+          "request_count": 2,
+          "dedup_hits": 0,
+          "total_rows": 1087,
+          "fetch_ms": 1050
+        },
+        {
+          "source": "mecanismos",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 19,
+          "fetch_ms": 359
+        },
+        {
+          "source": "client_journeys",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3432,
+          "fetch_ms": 1993
+        },
+        {
+          "source": "client_implementation_meeting_date",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 102,
+          "fetch_ms": 287
+        },
+        {
+          "source": "nps_responses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 292,
+          "fetch_ms": 509
+        },
+        {
+          "source": "csat_responses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 591,
+          "fetch_ms": 616
+        },
+        {
+          "source": "nps_sends",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 379,
+          "fetch_ms": 517
+        },
+        {
+          "source": "cancellation_statuses",
+          "request_count": 1,
+          "dedup_hits": 1,
+          "total_rows": 17,
+          "fetch_ms": 339
+        }
+      ],
+      "warm_payload_bytes": 2422322,
+      "before": {
+        "page_id": "cancellations",
+        "label": "Cancelamento",
+        "cold_ms": 4969,
+        "warm_ms": 23,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 36,
+        "rest_rows": 26559,
+        "db_fetch_ms": 4528,
+        "compute_ms": 4949,
+        "payload_bytes": 2422324,
+        "slowest_table": "client_meetings",
+        "sources": [
+          {
+            "source": "clients",
+            "request_count": 4,
+            "dedup_hits": 0,
+            "total_rows": 3429,
+            "fetch_ms": 2643
+          },
+          {
+            "source": "cancellations",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 420,
+            "fetch_ms": 563
+          },
+          {
+            "source": "client_financial_data",
+            "request_count": 4,
+            "dedup_hits": 0,
+            "total_rows": 3060,
+            "fetch_ms": 1657
+          },
+          {
+            "source": "client_meetings",
+            "request_count": 8,
+            "dedup_hits": 0,
+            "total_rows": 7590,
+            "fetch_ms": 4528
+          },
+          {
+            "source": "manual_meetings",
+            "request_count": 2,
+            "dedup_hits": 0,
+            "total_rows": 1338,
+            "fetch_ms": 1074
+          },
+          {
+            "source": "meeting_attendance",
+            "request_count": 5,
+            "dedup_hits": 0,
+            "total_rows": 4803,
+            "fetch_ms": 2564
+          },
+          {
+            "source": "client_mecanismos",
+            "request_count": 2,
+            "dedup_hits": 0,
+            "total_rows": 1087,
+            "fetch_ms": 1019
+          },
+          {
+            "source": "mecanismos",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 19,
+            "fetch_ms": 409
+          },
+          {
+            "source": "client_journeys",
+            "request_count": 4,
+            "dedup_hits": 0,
+            "total_rows": 3432,
+            "fetch_ms": 1810
+          },
+          {
+            "source": "client_implementation_meeting_date",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 102,
+            "fetch_ms": 570
+          },
+          {
+            "source": "nps_responses",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 292,
+            "fetch_ms": 879
+          },
+          {
+            "source": "csat_responses",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 591,
+            "fetch_ms": 1138
+          },
+          {
+            "source": "nps_sends",
+            "request_count": 1,
+            "dedup_hits": 0,
+            "total_rows": 379,
+            "fetch_ms": 742
+          },
+          {
+            "source": "cancellation_statuses",
+            "request_count": 1,
+            "dedup_hits": 1,
+            "total_rows": 17,
+            "fetch_ms": 334
+          }
+        ],
+        "warm_payload_bytes": 2422324,
+        "prior": null
+      },
+      "cold_gain_pct": -4.9,
+      "requests_gain_pct": 0,
+      "payload_gain_pct": 0,
+      "primaryCause": "paginação REST (meetings/clients/attendance)"
+    },
+    {
+      "page_id": "journey",
+      "label": "Jornada/Onboarding",
+      "cold_ms": 4541,
+      "warm_ms": 18,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": null,
+      "rest_requests": 0,
+      "rest_rows": 0,
+      "db_fetch_ms": 0,
+      "compute_ms": 4506,
+      "payload_bytes": 2452082,
+      "slowest_table": null,
+      "sources": [],
+      "warm_payload_bytes": 2452082,
+      "before": {
+        "page_id": "journey",
+        "label": "Jornada/Onboarding",
+        "cold_ms": 4692,
+        "warm_ms": 20,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 0,
+        "rest_rows": 0,
+        "db_fetch_ms": 0,
+        "compute_ms": 4665,
+        "payload_bytes": 2452082,
+        "slowest_table": null,
+        "sources": [],
+        "warm_payload_bytes": 2452082,
+        "prior": null
+      },
+      "cold_gain_pct": 3.2,
+      "requests_gain_pct": null,
+      "payload_gain_pct": 0,
+      "primaryCause": "payload / serialização"
+    },
+    {
+      "page_id": "general",
+      "label": "Dados Gerais",
+      "cold_ms": 4524,
+      "warm_ms": 108,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": null,
+      "rest_requests": 9,
+      "rest_rows": 6909,
+      "db_fetch_ms": 2985,
+      "compute_ms": 4437,
+      "payload_bytes": 6433426,
+      "slowest_table": "clients",
+      "sources": [
+        {
+          "source": "clients",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3429,
+          "fetch_ms": 2985
+        },
+        {
+          "source": "cancellations",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 420,
+          "fetch_ms": 1257
+        },
+        {
+          "source": "client_financial_data",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3060,
+          "fetch_ms": 2160
+        }
+      ],
+      "warm_payload_bytes": 6433426,
+      "before": {
+        "page_id": "general",
+        "label": "Dados Gerais",
+        "cold_ms": 2735,
+        "warm_ms": 28,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 0,
+        "rest_rows": 0,
+        "db_fetch_ms": 0,
+        "compute_ms": 2708,
+        "payload_bytes": 6433127,
+        "slowest_table": null,
+        "sources": [],
+        "warm_payload_bytes": 6433127,
+        "prior": null
+      },
+      "cold_gain_pct": -65.4,
+      "requests_gain_pct": null,
+      "payload_gain_pct": 0,
+      "primaryCause": "payload / serialização"
+    },
+    {
+      "page_id": "patrimonial_plan",
+      "label": "Plano Patrimonial",
+      "cold_ms": 4278,
+      "warm_ms": 20,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": null,
+      "rest_requests": 0,
+      "rest_rows": 0,
+      "db_fetch_ms": 0,
+      "compute_ms": 4252,
+      "payload_bytes": 2064678,
+      "slowest_table": null,
+      "sources": [],
+      "warm_payload_bytes": 2064678,
+      "before": {
+        "page_id": "patrimonial_plan",
+        "label": "Plano Patrimonial",
+        "cold_ms": 3800,
+        "warm_ms": 12,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 0,
+        "rest_rows": 0,
+        "db_fetch_ms": 0,
+        "compute_ms": 3784,
+        "payload_bytes": 2064678,
+        "slowest_table": null,
+        "sources": [],
+        "warm_payload_bytes": 2064678,
+        "prior": null
+      },
+      "cold_gain_pct": -12.6,
+      "requests_gain_pct": null,
+      "payload_gain_pct": 0,
+      "primaryCause": "payload / serialização"
+    },
+    {
+      "page_id": "financial_updates",
+      "label": "Atualização Financeira",
+      "cold_ms": 4199,
+      "warm_ms": 35,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": null,
+      "rest_requests": 0,
+      "rest_rows": 0,
+      "db_fetch_ms": 0,
+      "compute_ms": 4162,
+      "payload_bytes": 3149512,
+      "slowest_table": null,
+      "sources": [],
+      "warm_payload_bytes": 3149512,
+      "before": {
+        "page_id": "financial_updates",
+        "label": "Atualização Financeira",
+        "cold_ms": 3903,
+        "warm_ms": 17,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 0,
+        "rest_rows": 0,
+        "db_fetch_ms": 0,
+        "compute_ms": 3882,
+        "payload_bytes": 3149552,
+        "slowest_table": null,
+        "sources": [],
+        "warm_payload_bytes": 3149552,
+        "prior": null
+      },
+      "cold_gain_pct": -7.6,
+      "requests_gain_pct": null,
+      "payload_gain_pct": 0,
+      "primaryCause": "payload / serialização"
+    },
+    {
+      "page_id": "mechanisms",
+      "label": "Mecanismos",
+      "cold_ms": 3821,
+      "warm_ms": 12,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": 688362,
+      "rest_requests": 12,
+      "rest_rows": 8015,
+      "db_fetch_ms": 2534,
+      "compute_ms": 3808,
+      "payload_bytes": 734673,
+      "slowest_table": "clients",
+      "sources": [
+        {
+          "source": "clients",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3429,
+          "fetch_ms": 2534
+        },
+        {
+          "source": "client_mecanismos",
+          "request_count": 2,
+          "dedup_hits": 0,
+          "total_rows": 1087,
+          "fetch_ms": 824
+        },
+        {
+          "source": "mecanismos",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 19,
+          "fetch_ms": 183
+        },
+        {
+          "source": "cancellations",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 420,
+          "fetch_ms": 674
+        },
+        {
+          "source": "client_financial_data",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3060,
+          "fetch_ms": 1979
+        }
+      ],
+      "warm_payload_bytes": 734673,
+      "before": {
+        "page_id": "mechanisms",
+        "label": "Mecanismos",
+        "cold_ms": 3570,
+        "warm_ms": 7,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 0,
+        "rest_rows": 0,
+        "db_fetch_ms": 0,
+        "compute_ms": 3562,
+        "payload_bytes": 734190,
+        "slowest_table": null,
+        "sources": [],
+        "warm_payload_bytes": 734190,
+        "prior": null
+      },
+      "cold_gain_pct": -7,
+      "requests_gain_pct": null,
+      "payload_gain_pct": -0.1,
+      "primaryCause": "compute"
+    },
+    {
+      "page_id": "satisfaction",
+      "label": "Pesquisa de Satisfação",
+      "cold_ms": 2721,
+      "warm_ms": 41,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": 1177739,
+      "rest_requests": 7,
+      "rest_rows": 4691,
+      "db_fetch_ms": 2607,
+      "compute_ms": 2673,
+      "payload_bytes": 3816312,
+      "slowest_table": "clients",
+      "sources": [
+        {
+          "source": "clients",
+          "request_count": 4,
+          "dedup_hits": 0,
+          "total_rows": 3429,
+          "fetch_ms": 2607
+        },
+        {
+          "source": "nps_responses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 292,
+          "fetch_ms": 1108
+        },
+        {
+          "source": "csat_responses",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 591,
+          "fetch_ms": 960
+        },
+        {
+          "source": "nps_sends",
+          "request_count": 1,
+          "dedup_hits": 0,
+          "total_rows": 379,
+          "fetch_ms": 323
+        }
+      ],
+      "warm_payload_bytes": 3816312,
+      "before": {
+        "page_id": "satisfaction",
+        "label": "Pesquisa de Satisfação",
+        "cold_ms": 1842,
+        "warm_ms": 51,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 0,
+        "rest_rows": 0,
+        "db_fetch_ms": 0,
+        "compute_ms": 1814,
+        "payload_bytes": 3815934,
+        "slowest_table": null,
+        "sources": [],
+        "warm_payload_bytes": 3815934,
+        "prior": null
+      },
+      "cold_gain_pct": -47.7,
+      "requests_gain_pct": null,
+      "payload_gain_pct": 0,
+      "primaryCause": "payload / serialização"
+    },
+    {
+      "page_id": "renewal",
+      "label": "Renovação",
+      "cold_ms": 2040,
+      "warm_ms": 12,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": null,
+      "rest_requests": 0,
+      "rest_rows": 0,
+      "db_fetch_ms": 0,
+      "compute_ms": 2027,
+      "payload_bytes": 1265788,
+      "slowest_table": null,
+      "sources": [],
+      "warm_payload_bytes": 1265788,
+      "before": {
+        "page_id": "renewal",
+        "label": "Renovação",
+        "cold_ms": 1685,
+        "warm_ms": 8,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 0,
+        "rest_rows": 0,
+        "db_fetch_ms": 0,
+        "compute_ms": 1676,
+        "payload_bytes": 1265788,
+        "slowest_table": null,
+        "sources": [],
+        "warm_payload_bytes": 1265788,
+        "prior": null
+      },
+      "cold_gain_pct": -21.1,
+      "requests_gain_pct": null,
+      "payload_gain_pct": 0,
+      "primaryCause": "compute"
+    },
+    {
+      "page_id": "platform_usage",
+      "label": "Uso da Plataforma",
+      "cold_ms": 1162,
+      "warm_ms": 6,
+      "cache_hit_warm": true,
+      "cache_provider": "memory",
+      "public_payload_bytes": 173638,
+      "rest_requests": 0,
+      "rest_rows": 0,
+      "db_fetch_ms": 0,
+      "compute_ms": 1157,
+      "payload_bytes": 272265,
+      "slowest_table": null,
+      "sources": [],
+      "warm_payload_bytes": 272265,
+      "before": {
+        "page_id": "platform_usage",
+        "label": "Uso da Plataforma",
+        "cold_ms": 1073,
+        "warm_ms": 2,
+        "cache_hit_warm": true,
+        "cache_provider": "memory",
+        "rest_requests": 0,
+        "rest_rows": 0,
+        "db_fetch_ms": 0,
+        "compute_ms": 1070,
+        "payload_bytes": 272267,
+        "slowest_table": null,
+        "sources": [],
+        "warm_payload_bytes": 272267,
+        "prior": null
+      },
+      "cold_gain_pct": -8.3,
+      "requests_gain_pct": null,
+      "payload_gain_pct": 0,
+      "primaryCause": "compute"
+    }
+  ],
+  "topBottlenecks": [
+    {
+      "label": "Análises Estatísticas",
+      "cold_ms": 26324,
+      "primaryCause": "paginação REST (meetings/clients/attendance)"
+    },
+    {
+      "label": "Resumo Executivo",
+      "cold_ms": 16282,
+      "primaryCause": "paginação REST (meetings/clients/attendance)"
+    },
+    {
+      "label": "Performance por EP",
+      "cold_ms": 15511,
+      "primaryCause": "paginação REST (meetings/clients/attendance)"
+    },
+    {
+      "label": "Reuniões",
+      "cold_ms": 12530,
+      "primaryCause": "paginação REST (meetings/clients/attendance)"
+    },
+    {
+      "label": "Qualidade",
+      "cold_ms": 8469,
+      "primaryCause": "paginação REST (meetings/clients/attendance)"
+    }
+  ],
+  "paginationAudit": [
+    {
+      "page": "Análises Estatísticas",
+      "source": "clients",
+      "pageSize": "—",
+      "request_count": 4,
+      "total_rows": 3429,
+      "fetch_ms": 2404
+    },
+    {
+      "page": "Análises Estatísticas",
+      "source": "cancellations",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 420,
+      "fetch_ms": 932
+    },
+    {
+      "page": "Análises Estatísticas",
+      "source": "client_financial_data",
+      "pageSize": "—",
+      "request_count": 4,
+      "total_rows": 3060,
+      "fetch_ms": 1881
+    },
+    {
+      "page": "Análises Estatísticas",
+      "source": "client_meetings",
+      "pageSize": "—",
+      "request_count": 8,
+      "total_rows": 7590,
+      "fetch_ms": 5461
+    },
+    {
+      "page": "Análises Estatísticas",
+      "source": "manual_meetings",
+      "pageSize": "—",
+      "request_count": 2,
+      "total_rows": 1338,
+      "fetch_ms": 713
+    },
+    {
+      "page": "Análises Estatísticas",
+      "source": "meeting_attendance",
+      "pageSize": "—",
+      "request_count": 5,
+      "total_rows": 4803,
+      "fetch_ms": 3576
+    },
+    {
+      "page": "Análises Estatísticas",
+      "source": "client_implementation_meeting_date",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 102,
+      "fetch_ms": 290
+    },
+    {
+      "page": "Análises Estatísticas",
+      "source": "client_mecanismos",
+      "pageSize": "—",
+      "request_count": 2,
+      "total_rows": 1087,
+      "fetch_ms": 877
+    },
+    {
+      "page": "Análises Estatísticas",
+      "source": "mecanismos",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 19,
+      "fetch_ms": 556
+    },
+    {
+      "page": "Análises Estatísticas",
+      "source": "nps_responses",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 292,
+      "fetch_ms": 477
+    },
+    {
+      "page": "Resumo Executivo",
+      "source": "clients",
+      "pageSize": "—",
+      "request_count": 4,
+      "total_rows": 3429,
+      "fetch_ms": 2110
+    },
+    {
+      "page": "Resumo Executivo",
+      "source": "cancellations",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 420,
+      "fetch_ms": 856
+    },
+    {
+      "page": "Resumo Executivo",
+      "source": "client_financial_data",
+      "pageSize": "—",
+      "request_count": 4,
+      "total_rows": 3060,
+      "fetch_ms": 1684
+    },
+    {
+      "page": "Resumo Executivo",
+      "source": "client_meetings",
+      "pageSize": "—",
+      "request_count": 8,
+      "total_rows": 7590,
+      "fetch_ms": 4473
+    },
+    {
+      "page": "Resumo Executivo",
+      "source": "manual_meetings",
+      "pageSize": "—",
+      "request_count": 2,
+      "total_rows": 1338,
+      "fetch_ms": 933
+    },
+    {
+      "page": "Resumo Executivo",
+      "source": "meeting_attendance",
+      "pageSize": "—",
+      "request_count": 5,
+      "total_rows": 4803,
+      "fetch_ms": 2171
+    },
+    {
+      "page": "Resumo Executivo",
+      "source": "client_mecanismos",
+      "pageSize": "—",
+      "request_count": 2,
+      "total_rows": 1087,
+      "fetch_ms": 1056
+    },
+    {
+      "page": "Resumo Executivo",
+      "source": "mecanismos",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 19,
+      "fetch_ms": 380
+    },
+    {
+      "page": "Resumo Executivo",
+      "source": "client_journeys",
+      "pageSize": "—",
+      "request_count": 4,
+      "total_rows": 3432,
+      "fetch_ms": 2210
+    },
+    {
+      "page": "Resumo Executivo",
+      "source": "client_implementation_meeting_date",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 102,
+      "fetch_ms": 379
+    },
+    {
+      "page": "Resumo Executivo",
+      "source": "nps_responses",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 292,
+      "fetch_ms": 493
+    },
+    {
+      "page": "Resumo Executivo",
+      "source": "csat_responses",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 591,
+      "fetch_ms": 792
+    },
+    {
+      "page": "Resumo Executivo",
+      "source": "nps_sends",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 379,
+      "fetch_ms": 530
+    },
+    {
+      "page": "Resumo Executivo",
+      "source": "cancellation_statuses",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 17,
+      "fetch_ms": 356
+    },
+    {
+      "page": "Performance por EP",
+      "source": "clients",
+      "pageSize": "—",
+      "request_count": 4,
+      "total_rows": 3429,
+      "fetch_ms": 2275
+    },
+    {
+      "page": "Performance por EP",
+      "source": "cancellations",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 420,
+      "fetch_ms": 800
+    },
+    {
+      "page": "Performance por EP",
+      "source": "client_financial_data",
+      "pageSize": "—",
+      "request_count": 4,
+      "total_rows": 3060,
+      "fetch_ms": 1678
+    },
+    {
+      "page": "Performance por EP",
+      "source": "client_meetings",
+      "pageSize": "—",
+      "request_count": 8,
+      "total_rows": 7590,
+      "fetch_ms": 4550
+    },
+    {
+      "page": "Performance por EP",
+      "source": "manual_meetings",
+      "pageSize": "—",
+      "request_count": 2,
+      "total_rows": 1338,
+      "fetch_ms": 902
+    },
+    {
+      "page": "Performance por EP",
+      "source": "meeting_attendance",
+      "pageSize": "—",
+      "request_count": 5,
+      "total_rows": 4803,
+      "fetch_ms": 2757
+    },
+    {
+      "page": "Performance por EP",
+      "source": "client_mecanismos",
+      "pageSize": "—",
+      "request_count": 2,
+      "total_rows": 1087,
+      "fetch_ms": 796
+    },
+    {
+      "page": "Performance por EP",
+      "source": "mecanismos",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 19,
+      "fetch_ms": 344
+    },
+    {
+      "page": "Performance por EP",
+      "source": "client_journeys",
+      "pageSize": "—",
+      "request_count": 4,
+      "total_rows": 3432,
+      "fetch_ms": 1938
+    },
+    {
+      "page": "Performance por EP",
+      "source": "client_implementation_meeting_date",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 102,
+      "fetch_ms": 286
+    },
+    {
+      "page": "Performance por EP",
+      "source": "nps_responses",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 292,
+      "fetch_ms": 513
+    },
+    {
+      "page": "Performance por EP",
+      "source": "csat_responses",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 591,
+      "fetch_ms": 561
+    },
+    {
+      "page": "Performance por EP",
+      "source": "nps_sends",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 379,
+      "fetch_ms": 478
+    },
+    {
+      "page": "Performance por EP",
+      "source": "cancellation_statuses",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 17,
+      "fetch_ms": 291
+    },
+    {
+      "page": "Reuniões",
+      "source": "clients",
+      "pageSize": "—",
+      "request_count": 4,
+      "total_rows": 3429,
+      "fetch_ms": 2306
+    },
+    {
+      "page": "Reuniões",
+      "source": "client_meetings",
+      "pageSize": "—",
+      "request_count": 8,
+      "total_rows": 7590,
+      "fetch_ms": 4712
+    },
+    {
+      "page": "Reuniões",
+      "source": "manual_meetings",
+      "pageSize": "—",
+      "request_count": 2,
+      "total_rows": 1338,
+      "fetch_ms": 718
+    },
+    {
+      "page": "Reuniões",
+      "source": "meeting_attendance",
+      "pageSize": "—",
+      "request_count": 5,
+      "total_rows": 4803,
+      "fetch_ms": 2244
+    },
+    {
+      "page": "Reuniões",
+      "source": "client_implementation_meeting_date",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 102,
+      "fetch_ms": 171
+    },
+    {
+      "page": "Reuniões",
+      "source": "cancellations",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 420,
+      "fetch_ms": 807
+    },
+    {
+      "page": "Qualidade",
+      "source": "clients",
+      "pageSize": "—",
+      "request_count": 4,
+      "total_rows": 3429,
+      "fetch_ms": 2131
+    },
+    {
+      "page": "Qualidade",
+      "source": "client_financial_data",
+      "pageSize": "—",
+      "request_count": 4,
+      "total_rows": 3060,
+      "fetch_ms": 1873
+    },
+    {
+      "page": "Qualidade",
+      "source": "client_journeys",
+      "pageSize": "—",
+      "request_count": 4,
+      "total_rows": 3432,
+      "fetch_ms": 2137
+    },
+    {
+      "page": "Qualidade",
+      "source": "client_meetings",
+      "pageSize": "—",
+      "request_count": 8,
+      "total_rows": 7590,
+      "fetch_ms": 4390
+    },
+    {
+      "page": "Qualidade",
+      "source": "manual_meetings",
+      "pageSize": "—",
+      "request_count": 2,
+      "total_rows": 1338,
+      "fetch_ms": 1286
+    },
+    {
+      "page": "Qualidade",
+      "source": "meeting_attendance",
+      "pageSize": "—",
+      "request_count": 5,
+      "total_rows": 4803,
+      "fetch_ms": 2610
+    },
+    {
+      "page": "Qualidade",
+      "source": "client_implementation_meeting_date",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 102,
+      "fetch_ms": 293
+    },
+    {
+      "page": "Qualidade",
+      "source": "client_mecanismos",
+      "pageSize": "—",
+      "request_count": 2,
+      "total_rows": 1087,
+      "fetch_ms": 877
+    },
+    {
+      "page": "Qualidade",
+      "source": "mecanismos",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 19,
+      "fetch_ms": 300
+    },
+    {
+      "page": "Qualidade",
+      "source": "nps_responses",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 292,
+      "fetch_ms": 596
+    },
+    {
+      "page": "Qualidade",
+      "source": "csat_responses",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 591,
+      "fetch_ms": 647
+    },
+    {
+      "page": "Qualidade",
+      "source": "cancellations",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 420,
+      "fetch_ms": 997
+    },
+    {
+      "page": "Indicadores Temporais",
+      "source": "clients",
+      "pageSize": "—",
+      "request_count": 4,
+      "total_rows": 3429,
+      "fetch_ms": 2454
+    },
+    {
+      "page": "Indicadores Temporais",
+      "source": "cancellations",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 420,
+      "fetch_ms": 859
+    },
+    {
+      "page": "Indicadores Temporais",
+      "source": "client_meetings",
+      "pageSize": "—",
+      "request_count": 8,
+      "total_rows": 7590,
+      "fetch_ms": 4904
+    },
+    {
+      "page": "Indicadores Temporais",
+      "source": "manual_meetings",
+      "pageSize": "—",
+      "request_count": 2,
+      "total_rows": 1338,
+      "fetch_ms": 1048
+    },
+    {
+      "page": "Indicadores Temporais",
+      "source": "meeting_attendance",
+      "pageSize": "—",
+      "request_count": 5,
+      "total_rows": 4803,
+      "fetch_ms": 3081
+    },
+    {
+      "page": "Indicadores Temporais",
+      "source": "client_mecanismos",
+      "pageSize": "—",
+      "request_count": 2,
+      "total_rows": 1087,
+      "fetch_ms": 1193
+    },
+    {
+      "page": "Indicadores Temporais",
+      "source": "client_financial_data",
+      "pageSize": "—",
+      "request_count": 4,
+      "total_rows": 3060,
+      "fetch_ms": 1780
+    },
+    {
+      "page": "Indicadores Temporais",
+      "source": "nps_responses",
+      "pageSize": "—",
+      "request_count": 1,
+      "total_rows": 292,
+      "fetch_ms": 616
+    }
+  ],
+  "selectAudit": "- **nps_responses / csat_responses (contexto compartilhado):** removidos `raw_payload`, `comment`, `client_name`, `client_email`, `typeform_form_id`\n- **Página Satisfação:** mantém select completo via `canonical: false` (precisa de `raw_payload` para fallback de programa)\n- **scopeInputs público:** NPS/CSAT slim no `toPublicSatisfactionPayload` (sem raw_payload/comment no wire)",
+  "fidelityNote": "Testes existentes (executive-summary, ep-executive-ranking, meetings-fidelity, satisfaction-nps, statistical-crosses-parity) devem ser executados pós-benchmark — delta KPIs esperado: zero.",
+  "preloadNote": "Preloader (`js/page-preloader.js`) inalterado — continua aquecendo páginas via handlers existentes; cache version incrementada para invalidar payloads antigos.",
+  "nextBottleneck": "Análises Estatísticas (26324 ms) — paginação REST (meetings/clients/attendance)",
+  "rpcRecommendation": "**Primeira RPC candidata:** agregação server-side de `client_meetings` + `meeting_attendance` (KPIs BASE QV: total, recência, frequência, intervalo, no-show) — hoje ~7.5k meetings + ~4.8k attendance dominam requests e cold load em EP/Executive/Reuniões/Estatísticas."
+}

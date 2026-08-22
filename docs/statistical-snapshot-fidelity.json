@@ -1,0 +1,13 @@
+{
+  "generatedAt": "2026-08-22T20:05:34.547Z",
+  "calculationVersion": "v2.2026-08-22-perf-stage4",
+  "mode": "memory_roundtrip",
+  "pass": true,
+  "liveCount": 3428,
+  "snapshotCount": 3428,
+  "onlyLive": 0,
+  "onlySnapshot": 0,
+  "mismatchClients": 0,
+  "sampleMismatches": [],
+  "snapshotMeta": null
+}

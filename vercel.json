@@ -20,6 +20,7 @@
     { "source": "/api/support", "destination": "/api/dashboard?page=support" },
     { "source": "/api/analytics/catalog", "destination": "/api/analytics?action=catalog" },
     { "source": "/api/analytics/snapshot/refresh", "destination": "/api/analytics?action=refresh" },
+    { "source": "/api/analytics/statistical-snapshot/refresh", "destination": "/api/analytics?action=refresh-statistical-snapshot" },
     { "source": "/api/analytics/snapshot", "destination": "/api/analytics?action=snapshot" }
   ]
 }

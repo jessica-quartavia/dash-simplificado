@@ -1,0 +1,96 @@
+{
+  "generatedAt": "2026-08-22T19:11:15.191Z",
+  "calculationVersion": "v2.2026-08-22-perf-stage3",
+  "before": {
+    "cold_ms": 26324,
+    "compute_ms": 26284,
+    "rest_requests": 29,
+    "payload_bytes": 2913169
+  },
+  "runs": [
+    {
+      "wall_ms": 11969,
+      "total_ms": 11929,
+      "fetch_ms": 7248,
+      "compute_ms": 4656,
+      "serialization_ms": 0,
+      "rest_requests": 29,
+      "rest_rows": 22140,
+      "payload_bytes": 2913701,
+      "blocks": {
+        "renovacao": 2217,
+        "cancelamento": 2054,
+        "build_client_features": 73,
+        "predictive_ranking": 64,
+        "group_matrix": 59,
+        "general_matrix": 56,
+        "cohort": 56,
+        "permanencia": 33,
+        "top_clients": 22,
+        "nps": 15,
+        "serialization": 5,
+        "active_risk": 2
+      }
+    },
+    {
+      "wall_ms": 10770,
+      "total_ms": 10741,
+      "fetch_ms": 6156,
+      "compute_ms": 4568,
+      "serialization_ms": 0,
+      "rest_requests": 29,
+      "rest_rows": 22140,
+      "payload_bytes": 2913695,
+      "blocks": {
+        "renovacao": 2180,
+        "cancelamento": 2038,
+        "build_client_features": 70,
+        "predictive_ranking": 58,
+        "general_matrix": 53,
+        "cohort": 53,
+        "group_matrix": 48,
+        "permanencia": 30,
+        "top_clients": 19,
+        "nps": 12,
+        "active_risk": 4,
+        "serialization": 3
+      }
+    },
+    {
+      "wall_ms": 10602,
+      "total_ms": 10573,
+      "fetch_ms": 6174,
+      "compute_ms": 4384,
+      "serialization_ms": 0,
+      "rest_requests": 29,
+      "rest_rows": 22140,
+      "payload_bytes": 2913694,
+      "blocks": {
+        "renovacao": 2204,
+        "cancelamento": 1864,
+        "build_client_features": 60,
+        "cohort": 55,
+        "general_matrix": 50,
+        "predictive_ranking": 50,
+        "group_matrix": 46,
+        "permanencia": 27,
+        "top_clients": 14,
+        "nps": 7,
+        "active_risk": 4,
+        "serialization": 3
+      }
+    }
+  ],
+  "summary": {
+    "min": 10602,
+    "p50": 10770,
+    "max": 11969,
+    "fetch_p50": 6174,
+    "compute_p50": 4568,
+    "compute_min": 4384,
+    "compute_max": 4656,
+    "requests_p50": 29,
+    "payload_p50": 2913695
+  },
+  "gain_pct": 59.1
+}
