@@ -128,6 +128,35 @@ function pctLabel(value) {
   return `${Number(value).toLocaleString("pt-BR")}%`;
 }
 
+function subjectsSourceNote(summary, payload) {
+  const base = summary.baseClients ?? payload?.summary?.baseClients;
+  const app = summary.appPharusUsers ?? payload?.summary?.appPharusUsers;
+  if (base != null && app != null) {
+    return `${fmt.format(base)} BASE QV · ${fmt.format(app)} App Pharus`;
+  }
+  return "União deduplicada BASE QV + App Pharus";
+}
+
+function loginSourceNote(summary, payload) {
+  const source = summary.loginEventsSource || payload?.summary?.loginEventsSource;
+  if (source === "analytics.platform_login_events") {
+    return "App Pharus platform_login_events (fallback)";
+  }
+  if (source === "metrics.events") {
+    return "App Pharus metrics.events";
+  }
+  if (source === "none" || (summary.totalLogins === 0 && !source)) {
+    return "Fonte App Pharus indisponível";
+  }
+  return "App Pharus metrics.events";
+}
+
+function inactivityCardValue(summary) {
+  const days = summary.lastMonthDaysWithoutActivity;
+  if (days == null || !Number.isFinite(Number(days))) return "Sem dado";
+  return `${fmt.format(Math.round(Number(days)))} d`;
+}
+
 function kpiCard(label, value, note, options = {}) {
   const classes = ["kpi-card"];
   if (options.compact) classes.push("kpi-card-compact");
@@ -212,11 +241,14 @@ function renderSuccess() {
       <h2>Indicadores</h2>
       <p>Atividade agregada de clientes/usuários no recorte filtrado (últimos ${state.payload?.months?.length || 12} meses).</p>
       <div class="kpi-row kpi-row-compact">
-        ${kpiCard("Clientes/usuários", fmt.format(summary.totalSubjects), "Clientes e usuários Pharus vinculados")}
-        ${kpiCard("Logins", fmt.format(summary.totalLogins), "App Pharus metrics.events")}
-        ${kpiCard("Reuniões", fmt.format(summary.totalMeetings), "client_meetings + manual_meetings")}
-        ${kpiCard("Atualizações financeiras", fmt.format(summary.totalFinancialUpdates), "client_financial_data")}
-        ${kpiCard("Respostas NPS", fmt.format(summary.totalNpsResponses), "nps_responses vinculados")}
+        ${kpiCard("Clientes/usuários", fmt.format(summary.totalSubjects), subjectsSourceNote(summary, state.payload))}
+        ${kpiCard("Logins", fmt.format(summary.totalLogins), loginSourceNote(summary, state.payload))}
+        ${kpiCard("Reuniões", fmt.format(summary.totalMeetings), "BASE QV deduplicada")}
+        ${kpiCard("Implementações", fmt.format(summary.totalImplementations ?? state.payload?.summary?.totalImplementations ?? 0), "client_mecanismos")}
+        ${kpiCard("Atualizações financeiras", fmt.format(summary.totalFinancialUpdates), "updated_at ou created_at")}
+        ${kpiCard("NPS", fmt.format(summary.totalNpsResponses), "nps_responses")}
+        ${kpiCard("Interações", "Sem dado", "Sem fonte confiável")}
+        ${kpiCard("Dias sem atividade", inactivityCardValue(summary), "Média do mês mais recente")}
       </div>
     </section>
 

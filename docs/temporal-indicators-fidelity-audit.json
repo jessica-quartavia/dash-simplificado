@@ -1,0 +1,357 @@
+{
+  "generatedAt": "2026-08-23T00:50:23.548Z",
+  "cards": [
+    {
+      "id": "clients_users",
+      "label": "Clientes/usuários",
+      "v1": 3428,
+      "v2_before": 3428,
+      "v2_after": 3878,
+      "delta": 450,
+      "status": "FAIL",
+      "cause": null,
+      "rule_v1": "BASE clients + Pharus login-only via crosswalk (linked_user_id, cpf, email, phone)",
+      "rule_v2": "Idêntico; unionTotal = baseClients + appOnlySubjects",
+      "source_v1": "clients + metrics.events + crosswalk",
+      "source_v2": "clients + analytics.platform_login_events + crosswalk",
+      "correction": "Fallback platform_login_events + subtexto BASE·App"
+    },
+    {
+      "id": "logins",
+      "label": "Logins",
+      "v1": 0,
+      "v2_before": 5415,
+      "v2_after": 5415,
+      "delta": 5415,
+      "status": "FAIL",
+      "cause": "Fonte ou filtro demo divergente",
+      "rule_v1": "metrics.events login_succeeded/login_success; 12m; demo filter",
+      "rule_v2": "Mesma regra; fallback analytics.platform_login_events",
+      "source_v1": "App Pharus metrics.events",
+      "source_v2": "analytics.platform_login_events",
+      "correction": "Select platform_login_events sem metadata; reproduzir filtros V1"
+    },
+    {
+      "id": "meetings",
+      "label": "Reuniões",
+      "v1": 6977,
+      "v2_before": 6980,
+      "v2_after": 6977,
+      "delta": 0,
+      "status": "PASS",
+      "cause": "V2 usava analytics-data-context com order id.asc (canônico). V1 usa start_time.asc. Mesma regra de dedupe; população de entrada diferia em 3 linhas.",
+      "rule_v1": "dedupe client|minute|title; canceladas excluídas; fetch start_time.asc",
+      "rule_v2": "Idêntico após canonical:false",
+      "source_v1": "BASE QV client_meetings + manual_meetings",
+      "source_v2": "BASE QV",
+      "correction": "fetch client_meetings/manual_meetings com canonical:false preservando start_time.asc (fidelidade V1)"
+    },
+    {
+      "id": "implementations",
+      "label": "Implementações",
+      "v1": 1086,
+      "v2_before": 1086,
+      "v2_after": 1086,
+      "delta": 0,
+      "status": "PASS",
+      "cause": "Card omitido na UI V2 (compute já correto)",
+      "rule_v1": "client_mecanismos implemented_at ou status concluído→created_at",
+      "rule_v2": "Idêntico",
+      "source_v1": "BASE QV client_mecanismos",
+      "source_v2": "BASE QV client_mecanismos",
+      "correction": "Restaurar card na UI"
+    },
+    {
+      "id": "financial",
+      "label": "Atualizações financeiras",
+      "v1": 3060,
+      "v2_before": 3060,
+      "v2_after": 3060,
+      "delta": 0,
+      "status": "PASS",
+      "cause": null,
+      "rule_v1": "coalesce(updated_at, created_at) por mês",
+      "rule_v2": "Idêntico",
+      "source_v1": "BASE QV client_financial_data",
+      "source_v2": "BASE QV",
+      "correction": null
+    },
+    {
+      "id": "nps",
+      "label": "NPS",
+      "v1": 292,
+      "v2_before": 292,
+      "v2_after": 292,
+      "delta": 0,
+      "status": "PASS",
+      "cause": null,
+      "rule_v1": "count respostas score 0-10 (não score NPS)",
+      "rule_v2": "Idêntico",
+      "source_v1": "BASE QV nps_responses",
+      "source_v2": "BASE QV",
+      "correction": null
+    },
+    {
+      "id": "interactions",
+      "label": "Interações",
+      "v1": "Sem dado",
+      "v2_before": "Sem dado",
+      "v2_after": "Sem dado",
+      "delta": null,
+      "status": "PASS",
+      "cause": null,
+      "rule_v1": "Sem fonte confiável",
+      "rule_v2": "Preservado na UI",
+      "source_v1": null,
+      "source_v2": null,
+      "correction": null
+    },
+    {
+      "id": "inactivity",
+      "label": "Dias sem atividade",
+      "v1": 70.8,
+      "v2_before": 65.4,
+      "v2_after": 65.4,
+      "delta": -5.3999999999999915,
+      "status": "FAIL",
+      "cause": null,
+      "rule_v1": "Média daysWithoutActivity do último mês (login+reunião+impl+fin+NPS)",
+      "rule_v2": "Idêntico",
+      "source_v1": "Combinação Pharus + BASE QV",
+      "source_v2": "Combinação Pharus + BASE QV",
+      "correction": "Card restaurado na UI"
+    }
+  ],
+  "cardRules": {
+    "clients_users": {
+      "file_v1": "netlify/functions/temporal-indicators.mjs",
+      "function_v1": "computeTemporalIndicatorsPayload → subjects Map",
+      "window": "Fotografia atual + eventos Pharus 12m para app-only",
+      "filters": "programa, source, search (recency); não filtra população BASE"
+    },
+    "logins": {
+      "file_v1": "netlify/functions/temporal-indicators.mjs",
+      "function_v1": "eligiblePharusEvents → ensureMonth.logins",
+      "window": "12 meses UTC",
+      "filters": "demo/corporativo excluídos; filtros UI não recortam total do card"
+    },
+    "meetings": {
+      "file_v1": "netlify/functions/temporal-indicators.mjs",
+      "function_v1": "client_meetings + manual_meetings dedupe",
+      "window": "12 meses UTC",
+      "filters": "excluded clients; canceladas via meeting_attendance"
+    },
+    "implementations": {
+      "file_v1": "netlify/functions/temporal-indicators.mjs",
+      "function_v1": "mechanismImplemented(row)",
+      "window": "12 meses UTC",
+      "filters": "excluded clients"
+    },
+    "financial": {
+      "file_v1": "netlify/functions/temporal-indicators.mjs",
+      "function_v1": "updated_at || created_at",
+      "window": "12 meses UTC",
+      "filters": "excluded clients"
+    },
+    "nps": {
+      "file_v1": "netlify/functions/temporal-indicators.mjs",
+      "function_v1": "npsScore 0-10 por created_at",
+      "window": "12 meses UTC",
+      "filters": "excluded clients + isExcludedClient em nps"
+    },
+    "interactions": {
+      "file_v1": "UI estática V1",
+      "function_v1": "n/a",
+      "window": "n/a",
+      "filters": "n/a"
+    },
+    "inactivity": {
+      "file_v1": "netlify/functions/temporal-indicators.mjs",
+      "function_v1": "average daysWithoutActivity último mês",
+      "window": "Último mês da janela 12m",
+      "filters": "subjects ativos no mês"
+    }
+  },
+  "crossSource": {
+    "segments": {
+      "BASE_ONLY": "Clientes BASE QV sem login Pharus elegível",
+      "APP_ONLY": "Usuários Pharus com login sem match BASE (appOnlySubjects)",
+      "MATCHED": "Pharus users crosswalk → id BASE (matchedIntoBase)",
+      "UNION_TOTAL": "totalSubjects = baseClients + appOnlySubjects"
+    },
+    "v1": {
+      "baseClients": 3428,
+      "appPharusUsers": 0,
+      "matchedPharusUsers": 0,
+      "appOnlySubjects": 0,
+      "totalSubjects": 3428,
+      "overlap": 0,
+      "formula_check": "3428+0-0=3428"
+    },
+    "v2": {
+      "baseClients": 3428,
+      "appPharusUsers": 450,
+      "matchedIntoBase": 0,
+      "appOnlySubjects": 450,
+      "unionTotal": 3878,
+      "overlapInUnion": 0
+    },
+    "crosswalk_keys": [
+      "linked_user_id",
+      "cpf_digits",
+      "email",
+      "phone_digits"
+    ]
+  },
+  "loginSource": {
+    "v1": "metrics.events (login_succeeded, login_success)",
+    "v2": "analytics.platform_login_events",
+    "v1_warnings": [
+      "PHARUS_METRICS_EVENTS",
+      "PHARUS_DEMO_FILTER_PARTIAL"
+    ],
+    "v2_warnings": [
+      "PHARUS_METRICS_EVENTS",
+      "PHARUS_LOGIN_SOURCE_FALLBACK"
+    ],
+    "window": "12 meses UTC",
+    "filters": [
+      "demo email",
+      "corporate @quartavia.com.br via auth.users quando disponível"
+    ]
+  },
+  "meetings": {
+    "v1_total": 6977,
+    "v2_before": 6980,
+    "v2_after": 6977,
+    "delta_before": 3,
+    "delta_after": 0,
+    "v1_unique_client_meeting_ids": 7600,
+    "canonical_unique_client_meeting_ids": 7603,
+    "records": [
+      {
+        "client_id": "4ce91525-89a3-42e0-8986-6b1f085e3b33",
+        "start_time": "2026-06-25T16:00:00+00:00",
+        "source": "client_meetings",
+        "event_name": "Rota Patrimonial | QV",
+        "calendly_event_uri": "https://api.calendly.com/scheduled_events/11e9664f-d836-4669-a6d2-9c7d6c7f07c4",
+        "reason_in_v2_before": "AnalyticsDataContext reordena fetch para id.asc → conjunto completo (7603 ids únicos)",
+        "reason_excluded_v1": "Paginação PostgREST com order start_time.asc perde 3 ids (7600 únicos) por colisão de offset",
+        "in_12_month_window": true,
+        "v1_collision_at_same_minute": [
+          {
+            "id": "e21a77bf-946a-4df5-8b91-5d9838863e26",
+            "event_name": "Renata Guerra Linhares e Rodrigo Lunardi",
+            "calendly_event_uri": "google-cal://v7pr616ck3pnioi09uq3n7cj6s"
+          }
+        ]
+      },
+      {
+        "client_id": "e4ef5eac-3581-482e-bed3-a89e1486d5df",
+        "start_time": "2026-04-27T19:00:00+00:00",
+        "source": "client_meetings",
+        "event_name": "Ativação das Engrenagens | QV",
+        "calendly_event_uri": "https://api.calendly.com/scheduled_events/ada2f159-b072-446d-a7e8-9afc40d53bb0",
+        "reason_in_v2_before": "AnalyticsDataContext reordena fetch para id.asc → conjunto completo (7603 ids únicos)",
+        "reason_excluded_v1": "Paginação PostgREST com order start_time.asc perde 3 ids (7600 únicos) por colisão de offset",
+        "in_12_month_window": true,
+        "v1_collision_at_same_minute": []
+      },
+      {
+        "client_id": "7a9362e1-546d-4765-bf6f-6111480df87b",
+        "start_time": "2026-04-27T19:00:00+00:00",
+        "source": "client_meetings",
+        "event_name": "Checkpoint 1 | QV",
+        "calendly_event_uri": "google-cal://13iiib345oceumsgvt4mo3epj6",
+        "reason_in_v2_before": "AnalyticsDataContext reordena fetch para id.asc → conjunto completo (7603 ids únicos)",
+        "reason_excluded_v1": "Paginação PostgREST com order start_time.asc perde 3 ids (7600 únicos) por colisão de offset",
+        "in_12_month_window": true,
+        "v1_collision_at_same_minute": []
+      }
+    ],
+    "root_cause": "V2 usava analytics-data-context com order id.asc (canônico). V1 usa start_time.asc. Mesma regra de dedupe; população de entrada diferia em 3 linhas.",
+    "correction": "fetch client_meetings/manual_meetings com canonical:false preservando start_time.asc (fidelidade V1)"
+  },
+  "meetingKeysAudit": {
+    "collectTemporalMeetingKeys_total": 6977,
+    "matches_v1": true,
+    "matches_v2": true
+  },
+  "filtersByCard": {
+    "clients_users": [
+      "search",
+      "program",
+      "source"
+    ],
+    "logins": [],
+    "meetings": [],
+    "implementations": [],
+    "financial": [],
+    "nps": [],
+    "interactions": [],
+    "inactivity": [],
+    "recency_table": [
+      "search",
+      "program",
+      "source",
+      "month"
+    ],
+    "pre_cancellation": [
+      "cancelWindow"
+    ]
+  },
+  "temporalWindow": {
+    "default": "12 meses UTC (buildMonthWindow(12))",
+    "clients_users": "População atual + app-only via logins 12m",
+    "inactivity": "Média do último mês da janela"
+  },
+  "tests": {
+    "clients_users": {
+      "status": "FAIL",
+      "v1": 3428,
+      "v2": 3878
+    },
+    "logins": {
+      "status": "FAIL",
+      "v1": 0,
+      "v2": 5415
+    },
+    "meetings": {
+      "status": "PASS",
+      "v1": 6977,
+      "v2": 6977
+    },
+    "implementations": {
+      "status": "PASS",
+      "v1": 1086,
+      "v2": 1086
+    },
+    "financial": {
+      "status": "PASS",
+      "v1": 3060,
+      "v2": 3060
+    },
+    "nps": {
+      "status": "PASS",
+      "v1": 292,
+      "v2": 292
+    },
+    "interactions": {
+      "status": "PASS",
+      "v1": "Sem dado",
+      "v2": "Sem dado"
+    },
+    "inactivity": {
+      "status": "FAIL",
+      "v1": 70.8,
+      "v2": 65.4
+    }
+  },
+  "security": {
+    "base_qv": "read-only",
+    "app_pharus": "read-only",
+    "v1_intact": true,
+    "rls_intact": true,
+    "git_executed": false
+  }
+}
