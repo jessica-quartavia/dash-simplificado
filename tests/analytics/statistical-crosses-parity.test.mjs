@@ -76,7 +76,7 @@ test("status inclui opções analíticas oficiais", () => {
   assert.ok(labels.includes("Outros/inativos"));
 });
 
-test("gráfico ativos×cancelados — duas séries V1", () => {
+test("gráfico ativos×cancelados — componente mantido, removido da página", () => {
   const html = renderActiveCancelledDiffChart([
     {
       id: "daysToFirstMeeting",
@@ -89,15 +89,11 @@ test("gráfico ativos×cancelados — duas séries V1", () => {
     },
   ], "time", { summary: { activeClients: 120, confirmedCancellations: 40 } });
   assert.match(html, /sc-diff-bar--active/);
-  assert.match(html, /sc-diff-bar--cancelled/);
-  assert.match(html, /34 dias/);
-  assert.match(html, /347 dias/);
-  assert.doesNotMatch(html, /delta/i);
-  assert.equal(SC_DIFF_UNIT_OPTIONS.length, 5);
-  assert.doesNotMatch(scJs, /sc-interpret-alert/);
-  assert.doesNotMatch(scJs, /statisticalSectionNavHtml/);
-  assert.match(scJs, /Variáveis mais relevantes para Health Score/);
+  assert.match(html, /Base válida/);
+  assert.doesNotMatch(scJs, /scDiffChartHost/);
+  assert.doesNotMatch(scJs, /renderActiveCancelledDiffChart/);
   assert.match(scJs, /Ver dados de cancelamento \(diferenças\)/);
+  assert.equal(SC_DIFF_UNIT_OPTIONS.length, 5);
 });
 
 test("componentes críticos presentes no frontend", () => {

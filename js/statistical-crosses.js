@@ -25,11 +25,13 @@ import {
   renderProportionalHeatmapTable,
 } from "./components/statistical-matrix.js";
 import { renderSurvivalSection, bindSurvivalChart } from "./components/survival-chart.mjs";
-import {
-  renderActiveCancelledDiffChart,
-  SC_DIFF_UNIT_OPTIONS,
-} from "./components/statistical-diff-chart.mjs";
 import { sortLabelsUnknownLast } from "../lib/analytics/filters/sort-categories.mjs";
+import {
+  filterPrincipalDiscoveries,
+  rawDiscoveriesFromPayload,
+  shouldShowDiscoveriesToggle,
+  visiblePrincipalDiscoveries,
+} from "./statistical-discoveries-ui.mjs";
 import {
   EXECUTIVE_RECOMMENDATIONS,
   getInsightsForBlock,
@@ -58,7 +60,6 @@ const state = {
   filters: defaultStatisticalCrossesFilters(),
   showAllDiscoveries: false,
   survivalCompare: "overall",
-  diffUnit: "time",
 };
 
 let eventsBound = false;
@@ -77,6 +78,7 @@ const FILTER_FIELDS = [
 ];
 
 let unbindInsightToggles = () => {};
+let contentEventsAbort = null;
 
 function $(id) {
   return document.getElementById(id);
@@ -445,9 +447,18 @@ function renderAucChart(rows) {
   return `<p class="note-muted">Escala a partir de 0,50 (sem discriminação). Referências: 0,60 sinal fraco · 0,70 moderado.</p>${bars}`;
 }
 
+function discoveryPassMin(d) {
+  const { minCoverage, minSample } = currentThresholds();
+  return scPassMin({ coverage: d.coverage, sample: d.sample, n: d.sample }, minCoverage, minSample) || d.title;
+}
+
+function principalDiscoveriesFromPayload(payload) {
+  return filterPrincipalDiscoveries(rawDiscoveriesFromPayload(payload), { passMin: discoveryPassMin });
+}
+
 function renderDiscoveries(items) {
   const all = items || [];
-  const rows = state.showAllDiscoveries ? all : all.slice(0, 6);
+  const rows = visiblePrincipalDiscoveries(all, state.showAllDiscoveries);
   if (!rows.length) {
     return `<p class="note-muted">Nenhuma descoberta publicada com os limiares atuais de cobertura/amostra.</p>`;
   }
@@ -664,15 +675,6 @@ function renderSignalsClientsTable(clients) {
     <td>${escapeHtml(r.npsClass || "—")}${r.npsScore != null ? ` (${r.npsScore})` : ""}</td>
     <td class="num">${r.daysSinceLastMeeting ?? "—"}</td>
   </tr>`).join("")}</tbody></table></div>`;
-}
-
-function renderDiffUnitSelect(selected = "time") {
-  const opts = SC_DIFF_UNIT_OPTIONS.map((o) =>
-    `<option value="${escapeHtml(o.value)}"${selected === o.value ? " selected" : ""}>${escapeHtml(o.label)}</option>`,
-  ).join("");
-  return `<label class="sc-inline-filter">Unidade do gráfico
-    <select id="scDiffUnit">${opts}</select>
-  </label>`;
 }
 
 function renderRenewedVsNotTable(rows) {
@@ -893,41 +895,33 @@ function populateFilterOptions() {
 }
 
 function bindContentEvents() {
+  contentEventsAbort?.abort();
+  contentEventsAbort = new AbortController();
+  const { signal } = contentEventsAbort;
+
   $("scDiscoveriesToggle")?.addEventListener("click", () => {
     state.showAllDiscoveries = !state.showAllDiscoveries;
     const host = $("scDiscoveriesHost");
     if (host && state.payload) {
-      const discoveries = state.payload.discoveries?.length ? state.payload.discoveries : state.payload.simpleInsights || [];
-      host.innerHTML = renderDiscoveries(discoveries);
+      host.innerHTML = renderDiscoveries(principalDiscoveriesFromPayload(state.payload));
       const btn = $("scDiscoveriesToggle");
       if (btn) btn.textContent = state.showAllDiscoveries ? "Ver menos" : "Ver todas as descobertas";
     }
-  });
-  $("scDiffUnit")?.addEventListener("change", (e) => {
-    state.diffUnit = e.target.value;
-    const host = $("scDiffChartHost");
-    if (host && state.payload) {
-      host.innerHTML = renderActiveCancelledDiffChart(
-        state.payload.activeVsCancelled || state.payload.groupDifferences || [],
-        state.diffUnit,
-        { summary: state.payload.summary, population: state.payload.population },
-      );
-    }
-  });
+  }, { signal });
   const cohortReload = () => {
     state.filters = filtersFromForm();
     void loadStatisticalCrosses({ force: true });
   };
-  $("scCohortPeriod")?.addEventListener("change", cohortReload);
-  $("scCohortGranularity")?.addEventListener("change", cohortReload);
+  $("scCohortPeriod")?.addEventListener("change", cohortReload, { signal });
+  $("scCohortGranularity")?.addEventListener("change", cohortReload, { signal });
   $("scCohortCellMode")?.addEventListener("change", () => {
     state.filters = filtersFromForm();
     renderStateView();
-  });
+  }, { signal });
   $("scCohortMinN")?.addEventListener("change", () => {
     state.filters = filtersFromForm();
     renderStateView();
-  });
+  }, { signal });
 }
 
 function renderSuccess() {
@@ -940,9 +934,10 @@ function renderSuccess() {
   const pop = p.population || p.metadata?.population || {};
   const axes = p.axisMatrices || {};
   const rankings = p.discoveryRankings || {};
-  const discoveries = (p.discoveries?.length ? p.discoveries : p.simpleInsights || []).filter((d) =>
-    scPassMin({ coverage: d.coverage, sample: d.sample, n: d.sample }, minCoverage, minSample) || d.title,
-  );
+  const discoveries = principalDiscoveriesFromPayload(p);
+  const discoveriesToggleHtml = shouldShowDiscoveriesToggle(discoveries)
+    ? `<button class="btn btn-secondary" type="button" id="scDiscoveriesToggle">${state.showAllDiscoveries ? "Ver menos" : "Ver todas as descobertas"}</button>`
+    : "";
   const churn = p.churnAssociations || {};
   const numeric = (churn.numeric || p.numericAssociations || []).filter(
     (a) => scPassMin(a, minCoverage, minSample) || a.association != null,
@@ -967,7 +962,6 @@ function renderSuccess() {
   const auditNote = audit?.excludedCount
     ? ` Card renovados: ${fmt.format(s.renewedClients ?? 0)} (paridade Renovações). ${fmt.format(audit.excludedCount)} renovado(s) fora do recorte ativo/cancelados.`
     : "";
-  const diffRows = p.activeVsCancelled || p.groupDifferences || [];
   const activeSignals = p.activeRiskSignals || {};
 
   content.innerHTML = `<div class="statistical-page">${state.error ? `<p class="page-inline-error">${escapeHtml(state.error)}</p>` : ""}
@@ -1000,7 +994,7 @@ function renderSuccess() {
           <h2>2. Principais descobertas</h2>
           <p class="note-muted">Textos determinísticos (sem IA generativa). Só entram achados com cobertura/amostra suficientes.</p>
         </div>
-        <button class="btn btn-secondary" type="button" id="scDiscoveriesToggle">${state.showAllDiscoveries ? "Ver menos" : "Ver todas as descobertas"}</button>
+        ${discoveriesToggleHtml}
       </div>
       <div id="scDiscoveriesHost" class="sc-discoveries">${renderDiscoveries(discoveries)}</div>
     </section>
@@ -1011,17 +1005,13 @@ function renderSuccess() {
       <p class="note-muted">Mostra quais variáveis possuem maior relação observada com cancelamento. Valores maiores representam associações mais fortes, não causalidade.</p>
       <article class="sc-matrix-card sc-matrix-card--wide"><h3 class="sc-matrix-title">Matriz de associação com cancelamento</h3>${renderAxisHeatmapTable(axes.cancellation)}</article>
 
-      <h3 class="sc-subtitle">Diferença entre ativos e cancelados</h3>
-      <p class="note-muted sc-howto">Compare as barras verdes e vermelhas. Quando a barra vermelha é maior, o valor típico entre cancelados foi maior neste recorte.</p>
-      ${renderDiffUnitSelect(state.diffUnit)}
-      <div id="scDiffChartHost" class="sc-diff-host">${renderActiveCancelledDiffChart(diffRows, state.diffUnit, { summary: s, population: pop })}</div>
       <details class="sc-data-details"><summary>Ver dados de cancelamento (diferenças)</summary>
         <div class="table-wrap">
           <table class="gd-table sc-diff-table">
             <thead><tr>
               <th>Indicador</th><th class="num">Mediana ativos</th><th class="num">Mediana cancelados</th><th class="num">Diferença</th><th class="num">Dif. %</th><th>Associação</th><th>Força</th><th class="num">n ativos</th><th class="num">n cancel.</th><th class="num">Cobertura</th><th>Leitura</th>
             </tr></thead>
-            <tbody>${renderActiveVsCancelledTable(diffRows)}</tbody>
+            <tbody>${renderActiveVsCancelledTable(p.activeVsCancelled || p.groupDifferences || [])}</tbody>
           </table>
         </div>
       </details>
@@ -1344,6 +1334,9 @@ async function loadStatisticalCrosses({ force = false } = {}) {
 
 function unmountStatisticalCrosses() {
   state.mounted = false;
+  state.showAllDiscoveries = false;
+  contentEventsAbort?.abort();
+  contentEventsAbort = null;
   unbindFilters();
   unbindFilterMount();
 }
