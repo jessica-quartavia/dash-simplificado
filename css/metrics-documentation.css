@@ -1,0 +1,296 @@
+.page-view[data-page="metrics_documentation"] .page-content {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.page-view[data-page="metrics_documentation"] .page-filters {
+  min-height: 0;
+}
+
+.metric-doc-search-panel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.metric-doc-search {
+  position: relative;
+  display: block;
+  flex: 1 1 420px;
+  max-width: 620px;
+}
+
+.metric-doc-search__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 1.35rem;
+  pointer-events: none;
+}
+
+.metric-doc-search input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px 10px 42px;
+  font: inherit;
+  color: var(--foreground);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.metric-doc-search input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgb(232 93 58 / 0.12);
+}
+
+.metric-doc-search-hint {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.metric-doc-intro {
+  padding: 22px 24px;
+  margin-bottom: 16px;
+  background: linear-gradient(120deg, rgb(232 93 58 / 0.09), rgb(232 93 58 / 0.025));
+  border: 1px solid rgb(232 93 58 / 0.2);
+  border-radius: var(--radius);
+}
+
+.metric-doc-intro p {
+  max-width: 780px;
+  margin-bottom: 8px;
+}
+
+.metric-doc-intro span {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.metric-doc-index {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 12px;
+  margin-bottom: 12px;
+  scrollbar-width: thin;
+}
+
+.metric-doc-index button {
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  font: 500 0.8125rem var(--font-heading);
+  color: var(--foreground);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.metric-doc-index button:hover {
+  color: var(--primary);
+  border-color: rgb(232 93 58 / 0.45);
+}
+
+.metric-doc-section {
+  margin-bottom: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  scroll-margin-top: 20px;
+  overflow: clip;
+}
+
+.metric-doc-section > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  font: 700 1.05rem var(--font-heading);
+  cursor: pointer;
+  list-style: none;
+}
+
+.metric-doc-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.metric-doc-section > summary::after {
+  content: "+";
+  order: 3;
+  color: var(--primary);
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+
+.metric-doc-section[open] > summary::after {
+  content: "−";
+}
+
+.metric-doc-section[open] > summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.metric-doc-section__count {
+  margin-left: auto;
+  color: var(--muted);
+  font: 400 0.8125rem var(--font-body);
+}
+
+.metric-doc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 20px;
+}
+
+.metric-doc-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.metric-doc-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.metric-doc-card__head h3 {
+  font-size: 1rem;
+}
+
+.metric-doc-status {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  font: 500 0.68rem var(--font-heading);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+}
+
+.metric-doc-status.is-official {
+  color: #267247;
+  background: #eaf7ef;
+}
+
+.metric-doc-status.is-validating {
+  color: #7b5b23;
+  background: #faf2df;
+}
+
+.metric-doc-status.is-experimental {
+  color: #75523f;
+  background: #f8ece6;
+}
+
+.metric-doc-card__body {
+  display: grid;
+  gap: 14px;
+}
+
+.metric-doc-field h4,
+.metric-doc-source span {
+  margin-bottom: 3px;
+  color: var(--muted);
+  font: 500 0.72rem var(--font-heading);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.metric-doc-field p {
+  font-size: 0.925rem;
+  line-height: 1.52;
+}
+
+.metric-doc-source {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-top: 14px;
+  margin-top: auto;
+}
+
+.metric-doc-source strong {
+  font-size: 0.875rem;
+}
+
+.metric-doc-empty {
+  padding: 64px 24px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.metric-doc-empty > span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 2rem;
+}
+
+.metric-doc-empty h2 {
+  margin-bottom: 6px;
+  font-size: 1.1rem;
+}
+
+.metric-doc-empty p {
+  color: var(--muted);
+}
+
+.nav-item-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-right: 8px;
+  vertical-align: -3px;
+}
+
+@media (max-width: 760px) {
+  .metric-doc-search-panel {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .metric-doc-search {
+    flex-basis: auto;
+    max-width: none;
+  }
+
+  .metric-doc-grid {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .metric-doc-section > summary {
+    padding: 16px;
+  }
+
+  .metric-doc-section__count {
+    display: none;
+  }
+
+  .metric-doc-card {
+    padding: 16px;
+  }
+
+  .metric-doc-card__head {
+    flex-direction: column;
+  }
+}

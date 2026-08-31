@@ -60,7 +60,10 @@ function clearPageShell() {
   const filters = document.getElementById("page-filters");
   const content = document.getElementById("page-content");
   const actions = document.getElementById("page-actions");
-  if (filters) filters.replaceChildren();
+  if (filters) {
+    filters.replaceChildren();
+    filters.classList.remove("metric-doc-search-panel");
+  }
   if (actions) actions.replaceChildren();
   if (content) {
     content.innerHTML =
@@ -218,7 +221,17 @@ function renderSidebar() {
       button.type = "button";
       button.className = "nav-item";
       button.dataset.pageNav = page.id;
-      button.textContent = page.navLabel;
+      if (page.icon === "book-open") {
+        const icon = document.createElement("span");
+        icon.className = "nav-item-icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M2.75 4.75A2.75 2.75 0 0 1 5.5 2h5.75v17.25H5.5a2.75 2.75 0 0 0-2.75 2.75V4.75Zm18.5 0A2.75 2.75 0 0 0 18.5 2h-5.75v17.25h5.75A2.75 2.75 0 0 1 21.25 22V4.75Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+        const label = document.createElement("span");
+        label.textContent = page.navLabel;
+        button.append(icon, label);
+      } else {
+        button.textContent = page.navLabel;
+      }
       button.setAttribute("aria-current", "false");
       item.appendChild(button);
       list.appendChild(item);

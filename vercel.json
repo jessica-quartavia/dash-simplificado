@@ -15,6 +15,7 @@
     { "source": "/api/ep-performance", "destination": "/api/dashboard?page=ep_performance" },
     { "source": "/api/temporal-indicators", "destination": "/api/dashboard?page=temporal_indicators" },
     { "source": "/api/statistical-crosses", "destination": "/api/dashboard?page=statistical_crosses" },
+    { "source": "/api/health-score", "destination": "/api/dashboard?page=health_score" },
     { "source": "/api/quality", "destination": "/api/dashboard?page=quality" },
     { "source": "/api/platform-usage", "destination": "/api/dashboard?page=platform_usage" },
     { "source": "/api/support", "destination": "/api/dashboard?page=support" },

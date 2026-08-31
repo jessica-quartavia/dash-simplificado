@@ -79,9 +79,12 @@ const mockPayload = {
           ],
         },
       },
-      total_renewals: { value: 42 },
-      renewal_eligible_clients: { status: "pending_rule", pending: { message: "NOT FOUND" } },
-      renewals_per_active_client: { value: 0.42, numerator: 42, denominator: 100 },
+      renewed_active_clients_rate: {
+        value: 8.8,
+        numerator: 150,
+        denominator: 1700,
+        rule: "clientes ativos com ciclo ≥ 2 ÷ clientes analiticamente ativos",
+      },
     },
   },
   ep: {
@@ -147,8 +150,11 @@ test("Saúde subdivide NPS, split bar, cancelamentos e renovação", () => {
   assert.match(html, /executive-grid--health-top/);
   assert.match(html, /executive-split-bar/);
   assert.match(html, /executive-grid--health-bottom/);
-  assert.match(html, /executive-grid--renewal-dual/);
+  assert.match(html, /Renovações por clientes ativos/);
+  assert.match(html, /8,8%/);
+  assert.match(html, /150 clientes ativos renovados de 1\.700 ativos/);
   assert.doesNotMatch(html, /Clientes aptos para renovação/);
+  assert.doesNotMatch(html, /Quantidade de renovações/);
 });
 
 test("EP usa ranking compacto com maior e menor", () => {
@@ -182,6 +188,22 @@ test("Motivos e atritos usam leitura executiva", () => {
 test("Temporal usa duas colunas", () => {
   const html = renderExecutiveDashboard(mockPayload);
   assert.match(html, /executive-grid--temporal/);
+});
+
+test("NPS sem dado renderiza card estável", () => {
+  const payload = {
+    ...mockPayload,
+    clientHealth: {
+      ...mockPayload.clientHealth,
+      metrics: {
+        ...mockPayload.clientHealth.metrics,
+        nps: { value: null, coverage: { responses: 0 } },
+      },
+    },
+  };
+  const html = renderExecutiveDashboard(payload);
+  assert.match(html, />NPS</);
+  assert.match(html, /Sem dados/);
 });
 
 test("layout responsivo declara breakpoints mobile", () => {

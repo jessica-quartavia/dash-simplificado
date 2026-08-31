@@ -94,7 +94,35 @@ const mockSources = {
     }],
   },
   satisfaction: {
-    clients: [{ clientId: "1", latestNps: 9, npsResponses: 1, averageCsat: 5, csatResponses: 1 }],
+    population: { totalClients: 2 },
+    scopeInputs: {
+      totalClients: 2,
+      allNpsRows: [
+        { client_id: "1", score: 10, submitted_at: "2026-01-01", created_at: "2026-01-01" },
+        { client_id: "2", score: 6, submitted_at: "2026-01-02", created_at: "2026-01-02" },
+      ],
+      allCsatRows: [],
+      npsSends: [],
+      npsQuarterly: [],
+      clientPrograms: [
+        ["1", "Pharus"],
+        ["2", "Pharus"],
+      ],
+      clientBasics: [
+        ["1", { programa: "Pharus", engenheiro_patrimonial: "EP1", name: "A" }],
+        ["2", { programa: "Pharus", engenheiro_patrimonial: "EP1", name: "B" }],
+      ],
+    },
+    benchmarks: {
+      total: { nps: 0, n: 2, promoters: 1, neutrals: 0, detractors: 1 },
+      pharus: { nps: 0, n: 2, promoters: 1, neutrals: 0, detractors: 1 },
+      davos: { nps: null, n: 0, promoters: 0, neutrals: 0, detractors: 0 },
+      unknown: { nps: null, n: 0, promoters: 0, neutrals: 0, detractors: 0 },
+    },
+    clients: [
+      { clientId: "1", latestNps: 10, npsResponses: 1, averageCsat: 5, csatResponses: 1, program: "Pharus" },
+      { clientId: "2", latestNps: 6, npsResponses: 1, averageCsat: 4, csatResponses: 1, program: "Pharus" },
+    ],
     distributions: {},
   },
   cancellations: {
@@ -103,7 +131,35 @@ const mockSources = {
     distributions: { byMonthIntentionVsEffective: [], byCategory: [] },
   },
   renewal: {
-    clients: [{ clientId: "1", cycleValid: true, renewed: true, renewalCount: 1, currentCycle: 2 }],
+    clients: [
+      {
+        clientId: "1",
+        analyticalStatus: "Ativo",
+        program: "Pharus",
+        cycleValid: true,
+        renewed: true,
+        renewalCount: 1,
+        currentCycle: 2,
+      },
+      {
+        clientId: "2",
+        analyticalStatus: "Ativo",
+        program: "Pharus",
+        cycleValid: true,
+        renewed: false,
+        renewalCount: 0,
+        currentCycle: 1,
+      },
+      {
+        clientId: "3",
+        analyticalStatus: "Cancelado",
+        program: "Pharus",
+        cycleValid: true,
+        renewed: true,
+        renewalCount: 2,
+        currentCycle: 3,
+      },
+    ],
   },
   ep_performance: {
     engineers: [
@@ -134,9 +190,9 @@ const mockSources = {
   },
 };
 
-test("registry cobre 7 blocos e 32 indicadores", () => {
+test("registry cobre 7 blocos e 30 indicadores", () => {
   assert.equal(EXECUTIVE_SECTIONS.length, 7);
-  assert.equal(EXECUTIVE_METRIC_REGISTRY.length, 32);
+  assert.equal(EXECUTIVE_METRIC_REGISTRY.length, 30);
   for (const section of EXECUTIVE_SECTIONS) {
     assert.ok(EXECUTIVE_METRIC_REGISTRY.some((item) => item.section === section));
   }
@@ -258,7 +314,9 @@ test("payload estruturado por blocos sem sources brutos", () => {
   assert.ok(payload.onboarding?.metrics?.onboarding_completion_rate);
   assert.ok(payload.engagement?.metrics?.clients_without_meeting);
   assert.ok(payload.valueDelivery?.metrics?.clients_implementation_rate);
-  assert.ok(payload.clientHealth?.metrics?.renewal_eligible_clients);
+  assert.ok(payload.clientHealth?.metrics?.renewed_active_clients_rate);
+  assert.ok(payload.satisfaction?.nps != null);
+  assert.equal(payload.satisfaction.validResponses, 2);
   assert.ok(payload.ep?.metrics?.top_ep_renewed_share);
   assert.ok(payload.temporal?.metrics?.temporal_top_signals);
   assert.equal(payload.baseClients.metrics.active_clients.value, 1);
@@ -272,13 +330,16 @@ test("comparação executivo × fonte passa para métricas escalares", () => {
   const filters = defaultExecutiveSummaryFilters();
   const comparison = compareExecutiveWithSourcePages(mockSources, filters);
   assert.ok(Array.isArray(comparison.rows));
-  assert.equal(comparison.rows.length, 32);
+  assert.equal(comparison.rows.length, 30);
   const active = comparison.rows.find((row) => row.metricId === "active_clients");
   assert.equal(active.match, true);
   assert.equal(active.executiveValue, 1);
-  const pending = comparison.rows.find((row) => row.metricId === "renewal_eligible_clients");
-  assert.equal(pending.match, true);
-  assert.equal(pending.pending, false);
+  const npsRow = comparison.rows.find((row) => row.metricId === "nps");
+  assert.equal(npsRow.match, true);
+  assert.equal(npsRow.executiveValue, 0);
+  const renewalRate = comparison.rows.find((row) => row.metricId === "renewed_active_clients_rate");
+  assert.equal(renewalRate.match, true);
+  assert.equal(renewalRate.executiveValue, 50);
 });
 
 test("buildExecutiveSections mantém compatibilidade de blocos", () => {
@@ -287,6 +348,103 @@ test("buildExecutiveSections mantém compatibilidade de blocos", () => {
   assert.equal(built.sections.base.status, "ok");
   assert.equal(built.sections.base.data.active_clients, 1);
   assert.equal(built.sections.onboarding.data.onboarding_completion_rate, 100);
+});
+
+test("NPS executivo reutiliza compute oficial de Satisfação", () => {
+  const contexts = buildExecutiveContexts(mockSources, defaultExecutiveSummaryFilters());
+  const metrics = extractExecutiveMetrics(contexts);
+  assert.equal(metrics.nps.value, 0);
+  assert.equal(metrics.nps.coverage.responses, 2);
+  assert.equal(contexts.satisfaction.summary.promoters, 1);
+  assert.equal(contexts.satisfaction.summary.detractors, 1);
+});
+
+test("NPS Total não é média Pharus/Davos", () => {
+  const sources = {
+    ...mockSources,
+    satisfaction: {
+      ...mockSources.satisfaction,
+      scopeInputs: {
+        ...mockSources.satisfaction.scopeInputs,
+        allNpsRows: [
+          { client_id: "1", score: 10, submitted_at: "2026-01-01", created_at: "2026-01-01" },
+          { client_id: "2", score: 10, submitted_at: "2026-01-02", created_at: "2026-01-02" },
+          { client_id: "3", score: 10, submitted_at: "2026-01-03", created_at: "2026-01-03" },
+          { client_id: "4", score: 6, submitted_at: "2026-01-04", created_at: "2026-01-04" },
+          { client_id: "5", score: 5, submitted_at: "2026-01-05", created_at: "2026-01-05" },
+        ],
+        clientPrograms: [
+          ["1", "Pharus"],
+          ["2", "Pharus"],
+          ["3", "Pharus"],
+          ["4", "Davos"],
+          ["5", "Davos"],
+        ],
+        clientBasics: [
+          ["1", { programa: "Pharus" }],
+          ["2", { programa: "Pharus" }],
+          ["3", { programa: "Pharus" }],
+          ["4", { programa: "Davos" }],
+          ["5", { programa: "Davos" }],
+        ],
+      },
+      benchmarks: {
+        total: { nps: 20, n: 5, promoters: 3, neutrals: 0, detractors: 2 },
+        pharus: { nps: 100, n: 3, promoters: 3, neutrals: 0, detractors: 0 },
+        davos: { nps: -100, n: 2, promoters: 0, neutrals: 0, detractors: 2 },
+        unknown: { nps: null, n: 0, promoters: 0, neutrals: 0, detractors: 0 },
+      },
+    },
+  };
+  const contexts = buildExecutiveContexts(sources, defaultExecutiveSummaryFilters());
+  assert.equal(contexts.satisfaction.summary.nps, 20);
+  const naiveAverage = (100 + -100) / 2;
+  assert.notEqual(contexts.satisfaction.summary.nps, naiveAverage);
+});
+
+test("NPS sem respostas válidas retorna null com card disponível", () => {
+  const sources = {
+    ...mockSources,
+    satisfaction: {
+      ...mockSources.satisfaction,
+      scopeInputs: {
+        ...mockSources.satisfaction.scopeInputs,
+        allNpsRows: [],
+      },
+      benchmarks: {
+        total: { nps: null, n: 0, promoters: 0, neutrals: 0, detractors: 0 },
+        pharus: { nps: null, n: 0, promoters: 0, neutrals: 0, detractors: 0 },
+        davos: { nps: null, n: 0, promoters: 0, neutrals: 0, detractors: 0 },
+        unknown: { nps: null, n: 0, promoters: 0, neutrals: 0, detractors: 0 },
+      },
+    },
+  };
+  const metrics = extractExecutiveMetrics(buildExecutiveContexts(sources, defaultExecutiveSummaryFilters()));
+  assert.equal(metrics.nps.value, null);
+  assert.equal(metrics.nps.coverage.responses, 0);
+});
+
+test("renovação por clientes ativos usa ativos renovados sobre ativos", () => {
+  const metrics = extractExecutiveMetrics(buildExecutiveContexts(mockSources, defaultExecutiveSummaryFilters()));
+  const rate = metrics.renewed_active_clients_rate;
+  assert.equal(rate.numerator, 1);
+  assert.equal(rate.denominator, 2);
+  assert.equal(rate.value, 50);
+});
+
+test("cancelados não entram no denominador de renovação ativa", () => {
+  const contexts = buildExecutiveContexts(mockSources, defaultExecutiveSummaryFilters());
+  assert.equal(contexts.renewal.summary.activeClients, 2);
+  assert.equal(contexts.renewal.summary.renewedActiveClients, 1);
+});
+
+test("filtro Programa afeta NPS via clients.programa", () => {
+  const pharus = buildExecutiveContexts(mockSources, { ...defaultExecutiveSummaryFilters(), program: "Pharus" });
+  assert.equal(pharus.satisfaction.summary.nps, 0);
+  assert.equal(pharus.satisfaction.summary.npsResponses, 2);
+  const davos = buildExecutiveContexts(mockSources, { ...defaultExecutiveSummaryFilters(), program: "Davos" });
+  assert.equal(davos.satisfaction.summary.nps, null);
+  assert.equal(davos.satisfaction.summary.npsResponses, 0);
 });
 
 test("clientes aptos para renovação permanece pendente", () => {

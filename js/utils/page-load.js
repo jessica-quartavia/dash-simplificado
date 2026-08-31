@@ -14,6 +14,7 @@ const CACHE_TTL_MS = {
   ep_performance: 5 * 60 * 1000,
   temporal_indicators: 5 * 60 * 1000,
   statistical_crosses: 10 * 60 * 1000,
+  health_score: 5 * 60 * 1000,
   executive_summary: 5 * 60 * 1000,
   quality: 10 * 60 * 1000,
   platform_usage: 5 * 60 * 1000,

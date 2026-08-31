@@ -65,9 +65,11 @@ async function startPortal() {
     ["temporal-indicators", () => import("./temporal-indicators.js").then((m) => m.bootTemporalIndicators())],
     ["reports", () => import("./reports.js").then((m) => m.bootReports())],
     ["statistical-crosses", () => import("./statistical-crosses.js").then((m) => m.bootStatisticalCrosses())],
+    ["health-score", () => import("./health-score.js").then((m) => m.bootHealthScore())],
     ["quality", () => import("./quality.js").then((m) => m.bootQuality())],
     ["platform-usage", () => import("./platform-usage.js").then((m) => m.bootPlatformUsage())],
     ["support", () => import("./support.js").then((m) => m.bootSupport())],
+    ["metrics-documentation", () => import("./metrics-documentation.js").then((m) => m.bootMetricsDocumentation())],
   ];
 
   await Promise.all(pageBoots.map(([label, boot]) => safeBootAsync(label, boot)));

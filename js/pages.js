@@ -203,6 +203,17 @@ export const PAGES = [
     implemented: true,
   },
   {
+    id: "health_score",
+    hash: "health-score",
+    aliases: ["health_score", "health", "score-saude"],
+    group: "intelligence",
+    navLabel: "Health Score",
+    title: "Health Score",
+    eyebrow: "Inteligência",
+    description: "Classificação experimental de saúde do cliente com reuniões e mecanismos.",
+    implemented: true,
+  },
+  {
     id: "quality",
     hash: "quality",
     aliases: ["qualidade"],
@@ -212,6 +223,18 @@ export const PAGES = [
     eyebrow: "Sistema",
     description:
       "Esta página é utilizada pelo time de Inteligência para analisar cobertura, disponibilidade e confiabilidade dos dados utilizados no portal — identificar lacunas de preenchimento, entender cobertura e apoiar priorização de melhorias.",
+    implemented: true,
+  },
+  {
+    id: "metrics_documentation",
+    hash: "metrics-documentation",
+    aliases: ["metrics_documentation", "documentacao-de-metricas", "documentacao-metricas"],
+    group: "system",
+    navLabel: "Documentação de Métricas",
+    title: "Documentação de Métricas",
+    eyebrow: "Sistema",
+    description: "Veja de forma simples como os números do Analytics são calculados e o que cada indicador quer dizer.",
+    icon: "book-open",
     implemented: true,
   },
 ];

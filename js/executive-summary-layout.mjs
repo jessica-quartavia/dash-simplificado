@@ -335,8 +335,7 @@ function renderHealth(block) {
   const csat = metric(block, "csat_average");
   const monthly = metric(block, "cancellation_intention_vs_effective");
   const reasons = metric(block, "top_cancellation_reasons");
-  const renewals = metric(block, "total_renewals");
-  const perActive = metric(block, "renewals_per_active_client");
+  const renewedActiveRate = metric(block, "renewed_active_clients_rate");
 
   const promoters = shares.value?.promoters;
   const detractors = shares.value?.detractors;
@@ -348,14 +347,27 @@ function renderHealth(block) {
     percent: item.percent ?? 0,
   }));
 
+  const npsResponses = nps.coverage?.responses;
+  const npsNote =
+    nps.value == null
+      ? npsResponses ? `${num(npsResponses)} respostas válidas` : ""
+      : npsResponses != null
+        ? `${num(npsResponses)} respostas válidas`
+        : coverageNote(nps);
+
+  const renewalNote =
+    renewedActiveRate.numerator != null && renewedActiveRate.denominator != null
+      ? `${num(renewedActiveRate.numerator)} clientes ativos renovados de ${num(renewedActiveRate.denominator)} ativos`
+      : renewedActiveRate.rule || "";
+
   return execSection(
     "Saúde do cliente",
     `
     <div class="executive-grid executive-grid--health-top">
       ${execKpi({
         label: "NPS",
-        value: nps.value == null ? "—" : num(nps.value),
-        note: coverageNote(nps),
+        value: nps.value == null ? "Sem dados" : num(nps.value),
+        note: npsNote,
         accent: true,
       })}
       ${execChart("Promotores × detratores", renderSplitBar(promoters, detractors, neutrals), "executive-chart-card--split")}
@@ -376,15 +388,11 @@ function renderHealth(block) {
         rankedBars(reasonItems, { limit: 3, note: reasons.note || "Principais motivos categorizados." }),
         "executive-chart-card--reasons",
       )}
-      <div class="executive-grid executive-grid--mini-kpis executive-grid--renewal executive-grid--renewal-dual">
-        ${execKpi({ label: "Quantidade de renovações", value: num(renewals.value), note: coverageNote(renewals), mini: true })}
-        ${execKpi({
-          label: "Renovações por cliente ativo",
-          value: perActive.value == null ? "—" : num(perActive.value),
-          note: perActive.numerator != null ? `${num(perActive.numerator)}/${num(perActive.denominator)}` : perActive.rule || "",
-          mini: true,
-        })}
-      </div>
+      ${execKpi({
+        label: "Renovações por clientes ativos",
+        value: renewedActiveRate.value == null ? "—" : pct(renewedActiveRate.value),
+        note: renewalNote,
+      })}
     </div>`,
     block.status,
   );
