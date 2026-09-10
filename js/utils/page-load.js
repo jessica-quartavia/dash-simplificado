@@ -1,5 +1,6 @@
 import { authenticatedFetch } from "../auth.mjs";
 import { getCurrentPageId, getPageGeneration } from "../navigation.js";
+import { canCurrentUserAccessPage, canCurrentUserPreloadPage } from "../access-context.js";
 
 const CACHE_TTL_MS = {
   general: 5 * 60 * 1000,
@@ -159,6 +160,15 @@ async function fetchPageJsonInternal(url, {
   assertNavigation = true,
   signal = null,
 } = {}) {
+  if (pageId) {
+    const allowed = preload ? canCurrentUserPreloadPage(pageId) : canCurrentUserAccessPage(pageId);
+    if (!allowed) {
+      const err = new Error("Você não tem permissão para acessar esta página.");
+      err.code = "forbidden";
+      err.httpStatus = 403;
+      throw err;
+    }
+  }
   const key = cacheKey(pageId, url);
   const started = performance.now();
 

@@ -53,6 +53,7 @@ test("GET /api/reports autenticado retorna lista vazia", async () => {
   const req = mockReq({ method: "GET", url: "/api/reports", headers: { authorization: "Bearer test" } });
   const request = await nodeToWebRequest(req);
   const response = await handleReportsRequest(request, {
+    requirePageAccess: async () => null,
     requireCorporateAuthUser: async () => ({
       user: { id: "u1", email: "a@quartavia.com.br" },
       accessToken: "test",

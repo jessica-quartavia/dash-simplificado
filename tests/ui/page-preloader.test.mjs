@@ -51,6 +51,13 @@ function createTestQueue(overrides = {}) {
   return { queue, fetches, cache, inflight };
 }
 
+test("registry filtra preload sem permissão", () => {
+  const ordered = orderedPreloadEntries({
+    canPreloadPage: (pageId) => pageId === "general" || pageId === "meetings",
+  });
+  assert.deepEqual(ordered.map((item) => item.pageId).sort(), ["general", "meetings"]);
+});
+
 test("registry ordena prioridades e exclui preload:false", () => {
   const ordered = orderedPreloadEntries();
   assert.ok(ordered.length >= 10);

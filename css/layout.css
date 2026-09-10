@@ -2,6 +2,8 @@ body[data-auth="loading"] #portal-root,
 body[data-auth="unauthenticated"] #portal-root,
 body[data-auth="authenticating"] #portal-root,
 body[data-auth="unauthorizedDomain"] #portal-root,
+body[data-auth="unauthorizedAccess"] #portal-root,
+body[data-auth="accessDisabled"] #portal-root,
 body[data-auth="error"] #portal-root {
   display: none;
 }

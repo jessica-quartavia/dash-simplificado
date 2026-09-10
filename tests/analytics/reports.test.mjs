@@ -43,6 +43,7 @@ function mockAuth(deps = {}) {
       user: CORP_USER,
       accessToken: "test-token",
     }),
+    requirePageAccess: async () => null,
     analyticsCatalogConfigurationError: () => null,
     ...deps,
   };

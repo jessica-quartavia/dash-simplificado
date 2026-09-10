@@ -137,7 +137,8 @@ test("dashboard handlers map é explícito (sem import dinâmico arbitrário)", 
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/quality"], "quality");
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/platform-usage"], "platform_usage");
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/support"], "support");
-  assert.equal(Object.keys(ANALYTICS_ACTION_HANDLERS).length, 4);
+  assert.equal(Object.keys(ANALYTICS_ACTION_HANDLERS).length, 5);
+  assert.equal(typeof ANALYTICS_ACTION_HANDLERS.access.handler, "function");
 });
 
 test("general-data via dashboard entry retorna 401 sem auth", async () => {

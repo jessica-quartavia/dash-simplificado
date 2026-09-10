@@ -10,6 +10,13 @@ import {
   isCorporateEmail,
   isQuartaviaEmail,
 } from "./corporateEmail.mjs";
+import {
+  accessDenialMessage,
+  clearCurrentAccess,
+  fetchCurrentAccess,
+  setCurrentAccess,
+} from "./access-context.js";
+import { ACCESS_DISABLED_MESSAGE, ACCESS_UNAUTHORIZED_MESSAGE } from "../lib/access/access-policy.mjs";
 
 export {
   ALLOWED_GOOGLE_DOMAIN,
@@ -21,7 +28,7 @@ export {
 };
 
 /**
- * @typedef {'initializing' | 'unauthenticated' | 'authenticating' | 'authenticated' | 'unauthorizedDomain' | 'error'} AuthState
+ * @typedef {'initializing' | 'unauthenticated' | 'authenticating' | 'authenticated' | 'unauthorizedDomain' | 'unauthorizedAccess' | 'accessDisabled' | 'error'} AuthState
  */
 
 /** @type {AuthState} */
@@ -247,6 +254,7 @@ function renderAuthLoading() {
 
 function renderLoginPage(message = "") {
   clearAuthCache();
+  clearCurrentAccess();
   setAuthState("unauthenticated");
   clearHeaderUser();
   if (els.gate) els.gate.hidden = false;
@@ -259,12 +267,25 @@ function renderLoginPage(message = "") {
 
 function renderUnauthorizedDomain() {
   clearAuthCache();
+  clearCurrentAccess();
   setAuthState("unauthorizedDomain");
   clearHeaderUser();
   if (els.gate) els.gate.hidden = false;
   if (els.app) els.app.hidden = true;
   showPanel("login");
   setLoginMessage(INVALID_DOMAIN_MESSAGE);
+  resetGoogleButton();
+}
+
+function renderAccessDenied(code, message) {
+  clearAuthCache();
+  clearCurrentAccess();
+  setAuthState(code === "access_disabled" ? "accessDisabled" : "unauthorizedAccess");
+  clearHeaderUser();
+  if (els.gate) els.gate.hidden = false;
+  if (els.app) els.app.hidden = true;
+  showPanel("login");
+  setLoginMessage(message || accessDenialMessage(code));
   resetGoogleButton();
 }
 
@@ -481,12 +502,24 @@ function cleanAuthParamsFromUrl() {
 async function rejectInvalidDomainSession() {
   session = null;
   clearAuthCache();
+  clearCurrentAccess();
   try {
     await authSupabase?.auth.signOut();
   } catch {
     /* ignore */
   }
   renderUnauthorizedDomain();
+  bootOptions.onSignedOut?.();
+}
+
+async function rejectAccessSession(code, message) {
+  session = null;
+  try {
+    await authSupabase?.auth.signOut();
+  } catch {
+    /* ignore */
+  }
+  renderAccessDenied(code, message);
   bootOptions.onSignedOut?.();
 }
 
@@ -502,6 +535,24 @@ async function applySession(nextSession) {
     await rejectInvalidDomainSession();
     return { ok: false, reason: "unauthorizedDomain" };
   }
+
+  try {
+    const access = await fetchCurrentAccess(nextSession.access_token, { email });
+    setCurrentAccess(access);
+  } catch (error) {
+    const code = error?.code || "access_unavailable";
+    if (code === "access_disabled") {
+      await rejectAccessSession(code, ACCESS_DISABLED_MESSAGE);
+      return { ok: false, reason: "accessDisabled" };
+    }
+    if (code === "access_unauthorized") {
+      await rejectAccessSession(code, ACCESS_UNAUTHORIZED_MESSAGE);
+      return { ok: false, reason: "unauthorizedAccess" };
+    }
+    renderAuthError(error instanceof Error ? error.message : "Não foi possível verificar o acesso agora.", { allowRetry: true });
+    return { ok: false, reason: "error" };
+  }
+
   sessionExpiryHandled = false;
   renderPortal();
   return { ok: true };
@@ -638,10 +689,20 @@ export async function authenticatedFetch(url, options = {}) {
   }
 
   if (response.status === 403) {
-    await rejectInvalidDomainSession();
-    const err = new Error("AUTH_FORBIDDEN");
-    err.code = "AUTH_FORBIDDEN";
-    throw err;
+    const payload = await response.clone().json().catch(() => ({}));
+    if (payload.code === "invalid_domain") {
+      await rejectInvalidDomainSession();
+      const err = new Error("AUTH_FORBIDDEN");
+      err.code = "AUTH_FORBIDDEN";
+      throw err;
+    }
+    if (payload.code === "access_unauthorized" || payload.code === "access_disabled") {
+      await rejectAccessSession(payload.code, payload.error);
+      const err = new Error(payload.error || "AUTH_FORBIDDEN");
+      err.code = payload.code;
+      throw err;
+    }
+    return response;
   }
 
   return response;
@@ -842,18 +903,15 @@ async function bootAuthInner() {
     if (data.session && cacheCompatible(cache, data.session) && cacheFresh) {
       session = data.session;
       if (isAllowedCorporateEmail(data.session.user?.email)) {
-        renderPortal();
-        notifyAuthenticated();
-        void verifyStoredSession(data.session).then((verified) => {
-          if (verified) void applySession(verified);
-        });
+        const applied = await applySession(data.session);
+        if (applied.ok) notifyAuthenticated();
         return;
       }
     }
 
     const verifiedSession = await verifyStoredSession(data.session);
     if (!verifiedSession) {
-      if (authState === "error" || authState === "unauthorizedDomain") return;
+      if (authState === "error" || authState === "unauthorizedDomain" || authState === "unauthorizedAccess" || authState === "accessDisabled") return;
       if (!data.session && !callbackError) renderLoginPage("");
       return;
     }

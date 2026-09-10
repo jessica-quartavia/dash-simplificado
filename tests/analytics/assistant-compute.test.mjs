@@ -70,6 +70,7 @@ function mockMechanismsContext(implemented = 900, rate = 12.5) {
 function mockDeps(overrides = {}) {
   return {
     requireCorporateAuth: async () => null,
+    skipAccessGate: true,
     analyticsCatalogConfigurationError: () => null,
     loadAssistantCatalog: async () => ({ rows: seedCatalog, source: "seed", queryMs: 0 }),
     analyticsSnapshotStore: { read: async () => ({ rows: [] }) },

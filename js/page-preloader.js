@@ -8,6 +8,7 @@ import {
   shouldPausePreloadForVisibility,
 } from "../lib/preload/page-preload-queue.mjs";
 import { getCurrentPageId } from "./navigation.js";
+import { canCurrentUserPreloadPage, isAccessReady } from "./access-context.js";
 import {
   clearAllPageCacheAndInflight,
   fetchPageJsonPreload,
@@ -64,6 +65,7 @@ function bindQueue() {
     isInflight: (pageId, url) => Boolean(getPageInflight(pageId, url)),
     fetchPreload: fetchPageJsonPreload,
     getCurrentPageId,
+    canPreloadPage: canCurrentUserPreloadPage,
     isForegroundBusy,
     shouldLimitNetwork: () => shouldLimitPreloadForNetwork(navigator.connection),
     shouldPauseVisibility: () => shouldPausePreloadForVisibility(document.visibilityState),
@@ -109,7 +111,7 @@ export function bootPagePreloader() {
   if (booted) return;
   booted = true;
   bindQueue();
-  queue.markAuthReady();
+  if (isAccessReady()) queue.markAuthReady();
 
   document.addEventListener("page:ready", onPageReady);
   document.addEventListener("page:navigate", onPageNavigate);

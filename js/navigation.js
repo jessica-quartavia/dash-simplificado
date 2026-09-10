@@ -1,14 +1,13 @@
 import {
   DEFAULT_PAGE_ID,
-  PAGE_GROUPS,
   getPageById,
-  getPagesByGroup,
   isPageImplemented,
   resolvePageFromHash,
 } from "./pages.js";
 import { closeOpenDropdown } from "./components/dropdown-coordinator.js";
 import { initSidebarCollapse } from "./components/sidebar-collapse.js";
 import { resetPageFetchContext, isForegroundBusy } from "./utils/page-load.js";
+import { canCurrentUserAccessPage, getHomePageId, getMenuGroups } from "./access-context.js";
 
 const INTENDED_HASH_KEY = "qv:intendedHash";
 
@@ -147,8 +146,33 @@ function toggleNavGroup(groupId) {
   if (list) list.hidden = !expanded;
 }
 
+function renderForbiddenPage() {
+  const filters = document.getElementById("page-filters");
+  const content = document.getElementById("page-content");
+  const actions = document.getElementById("page-actions");
+  if (filters) filters.innerHTML = "";
+  if (actions) actions.innerHTML = "";
+  if (content) {
+    content.innerHTML = `<div class="gd-status" role="status">
+      <strong>Acesso negado</strong>
+      <span>Você não possui permissão para acessar esta área.</span>
+    </div>`;
+  }
+}
+
 export function navigateTo(pageId, { updateHash = true } = {}) {
-  const page = getPageById(pageId) || getPageById(DEFAULT_PAGE_ID);
+  let page = getPageById(pageId) || getPageById(DEFAULT_PAGE_ID);
+  if (page && !canCurrentUserAccessPage(page.id)) {
+    const fallbackId = getHomePageId() || DEFAULT_PAGE_ID;
+    page = getPageById(fallbackId) || page;
+    if (!canCurrentUserAccessPage(page.id)) {
+      pageGeneration += 1;
+      resetPageFetchContext();
+      clearPageShell();
+      renderForbiddenPage();
+      return;
+    }
+  }
   pageGeneration += 1;
   resetPageFetchContext();
   clearPageShell();
@@ -193,8 +217,9 @@ function renderSidebar() {
 
   nav.replaceChildren();
 
-  for (const group of PAGE_GROUPS) {
-    const pages = getPagesByGroup(group.id);
+  const menuGroups = getMenuGroups();
+  for (const group of menuGroups.length ? menuGroups : []) {
+    const pages = group.pages || [];
     if (!pages.length) continue;
 
     const section = document.createElement("section");
@@ -303,6 +328,7 @@ export function bootNavigation() {
     });
   }
 
-  const initial = resolvePageFromHash(consumeIntendedHash());
-  navigateTo(initial.id);
+  const intended = resolvePageFromHash(consumeIntendedHash());
+  const startId = canCurrentUserAccessPage(intended.id) ? intended.id : getHomePageId() || intended.id;
+  navigateTo(startId);
 }

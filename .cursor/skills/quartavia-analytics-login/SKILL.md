@@ -44,7 +44,8 @@ DOMContentLoaded
     → supabase.createClient (PKCE, detectSessionInUrl)
     → getSession → verifyStoredSession → applySession
          domínio inválido → signOut + unauthorizedDomain
-         ok → renderPortal + onAuthenticated → startPortal()
+         sem cadastro / inativo → Acesso não autorizado / Acesso desativado
+         ok → GET /api/analytics?action=access → renderPortal + onAuthenticated → startPortal()
   → Google click → signInWithOAuth → redirect Google → volta origin
 ```
 
@@ -57,6 +58,8 @@ DOMContentLoaded
 | `authenticating` | Botão "Redirecionando…" |
 | `authenticated` | `#portal-root` visível |
 | `unauthorizedDomain` | Login + mensagem domínio |
+| `unauthorizedAccess` | Login + "Acesso não autorizado" |
+| `accessDisabled` | Login + "Acesso desativado" |
 | `error` | Login + retry |
 
 CSS em `css/layout.css`: portal oculto até `data-auth="authenticated"`.

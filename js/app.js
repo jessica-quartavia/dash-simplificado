@@ -70,6 +70,7 @@ async function startPortal() {
     ["platform-usage", () => import("./platform-usage.js").then((m) => m.bootPlatformUsage())],
     ["support", () => import("./support.js").then((m) => m.bootSupport())],
     ["metrics-documentation", () => import("./metrics-documentation.js").then((m) => m.bootMetricsDocumentation())],
+    ["access-management", () => import("./access-management.js").then((m) => m.bootAccessManagement())],
   ];
 
   await Promise.all(pageBoots.map(([label, boot]) => safeBootAsync(label, boot)));

@@ -20,6 +20,7 @@ function post(body, headers = { authorization: "Bearer test-token" }) {
 
 const mockDeps = {
   requireCorporateAuth: async () => null,
+  skipAccessGate: true,
   analyticsCatalogConfigurationError: () => null,
   loadAssistantCatalog: async () => ({ rows: seedCatalog, source: "seed", queryMs: 0 }),
   analyticsSnapshotStore: { read: async () => ({ rows: [] }) },
