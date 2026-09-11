@@ -21,10 +21,26 @@ test("listagem de acessos usa table-panel alinhado e tags Owner", () => {
   assert.doesNotMatch(page, /class="am-groups"/);
 });
 
+test("modal de acesso é próprio, alinhado e com exclusão", () => {
+  assert.match(page, /class="am-modal"/);
+  assert.match(page, /am-check-list/);
+  assert.match(page, /type="submit"/);
+  assert.match(page, /preventDefault/);
+  assert.match(page, /mode: editing \? "update" : "create"/);
+  assert.match(page, /Excluir acesso/);
+  assert.match(page, /confirm-delete/);
+  assert.match(page, /method: "DELETE"/);
+  assert.match(page, /showFormError/);
+  assert.doesNotMatch(page, /reports-modal/);
+  assert.doesNotMatch(page, /reports-field/);
+});
+
 test("CSS da tela de acessos tem tag Owner distinta e tabela estável", () => {
   assert.match(css, /\.am-badge-owner/);
   assert.match(css, /\.am-table \{\s*table-layout: fixed;/);
   assert.match(css, /data-page="access_management"/);
+  assert.match(css, /\.am-check-list/);
+  assert.match(css, /\.am-modal \{/);
   assert.match(css, /@media \(max-width: 640px\)/);
 });
 

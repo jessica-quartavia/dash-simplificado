@@ -1,7 +1,7 @@
 import { onPageChange, getCurrentPageId } from "./navigation.js";
-import { authenticatedFetch } from "./auth.mjs";
+import { authenticatedFetch, getUserEmail } from "./auth.mjs";
 import { getCurrentAccess } from "./access-context.js";
-import { ACCESS_GROUPS, buildAccessUserTags } from "../lib/access/access-policy.mjs";
+import { ACCESS_GROUPS, buildAccessUserTags, normalizeAccessEmail } from "../lib/access/access-policy.mjs";
 import { escapeHtml } from "./general-charts.mjs";
 
 const PAGE_ID = "access_management";
@@ -15,7 +15,22 @@ const state = {
   filters: { search: "", group: "all", owner: "all", status: "active" },
   modal: null,
   saving: false,
+  deleting: false,
+  formError: "",
 };
+
+function isDevHost() {
+  return typeof location !== "undefined" && (location.hostname === "localhost" || location.hostname === "127.0.0.1");
+}
+
+function logAccessUi(label, extra = {}) {
+  if (!isDevHost()) return;
+  const safe = { ...extra };
+  delete safe.token;
+  delete safe.accessToken;
+  delete safe.authorization;
+  console.info(`[AccessManagement] ${label}`, safe);
+}
 
 let eventsBound = false;
 
@@ -194,80 +209,170 @@ function renderPage() {
   renderTableOnly();
 }
 
+function isSelfUser(user) {
+  return normalizeAccessEmail(user?.email) && normalizeAccessEmail(user.email) === normalizeAccessEmail(getUserEmail());
+}
+
 function openModal(user) {
+  state.formError = "";
+  state.saving = false;
+  state.deleting = false;
   state.modal = user
-    ? { ...user, groups: [...(user.groupCodes || [])] }
-    : { email: "", displayName: "", groups: [], isOwner: false, isActive: true };
+    ? {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName || "",
+        groups: [...(user.groupCodes || [])],
+        isOwner: Boolean(user.isOwner),
+        isActive: user.isActive !== false,
+        phase: "form",
+      }
+    : { email: "", displayName: "", groups: [], isOwner: false, isActive: true, phase: "form" };
   renderModal();
 }
 
 function closeModal() {
   state.modal = null;
+  state.formError = "";
+  state.saving = false;
+  state.deleting = false;
   const root = document.getElementById("overlay-root");
   if (!root) return;
   root.innerHTML = "";
   root.setAttribute("aria-hidden", "true");
 }
 
+function collectForm() {
+  return {
+    email: $("amEmail")?.value || state.modal?.email || "",
+    displayName: $("amName")?.value || "",
+    groups: [...document.querySelectorAll("[data-am-group]:checked")].map((input) => input.dataset.amGroup),
+    isOwner: Boolean($("amIsOwner")?.checked),
+    isActive: Boolean($("amIsActive")?.checked),
+  };
+}
+
+function showFormError(message) {
+  state.formError = message || "Não foi possível salvar o acesso.";
+  const errorNode = $("amFormError");
+  if (!errorNode) return;
+  errorNode.hidden = false;
+  errorNode.textContent = state.formError;
+}
+
+function setModalBusy(kind) {
+  state.saving = kind === "saving";
+  state.deleting = kind === "deleting";
+  const saveBtn = $("amSave");
+  const deleteBtn = $("amDelete");
+  const confirmBtn = $("amConfirmDelete");
+  if (saveBtn) {
+    saveBtn.disabled = Boolean(kind);
+    saveBtn.textContent = kind === "saving" ? "Salvando…" : "Salvar";
+  }
+  if (deleteBtn) deleteBtn.disabled = Boolean(kind);
+  if (confirmBtn) {
+    confirmBtn.disabled = Boolean(kind);
+    confirmBtn.textContent = kind === "deleting" ? "Excluindo…" : "Excluir acesso";
+  }
+  document.querySelectorAll("[data-am-dismiss]").forEach((el) => {
+    if (el.tagName === "BUTTON") el.disabled = Boolean(kind);
+  });
+}
+
 function renderModal() {
   const user = state.modal;
   const root = document.getElementById("overlay-root");
   if (!user || !root) return;
-  const editing = Boolean(user.id || (user.email && state.users.some((item) => item.email === user.email)));
+  const editing = Boolean(user.id);
+  const selfEdit = editing && isSelfUser(user);
   const groupChecks = Object.values(ACCESS_GROUPS)
     .map((group) => {
-      const checked = user.groups.includes(group.code) ? "checked" : "";
-      return `<label class="am-check"><input type="checkbox" data-am-group="${group.code}" ${checked} /> ${escapeHtml(group.name)}</label>`;
+      const checked = (user.groups || []).includes(group.code) ? "checked" : "";
+      return `<label class="am-check"><input type="checkbox" data-am-group="${group.code}" ${checked} /> <span>${escapeHtml(group.name)}</span></label>`;
     })
     .join("");
+
   root.setAttribute("aria-hidden", "false");
+  if (user.phase === "confirm-delete") {
+    root.innerHTML = `
+      <div class="am-modal-backdrop" data-am-dismiss></div>
+      <div class="am-modal" role="dialog" aria-modal="true" aria-labelledby="am-modal-title">
+        <header class="am-modal-head">
+          <h2 id="am-modal-title">Excluir acesso</h2>
+        </header>
+        <p class="am-modal-lead">Tem certeza que deseja excluir o acesso de ${escapeHtml(user.email)}?</p>
+        <p class="am-modal-note">Essa ação remove o cadastro de acesso e os vínculos de times desta pessoa.</p>
+        <p id="amFormError" class="am-modal-error" ${state.formError ? "" : "hidden"}>${escapeHtml(state.formError)}</p>
+        <div class="am-modal-actions">
+          <button type="button" class="btn btn-secondary" data-am-back>Cancelar</button>
+          <button type="button" class="btn btn-danger" id="amConfirmDelete">${state.deleting ? "Excluindo…" : "Excluir acesso"}</button>
+        </div>
+      </div>`;
+    root.querySelector("[data-am-dismiss]")?.addEventListener("click", closeModal);
+    root.querySelector("[data-am-back]")?.addEventListener("click", () => {
+      state.modal.phase = "form";
+      state.formError = "";
+      renderModal();
+    });
+    $("amConfirmDelete")?.addEventListener("click", () => void deleteUser());
+    return;
+  }
+
   root.innerHTML = `
-    <div class="reports-modal-backdrop" data-am-dismiss></div>
-    <div class="reports-modal" role="dialog" aria-modal="true" aria-labelledby="am-modal-title">
-      <header class="reports-modal-head">
+    <div class="am-modal-backdrop" data-am-dismiss></div>
+    <div class="am-modal" role="dialog" aria-modal="true" aria-labelledby="am-modal-title">
+      <header class="am-modal-head">
         <h2 id="am-modal-title">${editing ? "Editar acesso" : "Adicionar acesso"}</h2>
       </header>
-      <form id="amForm" class="reports-form">
-        <label class="reports-field">
-          <span class="reports-field-label">Email *</span>
+      <form id="amForm" class="am-modal-form">
+        <label class="am-field">
+          <span class="am-field-label">Email *</span>
           <input type="email" id="amEmail" required value="${escapeHtml(user.email)}" ${editing ? "readonly" : ""} />
         </label>
-        <label class="reports-field">
-          <span class="reports-field-label">Nome</span>
+        <label class="am-field">
+          <span class="am-field-label">Nome</span>
           <input type="text" id="amName" value="${escapeHtml(user.displayName || "")}" />
         </label>
-        <fieldset class="reports-field">
-          <legend class="reports-field-label">Times / perfis</legend>
-          <div class="am-multiselect">${groupChecks}</div>
+        <fieldset class="am-field am-fieldset">
+          <legend class="am-field-label">Times / perfis</legend>
+          <div class="am-check-list">${groupChecks}</div>
         </fieldset>
-        <label class="am-check"><input type="checkbox" id="amIsOwner" ${user.isOwner ? "checked" : ""} /> Owner</label>
-        <label class="am-check"><input type="checkbox" id="amIsActive" ${user.isActive !== false ? "checked" : ""} /> Ativo</label>
-        <p id="amFormError" class="reports-form-error" hidden></p>
-        <div class="reports-form-actions">
+        <label class="am-check"><input type="checkbox" id="amIsOwner" ${user.isOwner ? "checked" : ""} ${selfEdit ? "disabled" : ""} /> <span>Owner</span></label>
+        <label class="am-check"><input type="checkbox" id="amIsActive" ${user.isActive !== false ? "checked" : ""} ${selfEdit ? "disabled" : ""} /> <span>Ativo</span></label>
+        ${selfEdit ? `<p class="am-modal-note">Outro Owner precisa alterar o seu próprio acesso.</p>` : ""}
+        <p id="amFormError" class="am-modal-error" ${state.formError ? "" : "hidden"}>${escapeHtml(state.formError)}</p>
+        <div class="am-modal-actions">
+          ${editing && !selfEdit ? `<button type="button" class="btn btn-secondary am-delete-btn" id="amDelete">Excluir acesso</button>` : ""}
           <button type="button" class="btn btn-secondary" data-am-dismiss>Cancelar</button>
-          <button type="submit" class="btn btn-primary" ${state.saving ? "disabled" : ""}>${state.saving ? "Salvando…" : "Salvar"}</button>
+          <button type="submit" class="btn btn-primary" id="amSave" ${state.saving ? "disabled" : ""}>${state.saving ? "Salvando…" : "Salvar"}</button>
         </div>
       </form>
     </div>`;
   root.querySelectorAll("[data-am-dismiss]").forEach((el) => el.addEventListener("click", closeModal));
+  $("amDelete")?.addEventListener("click", () => {
+    Object.assign(state.modal, collectForm());
+    state.modal.phase = "confirm-delete";
+    state.formError = "";
+    renderModal();
+  });
   $("amForm")?.addEventListener("submit", (event) => {
     event.preventDefault();
+    logAccessUi("form submit");
     void saveUser();
   });
 }
 
 async function saveUser() {
-  const errorNode = $("amFormError");
-  const groups = [...document.querySelectorAll("[data-am-group]:checked")].map((input) => input.dataset.amGroup);
-  const payload = {
-    email: $("amEmail")?.value || "",
-    displayName: $("amName")?.value || "",
-    groups,
-    isOwner: Boolean($("amIsOwner")?.checked),
-    isActive: Boolean($("amIsActive")?.checked),
-  };
-  state.saving = true;
-  renderModal();
+  const form = collectForm();
+  if (state.modal) Object.assign(state.modal, form);
+  const editing = Boolean(state.modal?.id);
+  const payload = { ...form, mode: editing ? "update" : "create" };
+  logAccessUi("payload email=", { email: normalizeAccessEmail(payload.email) });
+  logAccessUi("groups=", { count: payload.groups.length, groups: payload.groups });
+  logAccessUi("owner=", { owner: payload.isOwner, active: payload.isActive, mode: payload.mode });
+  setModalBusy("saving");
+  logAccessUi("request start", { action: payload.mode, endpoint: "/api/analytics?action=access", method: "POST" });
   try {
     const response = await authenticatedFetch("/api/analytics?action=access", {
       method: "POST",
@@ -275,38 +380,64 @@ async function saveUser() {
       body: JSON.stringify(payload),
     });
     const body = await response.json().catch(() => ({}));
+    logAccessUi("response status=", { status: response.status, code: body.code || null });
     if (!response.ok) {
-      if (errorNode) {
-        errorNode.hidden = false;
-        errorNode.textContent = body.error || "Não foi possível salvar o acesso.";
-      }
-      state.saving = false;
-      renderModal();
+      logAccessUi("response error=", { error: body.error || null, code: body.code || null });
+      setModalBusy(false);
+      showFormError(body.error || "Não foi possível salvar o acesso.");
       return;
     }
-    state.saving = false;
     closeModal();
-    await loadUsers();
+    logAccessUi("refresh list");
+    await loadUsers({ silent: true });
   } catch (error) {
-    state.saving = false;
-    if (errorNode) {
-      errorNode.hidden = false;
-      errorNode.textContent = error instanceof Error ? error.message : "Não foi possível salvar o acesso.";
-    }
-    renderModal();
+    setModalBusy(false);
+    const message = error instanceof Error ? error.message : "Não foi possível salvar o acesso.";
+    logAccessUi("response error=", { error: message });
+    showFormError(message);
   }
 }
 
-async function loadUsers() {
-  state.loading = true;
-  state.error = null;
-  renderPage();
+async function deleteUser() {
+  const email = state.modal?.email || "";
+  setModalBusy("deleting");
+  logAccessUi("request start", { action: "delete", endpoint: "/api/analytics?action=access", method: "DELETE" });
+  try {
+    const response = await authenticatedFetch("/api/analytics?action=access", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const body = await response.json().catch(() => ({}));
+    logAccessUi("response status=", { status: response.status, code: body.code || null });
+    if (!response.ok) {
+      logAccessUi("response error=", { error: body.error || null });
+      setModalBusy(false);
+      showFormError(body.error || "Não foi possível excluir o acesso.");
+      return;
+    }
+    closeModal();
+    logAccessUi("refresh list");
+    await loadUsers({ silent: true });
+  } catch (error) {
+    setModalBusy(false);
+    showFormError(error instanceof Error ? error.message : "Não foi possível excluir o acesso.");
+  }
+}
+
+async function loadUsers({ silent = false } = {}) {
+  if (!silent) {
+    state.loading = true;
+    state.error = null;
+    renderPage();
+  }
   try {
     const response = await authenticatedFetch("/api/analytics?action=access&scope=users");
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || "Não foi possível carregar os acessos.");
     state.users = payload.users || [];
     state.summary = payload.summary || null;
+    state.error = null;
   } catch (error) {
     state.error = error instanceof Error ? error.message : "Não foi possível carregar os acessos.";
   } finally {

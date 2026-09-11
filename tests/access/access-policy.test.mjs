@@ -12,6 +12,7 @@ import {
   listAllowedPageIds,
   pagesGrantedByGroups,
   buildAccessUserTags,
+  canDeleteUser,
 } from "../../lib/access/access-policy.mjs";
 
 function access(groups, extra = {}) {
@@ -159,6 +160,24 @@ test("tags visuais: owner nunca aparece como Sem time", () => {
 test("home padrão cai na primeira página permitida", () => {
   assert.equal(firstAllowedPageId(access(["quality"])), "general");
   assert.equal(firstAllowedPageId(access(["finance"])), "executive_summary");
+});
+
+test("exclusão bloqueia último owner e autoexclusão", () => {
+  assert.equal(canDeleteUser({
+    actorEmail: "a@quartavia.com.br",
+    target: { email: "a@quartavia.com.br", isOwner: true, isActive: true },
+    activeOwnerCount: 2,
+  }).code, "self_lock");
+  assert.equal(canDeleteUser({
+    actorEmail: "b@quartavia.com.br",
+    target: { email: "a@quartavia.com.br", isOwner: true, isActive: true },
+    activeOwnerCount: 1,
+  }).code, "last_owner");
+  assert.equal(canDeleteUser({
+    actorEmail: "b@quartavia.com.br",
+    target: { email: "c@quartavia.com.br", isOwner: false, isActive: true },
+    activeOwnerCount: 1,
+  }).ok, true);
 });
 
 test("último owner e auto-alteração são bloqueados", () => {
