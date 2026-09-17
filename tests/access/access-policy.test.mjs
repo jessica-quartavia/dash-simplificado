@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { PAGES } from "../../js/pages.js";
 import {
+  ACCESS_GROUP_INHERITANCE,
   ACCESS_MANAGEMENT_PAGE_ID,
+  ACCESS_UNAUTHORIZED_MESSAGE,
+  PAGE_ACCESS_REGISTRY,
   canAccessPage,
   canDeactivateUser,
   canPreloadPage,
@@ -9,6 +13,7 @@ import {
   expandAccessGroups,
   filterPagesForMenu,
   firstAllowedPageId,
+  getPageAccessMetadata,
   listAllowedPageIds,
   pagesGrantedByGroups,
   buildAccessUserTags,
@@ -126,19 +131,28 @@ test("usuário inativo ou sem cadastro → bloqueado", () => {
   assert.equal(canAccessPage(null, "general"), false);
 });
 
-test("menu oculta categorias vazias e gerenciamento para não-owner", () => {
+test("menu oculta categorias vazias e gerenciamento para não-owner, mas mostra Acionamentos legado", () => {
   const financeMenu = filterPagesForMenu(access(["finance"]));
-  assert.deepEqual(financeMenu.map((group) => group.id).sort(), ["overview", "retention"]);
+  assert.deepEqual(financeMenu.map((group) => group.id).sort(), ["journey", "overview", "retention"]);
   assert.ok(!financeMenu.some((group) => group.id === "intelligence"));
+  const support = financeMenu.flatMap((group) => group.pages).find((page) => page.id === "support");
+  assert.equal(support.disabled, true);
+  assert.equal(support.menuBadge.label, "Legado");
   const ownerMenu = filterPagesForMenu(access([], { isOwner: true }));
   assert.ok(ownerMenu.some((group) => group.id === "system" && group.pages.some((page) => page.id === ACCESS_MANAGEMENT_PAGE_ID)));
+  const ownerSupport = ownerMenu.flatMap((group) => group.pages).find((page) => page.id === "support");
+  assert.equal(ownerSupport.disabled, false);
+  assert.equal(ownerSupport.menuBadge.label, "Legado");
 });
 
-test("preload não inclui gerenciamento nem página sem permissão", () => {
+test("preload não inclui gerenciamento, Acionamentos nem página sem permissão", () => {
   const ep = access(["eps"]);
   assert.equal(canPreloadPage(ep, "statistical_crosses"), false);
   assert.equal(canPreloadPage(ep, "meetings"), true);
   assert.equal(canPreloadPage(access([], { isOwner: true }), ACCESS_MANAGEMENT_PAGE_ID), false);
+  assert.equal(canPreloadPage(access([], { isOwner: true }), "support"), false);
+  assert.equal(canPreloadPage(access(["leaders"]), "support"), false);
+  assert.equal(canPreloadPage(access(["product"]), "support"), false);
 });
 
 test("tags visuais: owner nunca aparece como Sem time", () => {
@@ -155,6 +169,50 @@ test("tags visuais: owner nunca aparece como Sem time", () => {
   assert.deepEqual(buildAccessUserTags({ isOwner: false, groupLabels: ["Qualidade"] }), [
     { label: "Qualidade", kind: "group" },
   ]);
+  assert.deepEqual(buildAccessUserTags({ isOwner: false, groupCodes: ["product"] }), [
+    { label: "Produto", kind: "product" },
+  ]);
+});
+
+test("Produto herda exatamente as páginas de Líderes", () => {
+  assert.deepEqual(ACCESS_GROUP_INHERITANCE.product, ["leaders"]);
+  assert.deepEqual(expandAccessGroups(["product"]).sort(), ["leaders", "product"]);
+  const leader = access(["leaders"]);
+  const product = access(["product"]);
+  for (const page of PAGES) {
+    assert.equal(canAccessPage(product, page.id), canAccessPage(leader, page.id), page.id);
+  }
+  assert.equal(canAccessPage(product, ACCESS_MANAGEMENT_PAGE_ID), false);
+  assert.equal(canAccessPage(product, "satisfaction"), true);
+  assert.equal(canAccessPage(product, "support"), false);
+});
+
+test("Acionamentos é legado owner-only", () => {
+  const meta = getPageAccessMetadata("support");
+  assert.equal(meta.legacy, true);
+  assert.equal(meta.ownerOnly, true);
+  assert.equal(meta.preload, false);
+  assert.equal(meta.badge, "Legado");
+  assert.equal(canAccessPage(access([], { isOwner: true }), "support"), true);
+  for (const group of ["leaders", "product", "quality", "eps", "finance", "team_leaders_ep"]) {
+    assert.equal(canAccessPage(access([group]), "support"), false, group);
+    const item = filterPagesForMenu(access([group]))
+      .flatMap((menu) => menu.pages)
+      .find((page) => page.id === "support");
+    assert.equal(item?.disabled, true, group);
+    assert.equal(item?.menuBadge?.label, "Legado", group);
+  }
+});
+
+test("registry cobre todas as páginas atuais", () => {
+  for (const page of PAGES) {
+    assert.ok(PAGE_ACCESS_REGISTRY[page.id], page.id);
+  }
+});
+
+test("allowlist: e-mail corporativo sem cadastro não entra", () => {
+  assert.equal(canAccessPage(null, "executive_summary"), false);
+  assert.equal(ACCESS_UNAUTHORIZED_MESSAGE, "Seu usuário não possui acesso ao Analytics.");
 });
 
 test("home padrão cai na primeira página permitida", () => {

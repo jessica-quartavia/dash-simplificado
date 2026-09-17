@@ -4840,6 +4840,12 @@
   color: var(--muted);
 }
 
+.am-badge-product {
+  background: color-mix(in srgb, var(--color-product) 12%, var(--surface));
+  border-color: color-mix(in srgb, var(--color-product) 28%, var(--border));
+  color: var(--color-product);
+}
+
 .am-status {
   display: inline-flex;
   align-items: center;

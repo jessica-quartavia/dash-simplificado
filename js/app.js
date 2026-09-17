@@ -47,9 +47,6 @@ async function startPortal() {
 
   await import("./page-preloader.js").then(({ bootPagePreloader }) => bootPagePreloader());
 
-  const { bootNavigation } = await import("./navigation.js");
-  safeBoot("navigation", bootNavigation);
-
   const pageBoots = [
     ["executive-summary", () => import("./executive-summary.js").then((m) => m.bootExecutiveSummary())],
     ["general-data", () => import("./general-data.js").then((m) => m.bootGeneralData())],
@@ -74,6 +71,9 @@ async function startPortal() {
   ];
 
   await Promise.all(pageBoots.map(([label, boot]) => safeBootAsync(label, boot)));
+
+  const { bootNavigation } = await import("./navigation.js");
+  safeBoot("navigation", bootNavigation);
 
   document.getElementById("app")?.setAttribute("data-ready", "true");
   bootLog("shell mounted");

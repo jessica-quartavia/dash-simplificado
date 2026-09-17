@@ -360,6 +360,11 @@ function renderFilters() {
 }
 
 function renderErrorView(title, message) {
+  try {
+    renderFilters();
+  } catch (error) {
+    console.error("[Satisfação] filtros no erro", error);
+  }
   const content = $("page-content");
   if (!content) return;
   content.innerHTML = `<div class="gd-status">
@@ -429,25 +434,25 @@ function setActions(enabled) {
 }
 
 async function loadSatisfaction({ force = false } = {}) {
-  if (state.loading && !force) {
-    renderFilters();
-    renderStateView();
-    setActions(true);
-    return;
-  }
-  if (state.payload && !force) {
-    renderFilters();
-    renderStateView();
-    setActions(true);
-    return;
-  }
-
-  state.loading = true;
-  state.error = null;
-  state.errorCode = null;
-  if (force) state.payload = null;
-
   try {
+    if (state.loading && !force) {
+      renderFilters();
+      renderStateView();
+      setActions(true);
+      return;
+    }
+    if (state.payload && !force) {
+      renderFilters();
+      renderStateView();
+      setActions(true);
+      return;
+    }
+
+    state.loading = true;
+    state.error = null;
+    state.errorCode = null;
+    if (force) state.payload = null;
+
     devLog("mount");
     ensurePageRefresh().setLoading(true);
     devLog("filters mounted");
@@ -464,7 +469,7 @@ async function loadSatisfaction({ force = false } = {}) {
       return;
     }
     state.errorCode = mapped.errorCode;
-    state.error = mapped.error;
+    state.error = mapped.error || "Não foi possível carregar a Pesquisa de Satisfação.";
     devLog("error", mapped);
     if (force && state.payload) {
       ensurePageRefresh().markError(state.error);
@@ -496,10 +501,16 @@ function unmountSatisfaction() {
 }
 
 function mountSatisfaction() {
-  if (state.mounted && state.loading) return;
   state.mounted = true;
-  setActions(false);
-  void loadSatisfaction();
+  try {
+    setActions(false);
+    void loadSatisfaction();
+  } catch (error) {
+    console.error("[Satisfação] mount", error);
+    state.loading = false;
+    state.error = error instanceof Error ? error.message : "Falha ao iniciar a página.";
+    renderErrorView("Não foi possível carregar a Pesquisa de Satisfação.", state.error);
+  }
 }
 
 export function bootSatisfaction() {

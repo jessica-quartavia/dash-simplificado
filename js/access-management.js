@@ -172,6 +172,7 @@ function renderPage() {
         ${kpiCard("Team Leaders EP", summary.teamLeadersEp)}
         ${kpiCard("Qualidade", summary.quality)}
         ${kpiCard("Financeiro", summary.finance)}
+        ${kpiCard("Produto", summary.product)}
         ${kpiCard("Desativados", summary.inactive)}
       </div>
     </section>

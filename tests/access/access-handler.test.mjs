@@ -96,6 +96,7 @@ test("Owner lista usuários e summary", async () => {
   assert.equal(payload.summary.owners, 1);
   assert.equal(payload.summary.leaders, 2);
   assert.equal(payload.summary.finance, 1);
+  assert.equal(payload.summary.product, 0);
 });
 
 test("último owner não pode ser revogado", async () => {

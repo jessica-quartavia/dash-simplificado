@@ -4,14 +4,18 @@
 import {
   ACCESS_DISABLED_MESSAGE,
   ACCESS_FORBIDDEN_MESSAGE,
+  ACCESS_LEGACY_OWNER_MESSAGE,
   ACCESS_TECHNICAL_MESSAGE,
   ACCESS_UNAUTHORIZED_MESSAGE,
   canAccessPage,
   canPreloadPage,
   filterPagesForMenu,
   firstAllowedPageId,
+  getPageAccessMetadata,
   normalizeAccessEmail,
 } from "../lib/access/access-policy.mjs";
+
+export { getPageAccessMetadata, ACCESS_LEGACY_OWNER_MESSAGE };
 
 let currentAccess = null;
 
@@ -50,6 +54,7 @@ export function getHomePageId() {
 export function accessDenialMessage(code) {
   if (code === "access_disabled") return ACCESS_DISABLED_MESSAGE;
   if (code === "access_unauthorized") return ACCESS_UNAUTHORIZED_MESSAGE;
+  if (code === "legacy_owner") return ACCESS_LEGACY_OWNER_MESSAGE;
   if (code === "forbidden") return ACCESS_FORBIDDEN_MESSAGE;
   return ACCESS_TECHNICAL_MESSAGE;
 }

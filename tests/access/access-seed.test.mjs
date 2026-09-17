@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { buildAccessSeedUsers, INITIAL_OWNERS, summarizeAccessSeed } from "../../lib/access/access-seed.mjs";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { buildAccessSeedUsers, INITIAL_OWNERS, PRODUCT_SEED_USERS, summarizeAccessSeed } from "../../lib/access/access-seed.mjs";
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
 test("seed do CSV é idempotente, único e preserva múltiplos grupos", () => {
   const first = buildAccessSeedUsers();
@@ -24,4 +29,22 @@ test("seed do CSV é idempotente, único e preserva múltiplos grupos", () => {
   for (const email of INITIAL_OWNERS) {
     assert.equal(first.find((user) => user.email === email)?.isOwner, true);
   }
+});
+
+test("seed 016 de Produto é idempotente e isolado dos cinco emails", () => {
+  assert.equal(PRODUCT_SEED_USERS.length, 5);
+  assert.equal(new Set(PRODUCT_SEED_USERS).size, 5);
+  const original = buildAccessSeedUsers();
+  for (const email of PRODUCT_SEED_USERS) {
+    assert.equal(original.some((user) => user.email === email), false, email);
+  }
+  const sql = readFileSync(join(ROOT, "sql/analytics/016_dashboard_access_product.sql"), "utf8");
+  assert.match(sql, /code, name, description, is_active/);
+  assert.match(sql, /'product', 'Produto'/);
+  assert.match(sql, /ON CONFLICT \(email\) DO UPDATE\s+SET is_active = true/);
+  assert.doesNotMatch(sql, /ON CONFLICT \(email\) DO UPDATE[\s\S]{0,180}is_owner/);
+  for (const email of PRODUCT_SEED_USERS) {
+    assert.match(sql, new RegExp(email.replace(".", "\\.")));
+  }
+  assert.match(sql, /'leaders', 'eps', 'team_leaders_ep', 'quality', 'finance', 'product'/);
 });

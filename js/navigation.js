@@ -7,7 +7,13 @@ import {
 import { closeOpenDropdown } from "./components/dropdown-coordinator.js";
 import { initSidebarCollapse } from "./components/sidebar-collapse.js";
 import { resetPageFetchContext, isForegroundBusy } from "./utils/page-load.js";
-import { canCurrentUserAccessPage, getHomePageId, getMenuGroups } from "./access-context.js";
+import {
+  ACCESS_LEGACY_OWNER_MESSAGE,
+  canCurrentUserAccessPage,
+  getHomePageId,
+  getMenuGroups,
+  getPageAccessMetadata,
+} from "./access-context.js";
 
 const INTENDED_HASH_KEY = "qv:intendedHash";
 
@@ -146,7 +152,7 @@ function toggleNavGroup(groupId) {
   if (list) list.hidden = !expanded;
 }
 
-function renderForbiddenPage() {
+function renderForbiddenPage(message = "Você não possui permissão para acessar esta área.") {
   const filters = document.getElementById("page-filters");
   const content = document.getElementById("page-content");
   const actions = document.getElementById("page-actions");
@@ -155,14 +161,90 @@ function renderForbiddenPage() {
   if (content) {
     content.innerHTML = `<div class="gd-status" role="status">
       <strong>Acesso negado</strong>
-      <span>Você não possui permissão para acessar esta área.</span>
+      <span>${message}</span>
     </div>`;
+  }
+}
+
+function renderPageBootError(page, error) {
+  const filters = document.getElementById("page-filters");
+  const content = document.getElementById("page-content");
+  const actions = document.getElementById("page-actions");
+  if (actions) actions.innerHTML = "";
+  if (filters && !filters.innerHTML.trim()) {
+    filters.innerHTML = `<p class="placeholder-note">Os filtros desta página ficam disponíveis após o carregamento.</p>`;
+  }
+  if (!content) return;
+  const isSatisfaction = page?.id === "satisfaction";
+  const title = isSatisfaction
+    ? "Não foi possível carregar a Pesquisa de Satisfação."
+    : "Não foi possível carregar esta página.";
+  const detail = error instanceof Error && error.message
+    ? error.message
+    : "A página não inicializou. Tente novamente.";
+  content.innerHTML = `<div class="gd-status">
+    <strong>${title}</strong>
+    <span>${detail}</span>
+    <div style="margin-top:12px"><button class="btn btn-secondary" type="button" id="page-boot-retry">Tentar novamente</button></div>
+  </div>`;
+  document.getElementById("page-boot-retry")?.addEventListener("click", () => {
+    navigateTo(page.id, { updateHash: false });
+  });
+}
+
+const PAGE_BOOT_RECOVER = {
+  satisfaction: () => import("./satisfaction.js").then((mod) => mod.bootSatisfaction()),
+};
+
+function isStillPreparing() {
+  const content = document.getElementById("page-content");
+  return Boolean(content?.textContent?.includes("Preparando a página selecionada."));
+}
+
+async function recoverPageBoot(page) {
+  const recover = PAGE_BOOT_RECOVER[page.id];
+  if (!recover) {
+    renderPageBootError(page);
+    return;
+  }
+  try {
+    await recover();
+    if (isStillPreparing()) {
+      renderPageBootError(page, new Error("O módulo da página carregou, mas não substituiu o estado inicial."));
+    }
+  } catch (error) {
+    console.error("[nav] page boot recover", error);
+    renderPageBootError(page, error);
+  }
+}
+
+function applyPageLocation(page, { updateHash = true } = {}) {
+  currentPageId = page.id;
+  window.__portalCurrentPage = page.hash;
+  window.__portalCurrentPageCanonical = page.id;
+  updatePageChrome(page);
+  setDocumentTitle(page);
+  if (updateHash) {
+    const nextHash = `#${page.hash}`;
+    if (window.location.hash !== nextHash) {
+      window.history.replaceState({ page: page.id }, "", nextHash);
+    }
   }
 }
 
 export function navigateTo(pageId, { updateHash = true } = {}) {
   let page = getPageById(pageId) || getPageById(DEFAULT_PAGE_ID);
   if (page && !canCurrentUserAccessPage(page.id)) {
+    const meta = getPageAccessMetadata(page.id);
+    if (meta.legacy && meta.ownerOnly) {
+      pageGeneration += 1;
+      resetPageFetchContext();
+      applyPageLocation(page, { updateHash });
+      renderForbiddenPage(ACCESS_LEGACY_OWNER_MESSAGE);
+      closeMobileNav();
+      closeOpenDropdown();
+      return;
+    }
     const fallbackId = getHomePageId() || DEFAULT_PAGE_ID;
     page = getPageById(fallbackId) || page;
     if (!canCurrentUserAccessPage(page.id)) {
@@ -176,18 +258,7 @@ export function navigateTo(pageId, { updateHash = true } = {}) {
   pageGeneration += 1;
   resetPageFetchContext();
   clearPageShell();
-  currentPageId = page.id;
-  window.__portalCurrentPage = page.hash;
-  window.__portalCurrentPageCanonical = page.id;
-  updatePageChrome(page);
-  setDocumentTitle(page);
-
-  if (updateHash) {
-    const nextHash = `#${page.hash}`;
-    if (window.location.hash !== nextHash) {
-      window.history.replaceState({ page: page.id }, "", nextHash);
-    }
-  }
+  applyPageLocation(page, { updateHash });
 
   closeMobileNav();
   closeOpenDropdown();
@@ -197,6 +268,9 @@ export function navigateTo(pageId, { updateHash = true } = {}) {
     } catch (error) {
       console.error("[nav] page change listener", error);
     }
+  }
+  if (isPageImplemented(page.id) && isStillPreparing()) {
+    void recoverPageBoot(page);
   }
   if (typeof document !== "undefined") {
     document.dispatchEvent(new CustomEvent("page:navigate", { detail: { pageId: page.id } }));
@@ -246,16 +320,33 @@ function renderSidebar() {
       button.type = "button";
       button.className = "nav-item";
       button.dataset.pageNav = page.id;
+      const label = document.createElement("span");
+      label.className = "nav-item-label";
       if (page.icon === "book-open") {
         const icon = document.createElement("span");
         icon.className = "nav-item-icon";
         icon.setAttribute("aria-hidden", "true");
         icon.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M2.75 4.75A2.75 2.75 0 0 1 5.5 2h5.75v17.25H5.5a2.75 2.75 0 0 0-2.75 2.75V4.75Zm18.5 0A2.75 2.75 0 0 0 18.5 2h-5.75v17.25h5.75A2.75 2.75 0 0 1 21.25 22V4.75Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
-        const label = document.createElement("span");
-        label.textContent = page.navLabel;
-        button.append(icon, label);
+        const text = document.createElement("span");
+        text.textContent = page.navLabel;
+        label.append(icon, text);
       } else {
-        button.textContent = page.navLabel;
+        label.textContent = page.navLabel;
+      }
+      button.append(label);
+      if (page.menuBadge?.label) {
+        const badge = document.createElement("span");
+        badge.className = `nav-badge nav-badge-${page.menuBadge.kind || "meta"}`;
+        badge.textContent = page.menuBadge.label;
+        button.append(badge);
+      }
+      if (page.disabled) {
+        button.classList.add("is-disabled");
+        if (page.menuBadge?.kind === "legacy") button.classList.add("is-legacy");
+        button.disabled = true;
+        button.setAttribute("aria-disabled", "true");
+      } else if (page.menuBadge?.kind === "legacy") {
+        button.classList.add("is-legacy");
       }
       button.setAttribute("aria-current", "false");
       item.appendChild(button);
@@ -296,7 +387,7 @@ export function bootNavigation() {
         return;
       }
       const button = event.target.closest("[data-page-nav]");
-      if (!button) return;
+      if (!button || button.disabled || button.getAttribute("aria-disabled") === "true") return;
       navigateTo(button.dataset.pageNav);
     });
 

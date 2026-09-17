@@ -21,6 +21,11 @@ test("menu e preload respeitam permissões no código", () => {
   assert.match(auth, /Acesso desativado|ACCESS_DISABLED_MESSAGE/);
 });
 
+test("Acionamentos não entra na fila de preload", () => {
+  const queued = orderedPreloadEntries();
+  assert.ok(!queued.some((entry) => entry.pageId === "support"));
+});
+
 test("preload de EP não inclui inteligência", () => {
   const allowed = new Set(["executive_summary", "general", "meetings", "mechanisms", "satisfaction"]);
   const queued = orderedPreloadEntries({

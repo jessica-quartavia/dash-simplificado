@@ -17,6 +17,7 @@
   --color-success: #22a45a;
   --color-warning: #d18426;
   --color-destructive: #ea6c4c;
+  --color-product: #5c6bc0;
 
   --background: var(--color-off-white);
   --foreground: var(--color-black);

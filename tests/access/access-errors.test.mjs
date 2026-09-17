@@ -3,11 +3,12 @@ import { test } from "node:test";
 import {
   ACCESS_DISABLED_MESSAGE,
   ACCESS_FORBIDDEN_MESSAGE,
+  ACCESS_LEGACY_OWNER_MESSAGE,
   ACCESS_TECHNICAL_MESSAGE,
   ACCESS_UNAUTHORIZED_MESSAGE,
 } from "../../lib/access/access-policy.mjs";
 import { classifyAccessPostgrestError } from "../../lib/access/access-postgrest-error.mjs";
-import { resolveRequestAccess } from "../../lib/access/require-page-access.mjs";
+import { requirePageAccess, resolveRequestAccess } from "../../lib/access/require-page-access.mjs";
 import { accessDenialMessage } from "../../js/access-context.js";
 
 test("PGRST106 vira erro técnico, não unauthorized", () => {
@@ -33,7 +34,7 @@ test("mensagens de UI não se misturam", () => {
   assert.equal(accessDenialMessage("access_disabled"), ACCESS_DISABLED_MESSAGE);
   assert.equal(accessDenialMessage("forbidden"), ACCESS_FORBIDDEN_MESSAGE);
   assert.equal(accessDenialMessage("access_schema_not_exposed"), ACCESS_TECHNICAL_MESSAGE);
-  assert.equal(ACCESS_UNAUTHORIZED_MESSAGE, "Seu usuário ainda não possui acesso ao Analytics.");
+  assert.equal(ACCESS_UNAUTHORIZED_MESSAGE, "Seu usuário não possui acesso ao Analytics.");
   assert.equal(ACCESS_DISABLED_MESSAGE, "Seu acesso ao Analytics está desativado.");
 });
 
@@ -127,6 +128,67 @@ test("erro técnico de query → mensagem técnica", async () => {
   assert.equal(payload.code, "access_schema_not_exposed");
   assert.equal(payload.error, ACCESS_TECHNICAL_MESSAGE);
   assert.equal(payload.postgrestCode, "PGRST106");
+});
+
+test("API de Acionamentos é owner-only", async () => {
+  const leaderDenied = await requirePageAccess(new Request("http://localhost/api/support"), "support", {
+    requireCorporateAuthUser: async () => ({ user: { email: "lider@quartavia.com.br" }, accessToken: "t" }),
+    fetchAccessUserByEmail: async () => ({
+      email: "lider@quartavia.com.br",
+      isOwner: false,
+      isActive: true,
+      groups: [{ code: "leaders", name: "Líderes" }],
+    }),
+  });
+  assert.equal(leaderDenied.status, 403);
+  const deniedBody = await leaderDenied.json();
+  assert.equal(deniedBody.error, ACCESS_LEGACY_OWNER_MESSAGE);
+
+  const ownerOk = await requirePageAccess(new Request("http://localhost/api/support"), "support", {
+    requireCorporateAuthUser: async () => ({ user: { email: "owner@quartavia.com.br" }, accessToken: "t" }),
+    fetchAccessUserByEmail: async () => ({
+      email: "owner@quartavia.com.br",
+      isOwner: true,
+      isActive: true,
+      groups: [],
+    }),
+  });
+  assert.equal(ownerOk, null);
+});
+
+test("Satisfaction API segue a policy atual", async () => {
+  const leaderOk = await requirePageAccess(new Request("http://localhost/api/satisfaction"), "satisfaction", {
+    requireCorporateAuthUser: async () => ({ user: { email: "lider@quartavia.com.br" }, accessToken: "t" }),
+    fetchAccessUserByEmail: async () => ({
+      email: "lider@quartavia.com.br",
+      isOwner: false,
+      isActive: true,
+      groups: [{ code: "leaders", name: "Líderes" }],
+    }),
+  });
+  assert.equal(leaderOk, null);
+
+  const productOk = await requirePageAccess(new Request("http://localhost/api/satisfaction"), "satisfaction", {
+    requireCorporateAuthUser: async () => ({ user: { email: "produto@quartavia.com.br" }, accessToken: "t" }),
+    fetchAccessUserByEmail: async () => ({
+      email: "produto@quartavia.com.br",
+      isOwner: false,
+      isActive: true,
+      groups: [{ code: "product", name: "Produto" }],
+    }),
+  });
+  assert.equal(productOk, null);
+
+  const financeDenied = await requirePageAccess(new Request("http://localhost/api/satisfaction"), "satisfaction", {
+    requireCorporateAuthUser: async () => ({ user: { email: "fin@quartavia.com.br" }, accessToken: "t" }),
+    fetchAccessUserByEmail: async () => ({
+      email: "fin@quartavia.com.br",
+      isOwner: false,
+      isActive: true,
+      groups: [{ code: "finance", name: "Financeiro" }],
+    }),
+  });
+  assert.equal(financeDenied.status, 403);
 });
 
 test("viewer/grupo não recebe owner", async () => {

@@ -44,6 +44,12 @@ test("CSS da tela de acessos tem tag Owner distinta e tabela estável", () => {
   assert.match(css, /@media \(max-width: 640px\)/);
 });
 
+test("gerenciamento inclui KPI, filtro e badge de Produto", () => {
+  assert.match(page, /kpiCard\("Produto", summary\.product\)/);
+  assert.match(css, /\.am-badge-product/);
+  assert.equal(buildAccessUserTags({ isOwner: false, groupCodes: ["product"] })[0].kind, "product");
+});
+
 test("regra visual Owner / Sem time", () => {
   assert.equal(buildAccessUserTags({ isOwner: true, groupLabels: [] })[0].label, "Owner");
   assert.ok(!buildAccessUserTags({ isOwner: true, groupLabels: [] }).some((tag) => tag.label === "Sem time"));
