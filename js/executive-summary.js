@@ -1,4 +1,4 @@
-import { onPageChange, getCurrentPageId } from "./navigation.js";
+import { onPageChange } from "./navigation.js";
 import {
   defaultExecutiveSummaryFilters,
   buildExecutiveSummaryApiUrl,
@@ -6,10 +6,22 @@ import {
 import { normalizeProgramFilter, programSelectOptions } from "../lib/analytics/filters/program.mjs";
 import { createPageRefresh } from "./components/page-refresh.js";
 import { mountPageFilters } from "./components/filters/filter-shell.js";
-import { fetchPageJson, mapLoadError } from "./utils/page-load.js";
+import { applyLoadError, fetchPageJson } from "./utils/page-load.js";
 import { escapeHtml } from "./general-charts.mjs";
 import { renderExecutiveDashboard } from "./executive-summary-layout.mjs";
 import { bindChartExpand } from "./components/chart-expand.js";
+
+const isDevLog =
+  typeof location !== "undefined" &&
+  (location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1" ||
+    location.search.includes("bootdebug=1"));
+
+function execLog(step, extra) {
+  if (!isDevLog) return;
+  if (extra !== undefined) console.info(`[Executive] ${step}`, extra);
+  else console.info(`[Executive] ${step}`);
+}
 
 const state = {
   mounted: false,
@@ -25,6 +37,7 @@ let eventsBound = false;
 let pageRefresh = null;
 let unbindChartExpand = () => {};
 let unbindFilterMount = () => {};
+let loadToken = 0;
 
 function $(id) {
   return document.getElementById(id);
@@ -61,46 +74,90 @@ function renderFilters() {
   });
 }
 
+function renderErrorView(message) {
+  const host = $("page-content");
+  if (!host) return;
+  host.innerHTML = `<div class="gd-status">
+    <strong>Não foi possível carregar o Resumo Executivo.</strong>
+    <span>${escapeHtml(message || "Tente novamente.")}</span>
+    <div style="margin-top:12px"><button class="btn btn-secondary" type="button" id="exRetry">Tentar novamente</button></div>
+  </div>`;
+  $("exRetry")?.addEventListener("click", () => {
+    void loadData({ force: true });
+  });
+}
+
 function renderPage() {
   const host = $("page-content");
   if (!host) return;
-  if (state.loading) {
-    host.innerHTML = `<p class="placeholder-note">Consolidando indicadores…</p>`;
+  if (state.loading && !state.payload) {
+    host.innerHTML = `<p class="placeholder-note" role="status">Consolidando indicadores…</p>`;
     pageRefresh?.setLoading(true);
     return;
   }
-  if (state.error) {
-    host.innerHTML = `<p class="page-error">${escapeHtml(state.error)}</p>`;
+  if (state.error && !state.payload) {
+    renderErrorView(state.error);
     pageRefresh?.markError(state.error);
     return;
   }
   if (!state.payload) {
-    host.innerHTML = `<p class="placeholder-note">Carregando resumo executivo…</p>`;
+    host.innerHTML = `<p class="placeholder-note" role="status">Consolidando indicadores…</p>`;
     return;
   }
 
-  host.innerHTML = renderExecutiveDashboard(state.payload, { chartExpanded: state.chartExpanded });
-  unbindChartExpand();
-  unbindChartExpand = bindChartExpand(host, state.chartExpanded, () => renderPage());
-  pageRefresh?.markSuccess(state.payload.lastUpdatedAt || state.payload.generatedAt);
-  pageRefresh?.setEnabled(true);
+  try {
+    execLog("render");
+    host.innerHTML = renderExecutiveDashboard(state.payload, { chartExpanded: state.chartExpanded });
+    unbindChartExpand();
+    unbindChartExpand = bindChartExpand(host, state.chartExpanded, () => renderPage());
+    pageRefresh?.markSuccess(state.payload.lastUpdatedAt || state.payload.generatedAt);
+    pageRefresh?.setEnabled(true);
+  } catch (error) {
+    console.error("[Executive] render", error);
+    execLog("error", error instanceof Error ? error.message : error);
+    state.error = error instanceof Error ? error.message : "Falha ao montar o Resumo Executivo.";
+    renderErrorView(state.error);
+    pageRefresh?.markError(state.error);
+  }
 }
 
 async function loadData({ force = false } = {}) {
+  const token = ++loadToken;
+  execLog("start", { force, program: state.filters.program || "all" });
   state.loading = true;
   state.error = null;
+  state.errorCode = null;
+  if (force) state.payload = null;
   pageRefresh?.setLoading(true);
   renderPage();
   try {
     const url = buildExecutiveSummaryApiUrl(state.filters, { force });
-    const payload = await fetchPageJson(url, { force });
+    const payload = await fetchPageJson(url, { force, pageId: "executive_summary" });
+    if (token !== loadToken) {
+      execLog("stale superseded");
+      return;
+    }
     state.payload = payload;
+    execLog("build payload", { domains: Object.keys(payload?.sourcesLoaded || {}).length });
   } catch (error) {
-    Object.assign(state, mapLoadError(error));
-    pageRefresh?.markError(state.error);
+    execLog("error", error instanceof Error ? error.message : error);
+    if (token !== loadToken) return;
+    if (applyLoadError(state, error, { force, pageRefresh })) {
+      execLog("stale navigation — ignorando resposta");
+      return;
+    }
   } finally {
-    state.loading = false;
-    renderPage();
+    if (token === loadToken) {
+      state.loading = false;
+      pageRefresh?.setEnabled(true);
+      try {
+        renderPage();
+      } catch (renderError) {
+        console.error("[Executive] render pós-load", renderError);
+        state.error = renderError instanceof Error ? renderError.message : "Falha ao montar o Resumo Executivo.";
+        renderErrorView(state.error);
+      }
+    }
   }
 }
 
@@ -115,22 +172,18 @@ function bindEvents() {
   pageRefresh.setEnabled(false);
 }
 
+function mountExecutive() {
+  if (!state.mounted) {
+    state.mounted = true;
+    bindEvents();
+  }
+  renderFilters();
+  void loadData();
+}
+
 export function bootExecutiveSummary() {
   onPageChange((page) => {
-    if (page.id !== "executive_summary") return;
-    if (!state.mounted) {
-      state.mounted = true;
-      bindEvents();
-    }
-    renderFilters();
-    void loadData();
+    if (page.id === "executive_summary") mountExecutive();
+    else state.mounted = false;
   });
-  if (getCurrentPageId() === "executive_summary") {
-    if (!state.mounted) {
-      state.mounted = true;
-      bindEvents();
-    }
-    renderFilters();
-    void loadData();
-  }
 }
