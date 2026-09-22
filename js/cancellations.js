@@ -470,7 +470,10 @@ const onFilterChange = createFilterChangeHandler({
 function ensurePageRefresh() {
   if (pageRefresh) return pageRefresh;
   pageRefresh = createPageRefresh({
+    pageId: "cancellations",
     buttonId: "cxRefresh",
+    csvButtonId: "cxCsv",
+    getExportContext: () => ({ payload: state.payload, filters: state.filters, loading: state.loading }),
     onRefresh: () => loadCancellations({ force: true }),
   });
   return pageRefresh;

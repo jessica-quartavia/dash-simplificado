@@ -469,7 +469,10 @@ async function loadMatrixSources({ force = false } = {}) {
 function ensurePageRefresh() {
   if (pageRefresh) return pageRefresh;
   pageRefresh = createPageRefresh({
+    pageId: "quality",
     buttonId: "qyRefresh",
+    csvButtonId: "qyCsv",
+    getExportContext: () => ({ payload: state.payload, filters: state.filters, loading: state.loading }),
     onRefresh: () => loadQuality({ force: true }),
   });
   return pageRefresh;

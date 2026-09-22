@@ -736,7 +736,10 @@ function bindFilterEvents() {
 function ensurePageRefresh() {
   if (pageRefresh) return pageRefresh;
   pageRefresh = createPageRefresh({
+    pageId: "meetings",
     buttonId: "mRefresh",
+    csvButtonId: "mCsv",
+    getExportContext: () => ({ payload: state.payload, filters: state.filters, loading: state.loading }),
     onRefresh: () => loadMeetings({ force: true }),
   });
   return pageRefresh;

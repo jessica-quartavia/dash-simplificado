@@ -422,7 +422,10 @@ const onFilterChange = createFilterChangeHandler({
 function ensurePageRefresh() {
   if (pageRefresh) return pageRefresh;
   pageRefresh = createPageRefresh({
+    pageId: "satisfaction",
     buttonId: "sfRefresh",
+    csvButtonId: "sfCsv",
+    getExportContext: () => ({ payload: state.payload, filters: state.filters, loading: state.loading }),
     onRefresh: () => loadSatisfaction({ force: true }),
   });
   return pageRefresh;

@@ -351,7 +351,12 @@ async function refresh(force = false) {
 export function bootSupport() {
   if (state.mounted) return;
   state.mounted = true;
-  pageRefresh = createPageRefresh({ onRefresh: () => refresh(true) });
+  pageRefresh = createPageRefresh({
+    pageId: "support",
+    csvButtonId: "spCsv",
+    getExportContext: () => ({ payload: state.payload, filters: state.filters, loading: state.loading }),
+    onRefresh: () => refresh(true),
+  });
   onPageChange(async (page) => {
     if (page.id !== "support") return;
     if (!state.payload && !state.loading) await refresh();

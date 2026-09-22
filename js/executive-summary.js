@@ -165,7 +165,10 @@ function bindEvents() {
   if (eventsBound) return;
   eventsBound = true;
   pageRefresh = createPageRefresh({
+    pageId: "executive_summary",
     buttonId: "exRefresh",
+    csvButtonId: "exCsv",
+    getExportContext: () => ({ payload: state.payload, filters: state.filters, loading: state.loading }),
     onRefresh: () => loadData({ force: true }),
   });
   pageRefresh.render();

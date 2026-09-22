@@ -417,7 +417,10 @@ const onFilterChange = createFilterChangeHandler({
 function ensurePageRefresh() {
   if (pageRefresh) return pageRefresh;
   pageRefresh = createPageRefresh({
+    pageId: "journey",
     buttonId: "obRefresh",
+    csvButtonId: "obCsv",
+    getExportContext: () => ({ payload: state.payload, filters: state.filters, loading: state.loading }),
     onRefresh: () => loadOnboarding({ force: true }),
   });
   return pageRefresh;

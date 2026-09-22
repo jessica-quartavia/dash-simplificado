@@ -310,7 +310,10 @@ const onFilterChange = createFilterChangeHandler({
 function ensurePageRefresh() {
   if (pageRefresh) return pageRefresh;
   pageRefresh = createPageRefresh({
+    pageId: "patrimonial_plan",
     buttonId: "ppRefresh",
+    csvButtonId: "ppCsv",
+    getExportContext: () => ({ payload: state.payload, filters: state.filters, loading: state.loading }),
     onRefresh: () => loadPatrimonialPlan({ force: true }),
   });
   return pageRefresh;

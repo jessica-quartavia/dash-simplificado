@@ -654,7 +654,15 @@ function bindFilterEvents() {
 function ensurePageRefresh() {
   if (pageRefresh) return pageRefresh;
   pageRefresh = createPageRefresh({
+    pageId: "general",
     buttonId: "gRefresh",
+    csvButtonId: "gCsv",
+    getExportContext: () => ({
+      payload: state.payload,
+      filters: state.filters,
+      loading: state.loading,
+      acqRange: state.acqRange,
+    }),
     onRefresh: () => loadGeneral({ force: true }),
   });
   return pageRefresh;

@@ -467,6 +467,38 @@ body.sidebar-collapsed .sidebar-collapse-toggle {
   gap: 4px;
 }
 
+.page-actions-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.page-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-csv-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+}
+
+.btn-csv-export__icon {
+  flex-shrink: 0;
+}
+
+.page-csv-error {
+  max-width: 16rem;
+  text-align: right;
+}
+
 .page-refresh {
   display: flex;
   flex-direction: column;

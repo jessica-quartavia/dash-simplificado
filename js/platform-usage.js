@@ -396,6 +396,9 @@ async function loadPayload(force = false) {
 function ensurePageRefresh() {
   if (pageRefresh) return pageRefresh;
   pageRefresh = createPageRefresh({
+    pageId: "platform_usage",
+    csvButtonId: "puCsv",
+    getExportContext: () => ({ payload: state.payload, filters: state.filters, loading: state.loading }),
     onRefresh: () => refresh(true),
   });
   return pageRefresh;

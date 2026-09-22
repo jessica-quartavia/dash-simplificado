@@ -462,7 +462,15 @@ const onFilterChange = createFilterChangeHandler({
 function ensurePageRefresh() {
   if (pageRefresh) return pageRefresh;
   pageRefresh = createPageRefresh({
+    pageId: "temporal_indicators",
     buttonId: "tiRefresh",
+    csvButtonId: "tiCsv",
+    getExportContext: () => ({
+      payload: state.payload,
+      filters: state.filters,
+      loading: state.loading,
+      monthlyClients: state.monthlyClients,
+    }),
     onRefresh: () => loadTemporalIndicators({ force: true }),
   });
   return pageRefresh;

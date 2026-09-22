@@ -383,7 +383,15 @@ function bindEvents() {
   if (eventsBound) return;
   eventsBound = true;
   pageRefresh = createPageRefresh({
+    pageId: "health_score",
     buttonId: "hsRefresh",
+    csvButtonId: "hsCsv",
+    getExportContext: () => ({
+      payload: state.payload,
+      filters: state.filters,
+      loading: state.loading,
+      mechanismSlider: state.mechanismSlider,
+    }),
     onRefresh: () => loadData({ force: true }),
   });
   pageRefresh.render();

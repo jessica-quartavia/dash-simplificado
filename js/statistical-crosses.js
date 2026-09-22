@@ -1274,7 +1274,10 @@ function renderStateView() {
 function ensurePageRefresh() {
   if (pageRefresh) return pageRefresh;
   pageRefresh = createPageRefresh({
+    pageId: "statistical_crosses",
     buttonId: "scRefresh",
+    csvButtonId: "scCsv",
+    getExportContext: () => ({ payload: state.payload, filters: state.filters, loading: state.loading }),
     onRefresh: () => loadStatisticalCrosses({ force: true }),
   });
   return pageRefresh;

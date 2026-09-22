@@ -448,7 +448,10 @@ const onFilterChange = createFilterChangeHandler({
 function ensurePageRefresh() {
   if (pageRefresh) return pageRefresh;
   pageRefresh = createPageRefresh({
+    pageId: "ep_performance",
     buttonId: "epRefresh",
+    csvButtonId: "epCsv",
+    getExportContext: () => ({ payload: state.payload, filters: state.filters, loading: state.loading }),
     onRefresh: () => loadEpPerformance({ force: true }),
   });
   return pageRefresh;

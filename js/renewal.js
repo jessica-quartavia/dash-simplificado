@@ -338,7 +338,10 @@ const onFilterChange = createFilterChangeHandler({
 function ensurePageRefresh() {
   if (pageRefresh) return pageRefresh;
   pageRefresh = createPageRefresh({
+    pageId: "renewal",
     buttonId: "rnRefresh",
+    csvButtonId: "rnCsv",
+    getExportContext: () => ({ payload: state.payload, filters: state.filters, loading: state.loading }),
     onRefresh: () => loadRenewal({ force: true }),
   });
   return pageRefresh;

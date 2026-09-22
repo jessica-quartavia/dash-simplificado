@@ -450,7 +450,10 @@ const onFilterChange = createFilterChangeHandler({
 function ensurePageRefresh() {
   if (pageRefresh) return pageRefresh;
   pageRefresh = createPageRefresh({
+    pageId: "financial_updates",
     buttonId: "fuRefresh",
+    csvButtonId: "fuCsv",
+    getExportContext: () => ({ payload: state.payload, filters: state.filters, loading: state.loading }),
     onRefresh: () => loadFinancialUpdates({ force: true }),
   });
   return pageRefresh;
