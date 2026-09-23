@@ -1,0 +1,20 @@
+﻿mechanism;mechanism_column;n_with;renewed_with;renewal_rate_with_pct;n_without;renewed_without;renewal_rate_without_pct;difference_pp;relative_risk;odds_ratio;ci95_lower;ci95_upper;p_value;test;prevalence_pct;share_of_renewed_with_mechanism_pct;small_sample;renewal_fdr_p_value;statistically_significant;statistically_significant_fdr
+alabama;implemented_alabama;8;2;25.0;3404;223;6.55;18.45;3.816;4.755;0.954;23.694;0.093152;fisher_exact;0.23;0.89;True;0.126421;False;False
+arcadia;implemented_arcadia;130;29;22.31;3282;196;5.97;16.34;3.735;4.521;2.919;7.001;0.0;chi2;3.81;12.89;False;0.0;True;True
+arkansas;implemented_arkansas;0;0;;3412;225;6.59;;;14.135;0.28;714.031;1.0;fisher_exact;0.0;0.0;True;1.0;False;False
+armada;implemented_armada;0;0;;3412;225;6.59;;;14.135;0.28;714.031;1.0;fisher_exact;0.0;0.0;True;1.0;False;False
+autoconstrucao;implemented_autoconstrucao;376;95;25.27;3036;130;4.28;20.98;5.901;7.557;5.646;10.115;0.0;chi2;11.02;42.22;False;0.0;True;True
+credito verde;implemented_credito_verde;51;30;58.82;3361;195;5.8;53.02;10.139;23.194;13.037;41.264;0.0;chi2;1.49;13.33;False;0.0;True;True
+escala imobiliaria;implemented_escala_imobiliaria;79;39;49.37;3333;186;5.58;43.79;8.846;16.496;10.36;26.268;0.0;chi2;2.32;17.33;False;0.0;True;True
+fundo de investimento qvra11;implemented_fundo_de_investimento_qvra11;295;95;32.2;3117;130;4.17;28.03;7.721;10.914;8.079;14.744;0.0;chi2;8.65;42.22;False;0.0;True;True
+incorporacao financiada atlas;implemented_incorporacao_financiada_atlas;49;17;34.69;3363;208;6.18;28.51;5.609;8.058;4.402;14.753;0.0;chi2;1.44;7.56;False;0.0;True;True
+leilao circular aspen;implemented_leilao_circular_aspen;4;1;25.0;3408;224;6.57;18.43;3.804;4.738;0.491;45.735;0.238906;fisher_exact;0.12;0.44;True;0.283701;False;False
+leilao serial flipping de leilao;implemented_leilao_serial_flipping_de_leilao;336;97;28.87;3076;128;4.16;24.71;6.938;9.347;6.96;12.554;0.0;chi2;9.85;43.11;False;0.0;True;True
+liquidez antifragil;implemented_liquidez_antifragil;0;0;;3412;225;6.59;;;14.135;0.28;714.031;1.0;fisher_exact;0.0;0.0;True;1.0;False;False
+operacoes;implemented_operacoes;8;2;25.0;3404;223;6.55;18.45;3.816;4.755;0.954;23.694;0.093152;fisher_exact;0.23;0.89;True;0.126421;False;False
+renda fixa escalonada;implemented_renda_fixa_escalonada;224;49;21.88;3188;176;5.52;16.35;3.962;4.792;3.372;6.809;0.0;chi2;6.57;21.78;False;0.0;True;True
+renda sintetica;implemented_renda_sintetica;64;28;43.75;3348;197;5.88;37.87;7.435;12.44;7.438;20.809;0.0;chi2;1.88;12.44;False;0.0;True;True
+retropatrimonio;implemented_retropatrimonio;4;3;75.0;3408;222;6.51;68.49;11.514;43.054;4.46;415.596;0.001077;fisher_exact;0.12;1.33;True;0.001705;True;True
+shortstay;implemented_shortstay;2;1;50.0;3410;224;6.57;43.43;7.612;14.223;0.887;228.147;0.127557;fisher_exact;0.06;0.44;True;0.161572;False;False
+trava de inflacao;implemented_trava_de_inflacao;147;40;27.21;3265;185;5.67;21.54;4.802;6.224;4.204;9.214;0.0;chi2;4.31;17.78;False;0.0;True;True
+usinas escalonaveis ampar;implemented_usinas_escalonaveis_ampar;52;15;28.85;3360;210;6.25;22.6;4.615;6.081;3.284;11.259;0.0;chi2;1.52;6.67;False;0.0;True;True

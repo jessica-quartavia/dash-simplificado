@@ -1,0 +1,20 @@
+﻿mechanism;mechanism_column;with_respondents;with_average_csat;with_median_csat;with_std_csat;with_satisfied_count;with_satisfied_pct;without_respondents;without_average_csat;without_median_csat;without_std_csat;without_satisfied_count;without_satisfied_pct;csat_difference;mannwhitney_p_value;small_sample_csat
+alabama;implemented_alabama;0;;;;0;;184;4.84;5.0;0.41;157;85.3;;;True
+arcadia;implemented_arcadia;1;5.0;5.0;0.0;1;100.0;183;4.84;5.0;0.41;156;85.2;0.16;;True
+arkansas;implemented_arkansas;0;;;;0;;184;4.84;5.0;0.41;157;85.3;;;True
+armada;implemented_armada;0;;;;0;;184;4.84;5.0;0.41;157;85.3;;;True
+autoconstrucao;implemented_autoconstrucao;47;4.83;5.0;0.43;40;85.1;137;4.84;5.0;0.41;117;85.4;-0.01;0.9505100944386066;False
+credito verde;implemented_credito_verde;5;5.0;5.0;0.0;5;100.0;179;4.83;5.0;0.42;152;84.9;0.17;;True
+escala imobiliaria;implemented_escala_imobiliaria;5;4.8;5.0;0.45;4;80.0;179;4.84;5.0;0.41;153;85.5;-0.04;;True
+fundo de investimento qvra11;implemented_fundo_de_investimento_qvra11;28;4.96;5.0;0.19;27;96.4;156;4.81;5.0;0.44;130;83.3;0.15;;True
+incorporacao financiada atlas;implemented_incorporacao_financiada_atlas;0;;;;0;;184;4.84;5.0;0.41;157;85.3;;;True
+leilao circular aspen;implemented_leilao_circular_aspen;0;;;;0;;184;4.84;5.0;0.41;157;85.3;;;True
+leilao serial flipping de leilao;implemented_leilao_serial_flipping_de_leilao;43;4.84;5.0;0.48;38;88.4;141;4.84;5.0;0.39;119;84.4;0.0;0.592179611672905;False
+liquidez antifragil;implemented_liquidez_antifragil;0;;;;0;;184;4.84;5.0;0.41;157;85.3;;;True
+operacoes;implemented_operacoes;0;;;;0;;184;4.84;5.0;0.41;157;85.3;;;True
+renda fixa escalonada;implemented_renda_fixa_escalonada;11;4.82;5.0;0.4;9;81.8;173;4.84;5.0;0.41;148;85.5;-0.02;;True
+renda sintetica;implemented_renda_sintetica;4;5.0;5.0;0.0;4;100.0;180;4.83;5.0;0.42;153;85.0;0.17;;True
+retropatrimonio;implemented_retropatrimonio;1;5.0;5.0;0.0;1;100.0;183;4.84;5.0;0.41;156;85.2;0.16;;True
+shortstay;implemented_shortstay;0;;;;0;;184;4.84;5.0;0.41;157;85.3;;;True
+trava de inflacao;implemented_trava_de_inflacao;10;4.8;5.0;0.42;8;80.0;174;4.84;5.0;0.41;149;85.6;-0.04;;True
+usinas escalonaveis ampar;implemented_usinas_escalonaveis_ampar;0;;;;0;;184;4.84;5.0;0.41;157;85.3;;;True

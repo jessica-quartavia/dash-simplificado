@@ -1,0 +1,25 @@
+﻿model;term;coef;odds_ratio;ci95_lower;ci95_upper;p_value
+count_simple;Intercept;-3.6185;0.0268;0.0216;0.0333;0.0
+count_simple;total_implemented_mechanisms;0.8379;2.3115;2.1164;2.5245;0.0
+count_adjusted;Intercept;-3.9524;0.0192;0.0105;0.0351;0.0
+count_adjusted;C(segment)[T.DEBTS];1.3773;3.9643;2.2592;6.9564;2e-06
+count_adjusted;C(segment)[T.Dados insuficientes];-22.7639;0.0;0.0;inf;0.999204
+count_adjusted;C(segment)[T.OVER];0.1689;1.184;0.6142;2.2826;0.613987
+count_adjusted;C(segment)[T.PRINCIPAL];0.7317;2.0786;1.4118;3.0603;0.00021
+count_adjusted;C(segment)[T.PRIVATE];0.6214;1.8616;1.0575;3.2771;0.031252
+count_adjusted;C(program)[T.Não informado];-16.316;0.0;0.0;inf;0.999438
+count_adjusted;C(program)[T.Pharus];0.45;1.5684;0.9295;2.6464;0.091797
+count_adjusted;total_implemented_mechanisms;0.8637;2.372;2.1542;2.6119;0.0
+count_adjusted;tenure_days;-0.0009;0.9991;0.9986;0.9996;0.000313
+mechanisms_simple;Intercept;-3.6343;0.0264;0.0212;0.0329;0.0
+mechanisms_simple;implemented_arcadia[T.True];0.2011;1.2227;0.6436;2.3228;0.539122
+mechanisms_simple;implemented_autoconstrucao[T.True];1.1364;3.1155;2.1242;4.5693;0.0
+mechanisms_simple;implemented_credito_verde[T.True];1.5702;4.8075;2.371;9.748;1.3e-05
+mechanisms_simple;implemented_escala_imobiliaria[T.True];1.3393;3.8163;2.1561;6.755;4e-06
+mechanisms_simple;implemented_fundo_de_investimento_qvra11[T.True];1.2024;3.3282;2.2309;4.9652;0.0
+mechanisms_simple;implemented_incorporacao_financiada_atlas[T.True];1.4038;4.0706;1.7172;9.6494;0.001434
+mechanisms_simple;implemented_leilao_serial_flipping_de_leilao[T.True];0.6444;1.9049;1.2838;2.8263;0.001369
+mechanisms_simple;implemented_renda_fixa_escalonada[T.True];0.3485;1.417;0.7828;2.5649;0.249662
+mechanisms_simple;implemented_renda_sintetica[T.True];0.7873;2.1975;1.1372;4.2462;0.019151
+mechanisms_simple;implemented_trava_de_inflacao[T.True];0.6108;1.8419;0.9609;3.5305;0.065801
+mechanisms_simple;implemented_usinas_escalonaveis_ampar[T.True];0.4553;1.5766;0.6431;3.8655;0.319726

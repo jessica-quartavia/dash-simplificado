@@ -62,6 +62,10 @@ async function startPortal() {
     ["temporal-indicators", () => import("./temporal-indicators.js").then((m) => m.bootTemporalIndicators())],
     ["reports", () => import("./reports.js").then((m) => m.bootReports())],
     ["statistical-crosses", () => import("./statistical-crosses.js").then((m) => m.bootStatisticalCrosses())],
+    [
+      "internal-mechanisms-satisfaction",
+      () => import("./internal-mechanisms-satisfaction.js").then((m) => m.bootInternalMechanismsSatisfaction()),
+    ],
     ["health-score", () => import("./health-score.js").then((m) => m.bootHealthScore())],
     ["quality", () => import("./quality.js").then((m) => m.bootQuality())],
     ["platform-usage", () => import("./platform-usage.js").then((m) => m.bootPlatformUsage())],

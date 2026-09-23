@@ -1,0 +1,20 @@
+﻿mechanism;clients;prevalence_pct;renewal_rate_pct;renewal_difference_pp;relative_risk;odds_ratio;renewal_p_value;renewal_fdr_p_value;nps_respondents;nps;nps_difference;csat_respondents;average_csat;csat_difference;small_sample_renewal;small_sample_nps;small_sample_csat
+alabama;8;0.23;25.0;18.45;3.816;4.755;0.093152;0.126421;2;100.0;45.6;0;;;True;True;True
+arcadia;130;3.81;22.31;16.34;3.735;4.521;0.0;0.0;31;45.2;-10.1;1;5.0;0.16;False;False;True
+arkansas;0;0.0;;;;14.135;1.0;1.0;0;;;0;;;True;True;True
+armada;0;0.0;;;;14.135;1.0;1.0;0;;;0;;;True;True;True
+autoconstrucao;376;11.02;25.27;20.98;5.901;7.557;0.0;0.0;148;64.9;15.8;47;4.83;-0.01;False;False;False
+credito verde;51;1.49;58.82;53.02;10.139;23.194;0.0;0.0;14;42.9;-12.1;5;5.0;0.17;False;True;True
+escala imobiliaria;79;2.32;49.37;43.79;8.846;16.496;0.0;0.0;25;64.0;10.0;5;4.8;-0.04;False;True;True
+fundo de investimento qvra11;295;8.65;32.2;28.03;7.721;10.914;0.0;0.0;99;69.7;19.7;28;4.96;0.15;False;False;True
+incorporacao financiada atlas;49;1.44;34.69;28.51;5.609;8.058;0.0;0.0;4;50.0;-4.6;0;;;False;True;True
+leilao circular aspen;4;0.12;25.0;18.43;3.804;4.738;0.238906;0.283701;1;-100.0;-154.9;0;;;True;True;True
+leilao serial flipping de leilao;336;9.85;28.87;24.71;6.938;9.347;0.0;0.0;141;62.4;11.7;43;4.84;0.0;False;False;False
+liquidez antifragil;0;0.0;;;;14.135;1.0;1.0;0;;;0;;;True;True;True
+operacoes;8;0.23;25.0;18.45;3.816;4.755;0.093152;0.126421;0;;;0;;;True;True;True
+renda fixa escalonada;224;6.57;21.88;16.35;3.962;4.792;0.0;0.0;84;60.7;7.6;11;4.82;-0.02;False;False;True
+renda sintetica;64;1.88;43.75;37.87;7.435;12.44;0.0;0.0;20;55.0;0.5;4;5.0;0.17;False;True;True
+retropatrimonio;4;0.12;75.0;68.49;11.514;43.054;0.001077;0.001705;3;100.0;45.8;1;5.0;0.16;True;True;True
+shortstay;2;0.06;50.0;43.43;7.612;14.223;0.127557;0.161572;0;;;0;;;True;True;True
+trava de inflacao;147;4.31;27.21;21.54;4.802;6.224;0.0;0.0;49;67.3;14.4;10;4.8;-0.04;False;False;True
+usinas escalonaveis ampar;52;1.52;28.85;22.6;4.615;6.081;0.0;0.0;10;60.0;5.6;0;;;False;True;True

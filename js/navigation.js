@@ -176,9 +176,12 @@ function renderPageBootError(page, error) {
   }
   if (!content) return;
   const isSatisfaction = page?.id === "satisfaction";
+  const isInternalMech = page?.id === "internal_mechanisms_satisfaction";
   const title = isSatisfaction
     ? "Não foi possível carregar a Pesquisa de Satisfação."
-    : "Não foi possível carregar esta página.";
+    : isInternalMech
+      ? "Não foi possível carregar Mecanismos × Satisfação."
+      : "Não foi possível carregar esta página.";
   const detail = error instanceof Error && error.message
     ? error.message
     : "A página não inicializou. Tente novamente.";
@@ -194,6 +197,8 @@ function renderPageBootError(page, error) {
 
 const PAGE_BOOT_RECOVER = {
   satisfaction: () => import("./satisfaction.js").then((mod) => mod.bootSatisfaction()),
+  internal_mechanisms_satisfaction: () =>
+    import("./internal-mechanisms-satisfaction.js").then((mod) => mod.bootInternalMechanismsSatisfaction()),
 };
 
 function isStillPreparing() {

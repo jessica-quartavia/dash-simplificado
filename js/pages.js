@@ -14,6 +14,7 @@ export const PAGE_GROUPS = [
   { id: "retention", label: "Retenção" },
   { id: "management", label: "Gestão" },
   { id: "intelligence", label: "Inteligência" },
+  { id: "internal", label: "Análises internas" },
   { id: "system", label: "Sistema" },
 ];
 
@@ -212,6 +213,17 @@ export const PAGES = [
     title: "Health Score",
     eyebrow: "Inteligência",
     description: "Classificação experimental de saúde do cliente com reuniões e mecanismos.",
+    implemented: true,
+  },
+  {
+    id: "internal_mechanisms_satisfaction",
+    hash: "internal-mechanisms-satisfaction",
+    aliases: ["internal_mechanisms_satisfaction", "mecanismos-satisfacao-interna"],
+    group: "internal",
+    navLabel: "Mecanismos × Satisfação",
+    title: "Mecanismos × Satisfação",
+    eyebrow: "Análises internas",
+    description: "Associações observadas entre mecanismos implementados, NPS, CSAT e renovação (exploratório).",
     implemented: true,
   },
   {

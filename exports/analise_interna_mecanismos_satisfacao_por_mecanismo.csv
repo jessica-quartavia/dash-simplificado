@@ -1,0 +1,14 @@
+﻿mechanism_name;clients_with_nps;nps;nps_mean_score;nps_median;promoter_pct;neutral_pct;detractor_pct;clients_with_csat;csat_mean;renewal_eligible;renewed;renewal_rate;coverage_nps;coverage_csat;sample_small
+ALABAMA;2;100;9.5;9.5;100;0;0;;;2;0;0;0.5;;1
+ARCADIA;30;50;8.7;9;60;30;10;1;5;30;9;30;7.5;0.3;0
+Autoconstrução;144;63.9;8.7;10;72.9;18.1;9;24;4.8;138;37;26.8;36.2;6;0
+Crédito Verde;13;53.8;8.5;9;69.2;15.4;15.4;2;5;13;8;61.5;3.3;0.5;1
+Escala Imobiliária;25;68;8.9;10;76;16;8;2;5;23;12;52.2;6.3;0.5;1
+Fundo de Investimento (QVRA11);97;70.1;9;10;77.3;15.5;7.2;13;5;97;37;38.1;24.4;3.3;0
+Incorporação Financiada (ATLAS);3;100;10;10;100;0;0;;;3;3;100;0.8;;1
+Leilão Serial (Flipping de Leilão);143;62.9;8.8;10;72;18.9;9.1;24;4.8;137;36;26.3;35.9;6;0
+Renda Fixa Escalonada;87;63.2;8.8;10;74.7;13.8;11.5;6;4.8;84;27;32.1;21.9;1.5;0
+Renda Sintética;17;58.9;8.6;10;76.5;5.9;17.6;1;5;17;9;52.9;4.3;0.3;1
+Retropatrimônio;2;100;10;10;100;0;0;1;5;2;2;100;0.5;0.3;1
+Trava de Inflação;49;71.4;9.1;10;79.6;12.2;8.2;5;4.8;49;20;40.8;12.3;1.3;0
+Usinas Escalonáveis (ÂMPAR);9;77.8;9.6;10;77.8;22.2;0;;;9;5;55.6;2.3;;1

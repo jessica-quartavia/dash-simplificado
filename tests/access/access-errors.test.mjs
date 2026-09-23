@@ -6,10 +6,20 @@ import {
   ACCESS_LEGACY_OWNER_MESSAGE,
   ACCESS_TECHNICAL_MESSAGE,
   ACCESS_UNAUTHORIZED_MESSAGE,
+  filterPagesForMenu,
+  getPageAccessMetadata,
 } from "../../lib/access/access-policy.mjs";
 import { classifyAccessPostgrestError } from "../../lib/access/access-postgrest-error.mjs";
 import { requirePageAccess, resolveRequestAccess } from "../../lib/access/require-page-access.mjs";
 import { accessDenialMessage } from "../../js/access-context.js";
+
+function access(groups, extra = {}) {
+  return {
+    isOwner: Boolean(extra.isOwner),
+    isActive: extra.isActive !== false,
+    groups: Array.isArray(groups) ? groups : [],
+  };
+}
 
 test("PGRST106 vira erro técnico, não unauthorized", () => {
   const classified = classifyAccessPostgrestError(406, {
@@ -154,6 +164,52 @@ test("API de Acionamentos é owner-only", async () => {
     }),
   });
   assert.equal(ownerOk, null);
+});
+
+test("Análises internas — Mecanismos × Satisfação é owner-only", async () => {
+  const meta = getPageAccessMetadata("internal_mechanisms_satisfaction");
+  assert.equal(meta.ownerOnly, true);
+  assert.equal(meta.preload, false);
+
+  const leaderDenied = await requirePageAccess(
+    new Request("http://localhost/api/internal-mechanisms-satisfaction"),
+    "internal_mechanisms_satisfaction",
+    {
+      requireCorporateAuthUser: async () => ({ user: { email: "lider@quartavia.com.br" }, accessToken: "t" }),
+      fetchAccessUserByEmail: async () => ({
+        email: "lider@quartavia.com.br",
+        isOwner: false,
+        isActive: true,
+        groups: [{ code: "leaders", name: "Líderes" }],
+      }),
+    },
+  );
+  assert.equal(leaderDenied.status, 403);
+  const deniedBody = await leaderDenied.json();
+  assert.equal(deniedBody.error, ACCESS_FORBIDDEN_MESSAGE);
+
+  const ownerOk = await requirePageAccess(
+    new Request("http://localhost/api/internal-mechanisms-satisfaction"),
+    "internal_mechanisms_satisfaction",
+    {
+      requireCorporateAuthUser: async () => ({ user: { email: "owner@quartavia.com.br" }, accessToken: "t" }),
+      fetchAccessUserByEmail: async () => ({
+        email: "owner@quartavia.com.br",
+        isOwner: true,
+        isActive: true,
+        groups: [],
+      }),
+    },
+  );
+  assert.equal(ownerOk, null);
+
+  const leaderMenu = filterPagesForMenu(access(["leaders"]));
+  const internalGroup = leaderMenu.find((g) => g.id === "internal");
+  assert.equal(internalGroup, undefined);
+
+  const ownerMenu = filterPagesForMenu(access([], { isOwner: true }));
+  const ownerInternal = ownerMenu.find((g) => g.id === "internal");
+  assert.ok(ownerInternal?.pages?.some((p) => p.id === "internal_mechanisms_satisfaction"));
 });
 
 test("Satisfaction API segue a policy atual", async () => {

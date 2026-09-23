@@ -1,0 +1,12 @@
+﻿campo;descricao;regra;fonte;observacao
+generated_at;Data/hora UTC da extração;Momento da geração do arquivo;script export IMS;2026-09-23T01:53:21.130Z
+calculation_version;Versão do compute analytics;v2.2026-03-22-ims-nps-pipeline-fix;lib/cache/analytics-cache.mjs;
+latest_nps;Nota NPS mais recente do cliente;Dedupe oficial: submitted_at desc, created_at desc;BASE QV nps_responses;Escala 0–10
+nps_class;Classe NPS (promotor/neutro/detrator);Regra oficial NPS QuartaVia;nps-metrics.mjs;
+latest_csat;Nota CSAT mais recente;Resposta válida 1–5;BASE QV csat_responses;
+csat_satisfied;Cliente satisfeito no CSAT;Regra oficial CSAT do dataset;mechanisms-satisfaction-dataset.mjs;1/0 ou vazio
+has_mechanism;Possui ≥1 mecanismo implementado;Status implementado BASE QV;client_mechanisms + mechanism-status;
+mechanism_names;Nomes dos mecanismos implementados;Separador pipe |;catálogo Pharus/BASE;
+has_<slug>;Coluna binária por mecanismo do catálogo;1 possui · 0 não possui;implemented_<slug> no wide client;19 mecanismos no catálogo atual
+renewed;Renovou ciclo atual;Somente se cycleValid;client-cycle-renewal.mjs;Vazio se ciclo inválido
+filters;Filtros aplicados na extração;Ver linha filters no resumo;internal-mechanisms-satisfaction-filters;"{""status"":""active"",""program"":""all""}"

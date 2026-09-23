@@ -1,0 +1,3 @@
+﻿group;n_clients;n_renewed;n_not_renewed;renewal_rate;renewal_rate_pct;ci95_lower_pct;ci95_upper_pct
+sem_mecanismo (0 implementados);2595;56;2539;0.02157996146435453;2.16;1.67;2.79
+com_mecanismo (>=1 implementados);817;169;648;0.20685434516523868;20.69;18.05;23.6
