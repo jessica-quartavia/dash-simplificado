@@ -18,6 +18,8 @@ import {
 } from "../lib/analytics/reports-validation.mjs";
 import { reportsErrorMessage } from "../lib/analytics/reports-postgrest-error.mjs";
 
+const REPORTS_API = "/api/analytics/reports";
+
 const state = {
   mounted: false,
   loading: false,
@@ -188,7 +190,7 @@ function renderContent() {
       : "";
     host.innerHTML = `
       <div class="reports-empty">
-        <p>${state.reports.length ? "Nenhum relatório corresponde à busca." : "Os relatórios publicados pelo time de Inteligência aparecerão aqui."}</p>
+        <p>${state.reports.length ? "Nenhum relatório corresponde à busca." : "Nenhum relatório publicado."}</p>
         ${publishEmpty}
       </div>
       <div id="reports-toast" class="reports-toast" hidden></div>
@@ -332,8 +334,13 @@ function isReportsDebug() {
 
 function mapApiError(payload, status) {
   if (status === 401) return reportsErrorMessage("unauthorized");
+  if (status === 404 && payload?.code === "ANALYTICS_NOT_FOUND") {
+    return payload?.action
+      ? `Ação analítica não encontrada (${payload.action}).`
+      : "Ação analítica não encontrada.";
+  }
   if (status === 404 && (payload?.code === "reports_api_unavailable" || payload?.code === "local_api_unavailable")) {
-    return "Rota /api/reports indisponível no servidor local. Reinicie com npm run dev.";
+    return "Rota de relatórios indisponível no servidor local. Reinicie com npm run dev.";
   }
   if (status === 403 || payload?.code === "forbidden") {
     return payload?.error || "Você não possui acesso aos relatórios.";
@@ -355,7 +362,7 @@ async function loadReports() {
   state.error = null;
   renderContent();
   try {
-    const response = await authenticatedFetch("/api/reports");
+    const response = await authenticatedFetch(REPORTS_API);
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(mapApiError(payload, response.status));
     state.reports = Array.isArray(payload.reports) ? payload.reports : [];
@@ -376,7 +383,7 @@ function publishWithProgress(formData) {
       return;
     }
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/reports");
+    xhr.open("POST", REPORTS_API);
     xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     xhr.upload.onprogress = (event) => {
       const node = document.getElementById("reports-form-progress");
@@ -458,7 +465,7 @@ async function downloadReport(reportId, fileName) {
   if (state.openReportId) return;
   state.openReportId = reportId;
   try {
-    const response = await authenticatedFetch(`/api/reports?open=${encodeURIComponent(reportId)}`);
+    const response = await authenticatedFetch(`${REPORTS_API}&open=${encodeURIComponent(reportId)}`);
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(mapApiError(payload, response.status));
     if (!payload.url) throw new Error("Não foi possível gerar o link seguro.");
@@ -482,7 +489,7 @@ async function deleteReport(reportId) {
   state.deleting = true;
   renderDeleteModal();
   try {
-    const response = await authenticatedFetch(`/api/reports?id=${encodeURIComponent(reportId)}`, {
+    const response = await authenticatedFetch(`${REPORTS_API}&id=${encodeURIComponent(reportId)}`, {
       method: "DELETE",
     });
     const payload = await response.json().catch(() => ({}));
@@ -504,7 +511,7 @@ async function openReport(reportId) {
   if (state.openReportId) return;
   state.openReportId = reportId;
   try {
-    const response = await authenticatedFetch(`/api/reports?open=${encodeURIComponent(reportId)}`);
+    const response = await authenticatedFetch(`${REPORTS_API}&open=${encodeURIComponent(reportId)}`);
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(mapApiError(payload, response.status));
     if (!payload.url) throw new Error("Não foi possível gerar o link seguro.");

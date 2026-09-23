@@ -14,6 +14,7 @@ import {
 import {
   ANALYTICS_ACTION_HANDLERS,
   ANALYTICS_LEGACY_PATHS,
+  analyticsRequestContext,
   resolveAnalyticsAction,
 } from "../../lib/api/analytics-router.mjs";
 import { handleGeneralDataRequest } from "../../lib/analytics/general-data-handler.mjs";
@@ -78,6 +79,7 @@ test("vercel.json rewrites preservam URLs legadas de analytics", () => {
     rewrites["/api/analytics/statistical-snapshot/refresh"],
     "/api/analytics?action=refresh-statistical-snapshot",
   );
+  assert.equal(rewrites["/api/analytics/reports"], "/api/analytics?action=reports");
 });
 
 test("dashboard resolve todas as páginas legadas", () => {
@@ -142,7 +144,7 @@ test("dashboard handlers map é explícito (sem import dinâmico arbitrário)", 
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/quality"], "quality");
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/platform-usage"], "platform_usage");
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/support"], "support");
-  assert.equal(Object.keys(ANALYTICS_ACTION_HANDLERS).length, 5);
+  assert.equal(Object.keys(ANALYTICS_ACTION_HANDLERS).length, 10);
   assert.equal(typeof ANALYTICS_ACTION_HANDLERS.access.handler, "function");
 });
 
@@ -168,6 +170,30 @@ test("catalog via analytics entry retorna 401 sem auth", async () => {
   };
   await analyticsHandler({ method: "GET", url: "/api/analytics/catalog", headers: { host: "localhost" } }, res);
   assert.equal(res.statusCode, 401);
+});
+
+test("analytics legacy path /api/analytics/reports resolve reports", () => {
+  const entry = resolveAnalyticsAction("/api/analytics/reports", new URLSearchParams());
+  assert.equal(entry?.action, "reports");
+  assert.equal(entry?.handler, handleReportsRequest);
+});
+
+test("analyticsRequestContext mescla req.query (Vercel)", () => {
+  const ctx = analyticsRequestContext({
+    url: "/api/analytics",
+    query: { action: "reports-list" },
+    headers: { host: "localhost" },
+  });
+  assert.equal(ctx.pathname, "/api/analytics");
+  assert.equal(ctx.searchParams.get("action"), "reports-list");
+  assert.equal(resolveAnalyticsAction(ctx.pathname, ctx.searchParams)?.action, "reports-list");
+});
+
+test("analytics resolve action reports", () => {
+  const entry = resolveAnalyticsAction("/api/analytics", new URLSearchParams("action=reports"));
+  assert.equal(entry?.action, "reports");
+  assert.equal(entry?.handler, handleReportsRequest);
+  assert.equal(entry?.pageId, "reports");
 });
 
 test("reports e assistant permanecem entrypoints dedicados", () => {

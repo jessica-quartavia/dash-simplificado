@@ -23,6 +23,7 @@
     { "source": "/api/analytics/catalog", "destination": "/api/analytics?action=catalog" },
     { "source": "/api/analytics/snapshot/refresh", "destination": "/api/analytics?action=refresh" },
     { "source": "/api/analytics/statistical-snapshot/refresh", "destination": "/api/analytics?action=refresh-statistical-snapshot" },
-    { "source": "/api/analytics/snapshot", "destination": "/api/analytics?action=snapshot" }
+    { "source": "/api/analytics/snapshot", "destination": "/api/analytics?action=snapshot" },
+    { "source": "/api/analytics/reports", "destination": "/api/analytics?action=reports" }
   ]
 }
