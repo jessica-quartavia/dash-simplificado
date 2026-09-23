@@ -93,11 +93,12 @@ function filtersFromForm() {
 
 function buildApiUrl(extra = {}) {
   const params = internalMechanismsSatisfactionFiltersToSearchParams(state.filters);
+  params.set("page", "internal_mechanisms_satisfaction");
   if (extra.detail) params.set("detail", "1");
   if (extra.detailPage) params.set("detailPage", String(extra.detailPage));
   if (extra.detailPageSize) params.set("detailPageSize", String(extra.detailPageSize));
   const q = params.toString();
-  return q ? `/api/internal-mechanisms-satisfaction?${q}` : "/api/internal-mechanisms-satisfaction";
+  return `/api/dashboard?${q}`;
 }
 
 function kpiCard(label, value, note, options = {}) {
