@@ -1,5 +1,6 @@
 import { onPageChange, getCurrentPageId } from "./navigation.js";
 import { authenticatedFetch, getAccessToken, getUserEmail } from "./auth.mjs";
+import { getCurrentAccess } from "./access-context.js";
 import { escapeHtml } from "./general-charts.mjs";
 import {
   filterReports,
@@ -98,12 +99,17 @@ function renderToast() {
   node.className = `reports-toast ${state.error ? "is-error" : "is-success"}`;
 }
 
+function canPublishReports() {
+  const access = getCurrentAccess();
+  return Boolean(access?.isActive && access?.isOwner);
+}
+
 function renderToolbar() {
   const actions = $("page-actions");
   if (!actions) return;
-  actions.innerHTML = `
-    <button type="button" class="btn btn-primary" id="reports-publish-btn">+ Publicar relatório</button>
-  `;
+  actions.innerHTML = canPublishReports()
+    ? `<button type="button" class="btn btn-primary" id="reports-publish-btn">+ Publicar relatório</button>`
+    : "";
 }
 
 function renderFilters() {
@@ -129,6 +135,11 @@ function renderFilters() {
 function renderReportCard(report) {
   const typeLabel = reportFileTypeLabel(report.fileExtension);
   const sizeLabel = formatReportFileSize(report.fileSizeBytes);
+  const deleteBtn = canPublishReports()
+    ? `<button type="button" class="btn btn-secondary reports-delete-btn" data-delete-report="${escapeHtml(report.id)}" aria-label="Excluir relatório" title="Excluir">
+          Excluir
+        </button>`
+    : "";
   return `
     <article class="reports-card" data-report-id="${escapeHtml(report.id)}">
       <div class="reports-card-head">
@@ -150,9 +161,7 @@ function renderReportCard(report) {
         <button type="button" class="btn btn-secondary reports-download-btn" data-download-report="${escapeHtml(report.id)}" data-file-name="${escapeHtml(report.fileName || "")}">
           Baixar
         </button>
-        <button type="button" class="btn btn-secondary reports-delete-btn" data-delete-report="${escapeHtml(report.id)}" aria-label="Excluir relatório" title="Excluir">
-          Excluir
-        </button>
+        ${deleteBtn}
       </div>
     </article>
   `;
@@ -174,10 +183,13 @@ function renderContent() {
 
   const items = visibleReports();
   if (!items.length) {
+    const publishEmpty = canPublishReports()
+      ? `<button type="button" class="btn btn-primary" id="reports-empty-publish">${state.reports.length ? "+ Publicar relatório" : "Publicar primeiro relatório"}</button>`
+      : "";
     host.innerHTML = `
       <div class="reports-empty">
         <p>${state.reports.length ? "Nenhum relatório corresponde à busca." : "Os relatórios publicados pelo time de Inteligência aparecerão aqui."}</p>
-        <button type="button" class="btn btn-primary" id="reports-empty-publish">${state.reports.length ? "+ Publicar relatório" : "Publicar primeiro relatório"}</button>
+        ${publishEmpty}
       </div>
       <div id="reports-toast" class="reports-toast" hidden></div>
     `;
@@ -324,17 +336,13 @@ function mapApiError(payload, status) {
     return "Rota /api/reports indisponível no servidor local. Reinicie com npm run dev.";
   }
   if (status === 403 || payload?.code === "forbidden") {
-    const parts = [payload?.error || "Sem permissão para excluir este relatório."];
-    if (payload?.hint) parts.push(payload.hint);
-    if (isReportsDebug()) {
-      if (payload?.error_category) parts.push(`[${payload.error_category}]`);
-      if (payload?.postgrest_code) parts.push(`PostgREST ${payload.postgrest_code}`);
-      if (payload?.request_id) parts.push(`req ${payload.request_id}`);
-    }
-    return parts.join(" ");
+    return payload?.error || "Você não possui acesso aos relatórios.";
   }
-  if (payload?.code && reportsErrorMessage(payload.code) !== "Não foi possível consultar os relatórios.") {
+  if (payload?.code && reportsErrorMessage(payload.code) !== "Não foi possível carregar os relatórios.") {
     return reportsErrorMessage(payload.code);
+  }
+  if (status === 500) {
+    return payload?.error || "Não foi possível carregar os relatórios.";
   }
   if (status === 503 && payload?.hint) {
     return `${payload.error || "Relatórios indisponíveis."} ${payload.hint}`;

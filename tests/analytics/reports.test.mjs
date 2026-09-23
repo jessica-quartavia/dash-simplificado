@@ -18,11 +18,12 @@ import {
   validateReportFile,
   validateReportTitle,
 } from "../../lib/analytics/reports-validation.mjs";
-import { buildReportStoragePath, reportsStore } from "../../lib/analytics/reports-store.mjs";
+import { buildReportStoragePath, reportsStore, REPORTS_BUCKET } from "../../lib/analytics/reports-store.mjs";
 import {
   classifyReportsPostgrestError,
   reportsErrorMessage,
 } from "../../lib/analytics/reports-postgrest-error.mjs";
+import { canAccessPage, canMutateReports } from "../../lib/access/access-policy.mjs";
 import { getPageById, PAGES } from "../../js/pages.js";
 import { runFilterCheck } from "../../lib/analytics/filters/filter-check.mjs";
 
@@ -38,24 +39,31 @@ function jsonResponse(status, body) {
 }
 
 function mockAuth(deps = {}) {
+  const ownerAccess = { isOwner: true, isActive: true, groups: [] };
   return {
     requireCorporateAuthUser: async () => ({
       user: CORP_USER,
       accessToken: "test-token",
     }),
-    requirePageAccess: async () => null,
+    resolveRequestAccess: async () => ({
+      user: CORP_USER,
+      accessToken: "test-token",
+      access: ownerAccess,
+    }),
     analyticsCatalogConfigurationError: () => null,
     ...deps,
   };
 }
 
-test("Relatórios aparece em Visão Geral", () => {
+test("Relatórios em Análises internas (após Mecanismos × Satisfação)", () => {
   const page = getPageById("reports");
   assert.ok(page);
-  assert.equal(page.group, "overview");
+  assert.equal(page.group, "internal");
   assert.equal(page.implemented, true);
   const overview = PAGES.filter((item) => item.group === "overview").map((item) => item.navLabel);
-  assert.deepEqual(overview, ["Resumo Executivo", "Dados Gerais", "Relatórios"]);
+  assert.deepEqual(overview, ["Resumo Executivo", "Dados Gerais"]);
+  const internal = PAGES.filter((item) => item.group === "internal").map((item) => item.navLabel);
+  assert.deepEqual(internal, ["Mecanismos × Satisfação", "Relatórios"]);
 });
 
 test("título obrigatório com trim e limite", () => {
@@ -416,7 +424,7 @@ test("classificação PostgREST não confunde PGRST106 com table missing", () =>
   });
   const result = classifyReportsPostgrestError(406, body);
   assert.equal(result.code, "reports_schema_not_exposed");
-  assert.equal(reportsErrorMessage(result.code), "Relatórios ainda não estão disponíveis pela Data API.");
+  assert.equal(reportsErrorMessage(result.code), "O schema analytics não está exposto na API (PGRST106). Peça para incluir analytics em Exposed schemas no projeto Business Data.");
 });
 
 test("classificação PostgREST permission denied", () => {
@@ -453,4 +461,99 @@ test("handler expõe schema not exposed sem pedir migração", async () => {
 test("filter check de relatórios", () => {
   const result = runFilterCheck();
   assert.equal(result.reports.ok, true, JSON.stringify(result.reports.checks.filter((item) => !item.ok)));
+});
+
+function mockResolvedAccess(access, deps = {}) {
+  return {
+    ...mockAuth(deps),
+    resolveRequestAccess: async () => ({
+      user: CORP_USER,
+      accessToken: "test-token",
+      access,
+    }),
+  };
+}
+
+test("owner access reports PASS", () => {
+  assert.equal(canAccessPage({ isOwner: true, isActive: true, groups: [] }, "reports"), true);
+  assert.equal(canMutateReports({ isOwner: true, isActive: true }), true);
+});
+
+test("product access reports PASS", () => {
+  const product = { isOwner: false, isActive: true, groups: ["product"] };
+  assert.equal(canAccessPage(product, "reports"), true);
+  assert.equal(canMutateReports(product), false);
+});
+
+test("leader blocked reports PASS", () => {
+  assert.equal(canAccessPage({ isOwner: false, isActive: true, groups: ["leaders"] }, "reports"), false);
+});
+
+test("EP blocked reports PASS", () => {
+  assert.equal(canAccessPage({ isOwner: false, isActive: true, groups: ["eps"] }, "reports"), false);
+});
+
+test("product mutation API 403 PASS", async () => {
+  const response = await handleReportsRequest(
+    new Request("http://localhost/api/reports", { method: "POST" }),
+    mockResolvedAccess({ isOwner: false, isActive: true, groups: ["product"] }),
+  );
+  assert.equal(response.status, 403);
+  const payload = await response.json();
+  assert.equal(payload.code, "forbidden");
+});
+
+test("owner mutation gate allows POST when access resolved", async () => {
+  const store = {
+    list: async () => [],
+    toPublicRow: reportsStore.toPublicRow.bind(reportsStore),
+  };
+  const form = new FormData();
+  form.append("file", new Blob(["x"], { type: "application/pdf" }), "a.pdf");
+  form.append("title", "Título");
+  const response = await handleReportsRequest(
+    new Request("http://localhost/api/reports", { method: "POST", body: form }),
+    {
+      ...mockResolvedAccess({ isOwner: true, isActive: true, groups: [] }),
+      reportsStore: {
+        ...store,
+        uploadFile: async () => {},
+        insert: async (row) => ({ ...row, id: "new-id", created_at: new Date().toISOString() }),
+        newFileId: () => "file-uuid",
+        toPublicRow: reportsStore.toPublicRow.bind(reportsStore),
+      },
+    },
+  );
+  assert.equal(response.status, 201);
+});
+
+test("frontend esconde publicar para não-owner", () => {
+  const source = readFileSync(resolve(root, "js/reports.js"), "utf8");
+  assert.match(source, /canPublishReports/);
+  assert.match(source, /getCurrentAccess/);
+  assert.match(source, /isOwner/);
+});
+
+test("download signed URL PASS (handler open)", async () => {
+  const store = {
+    findById: async () => ({
+      id: "rep-1",
+      storage_path: "reports/2026/08/id_relatorio.pdf",
+      file_name: "relatorio.pdf",
+      status: "published",
+    }),
+    createSignedUrl: async () => "https://example.supabase.co/storage/v1/object/sign/analytics-reports/x?token=abc",
+    toPublicRow: reportsStore.toPublicRow.bind(reportsStore),
+  };
+  const response = await handleReportsRequest(
+    new Request("http://localhost/api/reports?open=rep-1"),
+    mockResolvedAccess({ isOwner: false, isActive: true, groups: ["product"] }, { reportsStore: store }),
+  );
+  assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.match(payload.url, /sign/);
+});
+
+test("private bucket preserved PASS", () => {
+  assert.equal(REPORTS_BUCKET, "analytics-reports");
 });

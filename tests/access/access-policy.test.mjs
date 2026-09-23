@@ -39,10 +39,10 @@ test("OWNER → tudo permitido, inclusive construção e gerenciamento", () => {
   }
 });
 
-test("Líder → tudo menos construção e access management", () => {
+test("Líder → tudo menos construção, relatórios e access management", () => {
   const leader = access(["leaders"]);
   assert.equal(canAccessPage(leader, "executive_summary"), true);
-  assert.equal(canAccessPage(leader, "reports"), true);
+  assert.equal(canAccessPage(leader, "reports"), false);
   assert.equal(canAccessPage(leader, "ep_performance"), true);
   assert.equal(canAccessPage(leader, "statistical_crosses"), true);
   assert.equal(canAccessPage(leader, "quality"), true);
@@ -68,12 +68,12 @@ test("EP → visão geral sem relatórios, jornada sem plataforma, sem inteligê
   assert.equal(canAccessPage(ep, ACCESS_MANAGEMENT_PAGE_ID), false);
 });
 
-test("Team Leader EP herda EP + Relatórios + Performance EP", () => {
+test("Team Leader EP herda EP + Performance EP (sem Relatórios)", () => {
   const tl = access(["team_leaders_ep"]);
   assert.deepEqual(expandAccessGroups(["team_leaders_ep"]).sort(), ["eps", "team_leaders_ep"]);
   assert.equal(canAccessPage(tl, "executive_summary"), true);
   assert.equal(canAccessPage(tl, "meetings"), true);
-  assert.equal(canAccessPage(tl, "reports"), true);
+  assert.equal(canAccessPage(tl, "reports"), false);
   assert.equal(canAccessPage(tl, "ep_performance"), true);
   assert.equal(canAccessPage(tl, "statistical_crosses"), false);
   assert.equal(canAccessPage(tl, "platform_usage"), false);
@@ -115,7 +115,7 @@ test("Team Leader com eps + team_leaders_ep não duplica e ganha extras", () => 
   const granted = [...pagesGrantedByGroups(["eps", "team_leaders_ep"])].sort();
   const inherited = [...pagesGrantedByGroups(["team_leaders_ep"])].sort();
   assert.deepEqual(granted, inherited);
-  assert.ok(granted.includes("reports"));
+  assert.ok(!granted.includes("reports"));
   assert.ok(granted.includes("ep_performance"));
   assert.ok(granted.includes("meetings"));
 });
@@ -174,17 +174,31 @@ test("tags visuais: owner nunca aparece como Sem time", () => {
   ]);
 });
 
-test("Produto herda exatamente as páginas de Líderes", () => {
+test("Produto herda Líderes e ganha Relatórios (Análises internas)", () => {
   assert.deepEqual(ACCESS_GROUP_INHERITANCE.product, ["leaders"]);
   assert.deepEqual(expandAccessGroups(["product"]).sort(), ["leaders", "product"]);
   const leader = access(["leaders"]);
   const product = access(["product"]);
+  assert.equal(canAccessPage(product, "reports"), true);
+  assert.equal(canAccessPage(leader, "reports"), false);
+  assert.equal(canAccessPage(product, "internal_mechanisms_satisfaction"), false);
+  assert.equal(canAccessPage(product, "satisfaction"), true);
+  assert.equal(canAccessPage(product, "support"), false);
   for (const page of PAGES) {
+    if (page.id === "reports") continue;
     assert.equal(canAccessPage(product, page.id), canAccessPage(leader, page.id), page.id);
   }
   assert.equal(canAccessPage(product, ACCESS_MANAGEMENT_PAGE_ID), false);
-  assert.equal(canAccessPage(product, "satisfaction"), true);
-  assert.equal(canAccessPage(product, "support"), false);
+});
+
+test("menu Produto: Análises internas só com Relatórios", () => {
+  const menu = filterPagesForMenu(access(["product"]));
+  const internal = menu.find((group) => group.id === "internal");
+  assert.ok(internal, "categoria internal");
+  assert.deepEqual(internal.pages.map((page) => page.id), ["reports"]);
+  const reportEntries = menu.flatMap((group) => group.pages.filter((page) => page.id === "reports"));
+  assert.equal(reportEntries.length, 1);
+  assert.equal(reportEntries[0].allowed, true);
 });
 
 test("Acionamentos é legado owner-only", () => {
