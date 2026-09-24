@@ -274,3 +274,457 @@
     min-width: 36px;
   }
 }
+
+.ims-page .ims-projection-block {
+  border: 1px solid var(--border-subtle, #e7e5e4);
+  border-radius: 8px;
+  padding: 16px 20px;
+  background: var(--surface-primary, #fff);
+}
+
+.ims-page .ims-projection-unavailable {
+  border-left: 4px solid var(--warning, #d97706);
+}
+
+.ims-page .ims-projection-headline {
+  font-size: 1.05rem;
+  margin: 0 0 12px;
+}
+
+.ims-page .ims-subheading {
+  font-size: 0.95rem;
+  margin: 16px 0 8px;
+}
+
+.ims-page .ims-proxy-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  border-radius: 4px;
+  padding: 4px 10px;
+  margin-bottom: 10px;
+}
+
+.ims-page .ims-projection-exploratory {
+  border-left-color: #2563eb;
+}
+
+.ims-page .ims-projection-kpis {
+  margin: 16px 0;
+}
+
+.ims-page .ims-top-mech-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ims-page .ims-top-mech-card {
+  border: 1px solid var(--border-subtle, #e7e5e4);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #fafaf9;
+}
+
+.ims-page .ims-top-mech-rank {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #57534e;
+  margin-bottom: 4px;
+}
+
+.ims-page .ims-proj-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  min-height: 100px;
+  margin: 12px 0 20px;
+  padding: 8px 0;
+}
+
+.ims-page .ims-proj-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+}
+
+.ims-page .ims-proj-bar {
+  width: 100%;
+  max-width: 56px;
+  background: #2563eb;
+  border-radius: 4px 4px 0 0;
+}
+
+.ims-page .ims-proj-bar-label {
+  font-size: 0.68rem;
+  text-align: center;
+  margin-top: 6px;
+  color: #57534e;
+}
+
+.ims-page .ims-proxy-badge-inline {
+  margin-bottom: 8px;
+}
+
+.ims-page .ims-projection-warnings {
+  margin: 8px 0 12px;
+  padding-left: 1.2rem;
+}
+
+.ims-page .ims-proxy-coverage {
+  margin: 12px 0 16px;
+  padding: 12px 14px;
+  background: #fafaf9;
+  border-radius: 8px;
+}
+
+/* —— Seção 9: Projeção de renovação —— */
+.ims-page .ims-projection-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5, 24px);
+  margin-top: 8px;
+}
+
+.ims-page .ims-proj-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ims-page .ims-proj-callout {
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary, #e85d3a);
+  border-radius: var(--radius, 8px);
+  padding: 14px 16px;
+  background: var(--surface);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--foreground);
+}
+
+.ims-page .ims-proj-callout p {
+  margin: 0;
+}
+
+.ims-page .ims-proj-kpi-primary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ims-page .ims-proj-kpi-primary .kpi-card {
+  min-height: 7.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ims-page .ims-proj-kpi-secondary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ims-page .ims-proj-kpi-proxy {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.ims-page .ims-proj-kpi-proxy .ims-proj-proxy-class {
+  font-size: 1.75rem;
+}
+
+.ims-page .ims-proj-coverage-meta {
+  margin: -8px 0 0;
+  font-size: 0.82rem;
+}
+
+.ims-page .ims-proj-panel {
+  border: 1px solid var(--border-subtle, #e7e5e4);
+  border-radius: var(--radius, 8px);
+  padding: 18px 20px;
+  background: var(--surface);
+}
+
+.ims-page .ims-proj-panel-title {
+  margin: 0 0 14px;
+  font-family: var(--font-heading, inherit);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.ims-page .ims-proj-panel-sub {
+  margin: 4px 0 0;
+  font-size: 0.88rem;
+}
+
+.ims-page .ims-proj-month-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ims-page .ims-proj-month-row {
+  display: grid;
+  grid-template-columns: 7rem 1fr 3rem;
+  align-items: center;
+  gap: 12px;
+}
+
+.ims-page .ims-proj-month-label {
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.ims-page .ims-proj-month-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-secondary, #f5f5f4);
+  overflow: hidden;
+}
+
+.ims-page .ims-proj-month-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary, #e85d3a);
+  min-width: 2px;
+}
+
+.ims-page .ims-proj-month-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.ims-page .ims-proj-howto {
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 8px);
+  padding: 0 16px;
+  background: #fafaf9;
+}
+
+.ims-page .ims-proj-howto summary {
+  cursor: pointer;
+  padding: 12px 0;
+  font-weight: 600;
+  font-size: 0.92rem;
+  list-style: none;
+}
+
+.ims-page .ims-proj-howto summary::-webkit-details-marker {
+  display: none;
+}
+
+.ims-page .ims-proj-howto-list {
+  margin: 0 0 12px;
+  padding-left: 1.2rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.ims-page .ims-proj-howto-warnings {
+  margin: 0 0 12px;
+  padding-left: 1.2rem;
+  font-size: 0.82rem;
+}
+
+.ims-page .ims-proj-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 20px;
+}
+
+.ims-page .ims-proj-metric-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.ims-page .ims-proj-metric-value {
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.ims-page .ims-proj-model-narrative {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: rgba(232, 93, 58, 0.08);
+  border-left: 3px solid var(--primary, #e85d3a);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.ims-page .ims-proj-model-placeholder {
+  margin: 0;
+}
+
+.ims-page .ims-proj-top-mech .ims-top-mech-grid {
+  margin-bottom: 0;
+}
+
+.ims-page .ims-top-mech-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 100%;
+}
+
+.ims-page .ims-top-mech-name {
+  margin: 0;
+  font-size: 1rem;
+  font-family: var(--font-heading, inherit);
+  color: var(--foreground);
+}
+
+.ims-page .ims-top-mech-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.ims-page .ims-proj-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.82rem;
+  border-bottom: 1px solid var(--border-subtle, #e7e5e4);
+  padding-bottom: 4px;
+}
+
+.ims-page .ims-proj-stat-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.ims-page .ims-proj-stat-label {
+  color: var(--muted);
+}
+
+.ims-page .ims-proj-stat-value {
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ims-page .ims-proj-bands-table th,
+.ims-page .ims-proj-bands-table td {
+  font-size: 0.88rem;
+}
+
+.ims-page .ims-proj-dist-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 120px;
+  padding: 8px 4px 0;
+}
+
+.ims-page .ims-proj-dist-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  gap: 6px;
+}
+
+.ims-page .ims-proj-dist-value {
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ims-page .ims-proj-dist-bar {
+  width: 100%;
+  max-width: 48px;
+  background: var(--primary, #e85d3a);
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+}
+
+.ims-page .ims-proj-dist-label {
+  font-size: 0.68rem;
+  text-align: center;
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+.ims-page .ims-proj-clients-table .ims-proj-clients-head {
+  margin-bottom: 12px;
+}
+
+.ims-page .ims-proj-clients-table .table-toolbar {
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.ims-page .ims-proj-clients-table .table-count:empty {
+  display: none;
+}
+
+.ims-page .ims-proj-footnote {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.ims-page .ims-proj-table-host {
+  margin-top: 4px;
+}
+
+@media (max-width: 1024px) {
+  .ims-page .ims-proj-kpi-primary,
+  .ims-page .ims-proj-kpi-secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ims-page .ims-proj-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .ims-page .ims-proj-kpi-primary,
+  .ims-page .ims-proj-kpi-secondary {
+    grid-template-columns: 1fr;
+  }
+
+  .ims-page .ims-proj-month-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .ims-page .ims-proj-month-value {
+    text-align: left;
+  }
+
+  .ims-page .ims-proj-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ims-page .ims-proj-dist-chart {
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .ims-page .ims-proj-dist-col {
+    min-width: 52px;
+  }
+}
