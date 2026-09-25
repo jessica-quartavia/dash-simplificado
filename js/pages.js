@@ -212,7 +212,23 @@ export const PAGES = [
     navLabel: "Mecanismos × Satisfação",
     title: "Mecanismos × Satisfação",
     eyebrow: "Análises internas",
-    description: "Associações observadas entre mecanismos implementados, NPS, CSAT e renovação (exploratório).",
+    description: "Associações observadas entre mecanismos implementados, NPS e CSAT (exploratório).",
+    implemented: true,
+  },
+  {
+    id: "internal_mechanisms_renewal_projection",
+    hash: "internal-mechanisms-renewal-projection",
+    aliases: [
+      "internal_mechanisms_renewal_projection",
+      "mecanismos-renovacao-projecao",
+      "projecao-mecanismos-renovacao",
+    ],
+    group: "internal",
+    navLabel: "Projeção Mecanismos × Renovação",
+    title: "Projeção Mecanismos × Renovação",
+    eyebrow: "Análises internas",
+    description:
+      "Comparação exploratória de modelos A (base ativa) e B (base histórica) — mecanismos e renovação.",
     implemented: true,
   },
   {

@@ -1,0 +1,20 @@
+mechanism_name;clients;renewed;renewal_rate;rate_without;delta_pp;sample_ok
+Autoconstrução;98;69;70.4;3.1;67.3;sim
+Renda Fixa Escalonada;68;34;50;3.1;46.9;sim
+ShortStay;0;0;;3.1;;nao
+Fundo de Investimento (QVRA11);76;59;77.6;3.1;74.6;sim
+Operações;0;0;;3.1;;nao
+Incorporação Financiada (ATLAS);17;6;35.3;3.1;32.2;nao
+Retropatrimônio;2;2;100;3.1;96.9;nao
+Usinas Escalonáveis (ÂMPAR);10;5;50;3.1;46.9;nao
+Trava de Inflação;45;31;68.9;3.1;65.8;sim
+ARKANSAS;0;0;;3.1;;nao
+ALABAMA;0;0;;3.1;;nao
+ARCADIA;22;12;54.5;3.1;51.5;nao
+Leilão Circular (ASPEN);1;1;100;3.1;96.9;nao
+Leilão Serial (Flipping de Leilão);80;58;72.5;3.1;69.4;sim
+Crédito Verde;37;30;81.1;3.1;78;sim
+Liquidez Antifrágil;0;0;;3.1;;nao
+Renda Sintética;26;20;76.9;3.1;73.8;nao
+Escala Imobiliária;41;36;87.8;3.1;84.7;sim
+ARMADA;0;0;;3.1;;nao

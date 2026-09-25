@@ -199,3 +199,33 @@ Texto em linguagem simples, sem prefixos técnicos (`comparacao:`, etc.). Inclui
 ## 13. Segurança e escopo técnico
 
 - Página **owner-only**; BASE QV e Pharus **read-only**; regras oficiais de NPS e mecanismos inalteradas; V1 intacto.
+
+## 14. Renovação — população canônica e auditoria do modelo (2026-09-25)
+
+### População
+
+- **`canonicalRenewalPopulation`**: carteira wide após filtros operacionais da página (status, programa, EP, segmento, mecanismo, busca, renovação), **sem** `npsScore` / `npsClass`.
+- **Regra oficial de renovação**: `clients.ciclo > 1` ⇒ renovou (`lib/analytics/client-cycle-renewal.mjs`).
+- Seções alimentadas: Renovação × mecanismo, Top 3, faixas de mecanismos, projeção 31/12, exports de renovação.
+- NPS/CSAT permanecem apenas nas seções de satisfação.
+
+### Auditoria “15 vs 40” (ativos, snapshot BASE QV)
+
+| Métrica | População | Valor típico |
+|--------|-----------|--------------|
+| Renovados sem mecanismo (elegíveis) | `npsPopulation` (legado) | **15** |
+| Renovados sem mecanismo (elegíveis) | `canonicalRenewalPopulation` | **40** |
+
+Os **15** vinham do recorte que exigia NPS na população principal; **40** é o confronto correto na população de renovação (ativos, ciclo válido, sem mecanismo implementado, já renovados).
+
+### Modelo exploratório (projeção PROXY)
+
+- **Algoritmo real**: taxas estratificadas `programa × faixa de mechanism_count (0…4+)` com shrinkage; holdout 20% por hash de `client_id`.
+- **Não** é regressão logística com coeficientes por feature nesta versão — rankings associativos por mecanismo usam taxas históricas vs sem mecanismo.
+- **Target**: `renewed_binary` = 1 se `ciclo > 1`, 0 se 1º ciclo, entre `cycleValid`.
+- **Excluídos do predictClient**: NPS, CSAT, binários `implemented_*` (usados só em rankings descritivos).
+- **Métricas holdout** (referência ativos): ROC-AUC ≈ 0,77; Brier ≈ 0,095 (baseline ≈ 0,117); acurácia ≈ 0,87 com baseline “sempre não renova” ≈ 0,94 — ver bloco **Como calculamos?** na seção 9.
+- **Utilidade**: ranking PASS; volume (soma de probabilidades) PASS; classificação binária individual ATENÇÃO (classe minoritária).
+- **Backtest temporal**: não disponível (sem data oficial de evento de renovação).
+
+Script reprodutível: `node scripts/audit-ims-renewal-model.mjs` (requer `.env` DATA_SUPABASE_*).

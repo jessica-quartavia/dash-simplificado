@@ -84,6 +84,8 @@ test("Renovação — métricas sem fonte não entram no payload", () => {
   const src = readFileSync(resolve(root, "js/renewal.js"), "utf8");
   assert.doesNotMatch(src, /Tempo até renovação/);
   assert.doesNotMatch(src, /Valor da renovação/);
+  assert.match(src, /Clientes do recorte atual com ciclo maior que 1\./);
+  assert.match(src, /Soma de ciclo - 1 dos clientes do recorte atual\./);
 });
 
 test("Filter Check PASS inclui novas páginas", () => {

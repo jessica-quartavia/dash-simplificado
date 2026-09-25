@@ -6,6 +6,7 @@ import {
   RENEWED_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
   sortRenewalClients,
+  DEFAULT_STATUS_FILTER,
 } from "../lib/analytics/renewal-filters.mjs";
 import {
   distributionsFromRenewalRows,
@@ -67,7 +68,7 @@ function uniqueSorted(values) {
 function filtersFromForm() {
   return {
     search: $("rnSearch")?.value || "",
-    status: $("rnStatus")?.value || "all",
+    status: $("rnStatus")?.value || DEFAULT_STATUS_FILTER,
     engineer: $("rnEngineer")?.value || "all",
     segment: $("rnSegment")?.value || "all",
     program: normalizeProgramFilter($("rnProgram")?.value || "all"),
@@ -88,11 +89,6 @@ function currentSummary() {
   const summary = summarizeRenewalRows(rows);
   const dist = distributionsFromRenewalRows(rows);
   return { rows, summary, dist };
-}
-
-function pctLabel(value) {
-  if (value == null || !Number.isFinite(Number(value))) return "—";
-  return `${Number(value).toLocaleString("pt-BR")}%`;
 }
 
 function kpiCard(label, value, note, options = {}) {
@@ -154,13 +150,12 @@ function renderSuccess() {
 
     <section class="section-block">
       <h2>Indicadores</h2>
-      <p>Elegíveis com ciclo válido no recorte filtrado. Renovação = ciclo atual maior que 1.</p>
+      <p>Indicadores e gráficos respeitam o filtro Status e os demais recortes da barra.</p>
       <div class="kpi-row kpi-row-three">
-        ${kpiCard("Clientes que renovaram", fmt.format(summary.renewedClients), pctLabel(summary.renewedClientsPercent) + " dos elegíveis", { featured: true, highlight: true })}
-        ${kpiCard("Total de renovações", fmt.format(summary.totalRenewals), "Soma de max(ciclo − 1, 0)")}
-        ${kpiCard("Maior ciclo atual", summary.maxCurrentCycle == null ? "—" : fmt.format(summary.maxCurrentCycle), "Entre elegíveis")}
+        ${kpiCard("Clientes que renovaram", fmt.format(summary.renewedClients), "Clientes do recorte atual com ciclo maior que 1.", { featured: true, highlight: true })}
+        ${kpiCard("Total de renovações", fmt.format(summary.totalRenewals), "Soma de ciclo - 1 dos clientes do recorte atual.")}
+        ${kpiCard("Maior ciclo atual", summary.maxCurrentCycle == null ? "—" : fmt.format(summary.maxCurrentCycle), "Entre elegíveis do recorte")}
       </div>
-      <p class="chart-note">Gráficos respeitam o filtro Status (use Ativos para analisar somente clientes ativos).</p>
     </section>
 
     <section class="section-block">

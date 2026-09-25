@@ -203,6 +203,12 @@ test("matriz — sem coluna Nota NPS 0–10", () => {
   assert.ok(ids.includes("promoter"));
 });
 
+test("frontend satisfação sem blocos de renovação", () => {
+  const js = readFileSync(resolve(root, "js/internal-mechanisms-satisfaction.js"), "utf8");
+  assert.doesNotMatch(js, /imsRenewalProjection/);
+  assert.doesNotMatch(js, /8\. Renovação/);
+});
+
 test("payload — CSAT e temporal no recorte", () => {
   const ds = fixtureDataset();
   const payload = buildInternalMechanismsSatisfactionPayload(ds, { filters: { status: "all" } });
@@ -242,24 +248,8 @@ test("insights — sem Mann–Whitney", () => {
   assert.ok(!texts.some((t) => t.includes("Mann–Whitney")));
 });
 
-test("payload — projeção até fim do ano inclui validação PROXY", () => {
-  const ds = fixtureDataset();
-  const payload = buildInternalMechanismsSatisfactionPayload(ds, { filters: { status: "all" } });
-  const proj = payload.renewalYearEndProjection;
-  assert.ok(proj);
-  assert.ok(proj.proxyCycleEndDate?.validation?.classification);
-  assert.ok(["A", "B", "C", "D"].includes(proj.proxyCycleEndDate.validation.classification));
-  assert.equal(proj.officialEligibleAvailable, false);
-  assert.equal(proj.officialEligibilityAvailable, false);
-  assert.equal(typeof proj.proxyAvailable, "boolean");
-  assert.equal(typeof proj.projectionAvailable, "boolean");
-  assert.equal(proj.modelProjectionPublished, false);
-});
-
-test("frontend — seção projeção renovação", () => {
+test("frontend satisfação sem blocos de renovação", () => {
   const js = readFileSync(resolve(root, "js/internal-mechanisms-satisfaction.js"), "utf8");
-  assert.match(js, /renderYearEndRenewalProjection/);
-  assert.match(js, /imsRenewalProjection/);
-  assert.match(js, /Como ler esta seção/);
-  assert.match(js, /ims-proj-kpi-primary/);
+  assert.doesNotMatch(js, /imsRenewalProjection/);
+  assert.doesNotMatch(js, /Renovação × Mecanismos/);
 });

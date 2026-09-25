@@ -1,0 +1,684 @@
+{
+  "modelId": "B1_historical_stratified",
+  "calculation_version": "historical-b1-v1-v2.2026-09-25-ims-renewal-canonical-population",
+  "generated_at": "2026-09-25T18:11:17.524Z",
+  "mechanism_era": {
+    "cutoffs": [
+      {
+        "id": "ample",
+        "label": "Corte amplo",
+        "eraStart": "2025-06-01",
+        "eraStartMonth": "2025-06",
+        "rule": "Primeiro mês com >= 27 clientes na 1ª implementação OU >= 50 implementações totais."
+      },
+      {
+        "id": "intermediate",
+        "label": "Corte intermediário",
+        "eraStart": "2026-01-01",
+        "eraStartMonth": "2026-01",
+        "rule": "Primeiro mês com >= 66 clientes na 1ª implementação OU >= 125 implementações."
+      },
+      {
+        "id": "conservative",
+        "label": "Corte conservador",
+        "eraStart": "2026-08-01",
+        "eraStartMonth": "2026-08",
+        "rule": "Primeiro mês com >= 149 clientes na 1ª implementação OU >= 291 implementações."
+      }
+    ],
+    "peakMonthlyClients": 330,
+    "peakMonthlyImplementations": 831,
+    "thresholds": {
+      "ampleMinClients": 27,
+      "intermediateMinClients": 66,
+      "conservativeMinClients": 149,
+      "ampleMinImpl": 50,
+      "intermediateMinImpl": 125,
+      "conservativeMinImpl": 291
+    },
+    "relevantAdoptionMonth": "2026-01",
+    "stabilizationMonth": null,
+    "experimentalStart": "2025-01"
+  },
+  "primary_cutoff": {
+    "id": "intermediate",
+    "label": "Corte intermediário",
+    "eraStart": "2026-01-01",
+    "eraStartMonth": "2026-01",
+    "rule": "Primeiro mês com >= 66 clientes na 1ª implementação OU >= 125 implementações."
+  },
+  "population": {
+    "summary": {
+      "total": 1064,
+      "renewed": 137,
+      "notRenewed": 927,
+      "withMechanism": 187,
+      "withoutMechanism": 877,
+      "renewalRatePct": 12.9
+    },
+    "excluded": {
+      "before_era": 389,
+      "insufficient_exposure": 472,
+      "outcome_still_open": 1487,
+      "invalid_cycle": 34,
+      "missing_reference": 0,
+      "other": 0
+    },
+    "exposureRule": {
+      "minExposureDays": 118,
+      "p25ExposureDays": 118,
+      "auditSampleN": 3397,
+      "definition": "Dias entre max(entry_date, era_start) e min(cancelamento, hoje), exigindo >= 118 (P25 auditado)."
+    }
+  },
+  "split": {
+    "type": "hash_holdout_client_id_seed_42",
+    "primary": "hash",
+    "metricsSplit": "hash",
+    "temporal": false,
+    "temporalFeasible": false,
+    "splitDate": null,
+    "trainShare": 0.8017,
+    "testShare": 0.1983,
+    "eventsTrain": 112,
+    "eventsTest": 25,
+    "referenceDateConfoundingNote": "Out-of-time por reference_date inviável: renovados concentram data_fim_ciclo futura; os 8 primeiros eventos positivos só aparecem após ~88% da série ordenada. Métricas B1 usam hash holdout (igual ao A); ver split temporal ilustrativo no snapshot.",
+    "hashHoldoutRule": "20% determinístico por hash(client_id), seed=42"
+  },
+  "splitTemporalIllustrative": {
+    "feasible": true,
+    "warning": "Métricas ilustrativas — treino com poucos renovados (reference_date).",
+    "splitDate": "2026-09-11",
+    "trainN": 851,
+    "testN": 213,
+    "eventsTrain": 2,
+    "eventsTest": 135,
+    "brier": 0.5716,
+    "rocAuc": 0.5373219373219373,
+    "prAuc": 0.4844,
+    "accuracy": 0.3662
+  },
+  "sampleSizes": {
+    "nTotal": 1064,
+    "nTrain": 853,
+    "nTest": 211,
+    "renewedTrain": 112,
+    "notRenewedTrain": 741,
+    "renewedTest": 25,
+    "notRenewedTest": 186,
+    "baseRate": 0.1313
+  },
+  "metrics": {
+    "threshold": 0.5,
+    "tp": 9,
+    "fp": 2,
+    "tn": 184,
+    "fn": 16,
+    "accuracy": 0.9147,
+    "baselineAccuracy": 0.9479,
+    "balancedAccuracy": 0.6746,
+    "precision": 0.8182,
+    "recall": 0.36,
+    "specificity": 0.9892,
+    "f1": 0.5,
+    "sensitivity": 0.36,
+    "rocAuc": 0.8633,
+    "prAuc": 0.6573,
+    "brier": 0.0622,
+    "baselineBrier": 0.1141
+  },
+  "thresholds": [
+    {
+      "threshold": 0.2,
+      "tp": 18,
+      "fp": 13,
+      "tn": 173,
+      "fn": 7,
+      "accuracy": 0.9052,
+      "baselineAccuracy": 0.8531,
+      "balancedAccuracy": 0.8251,
+      "precision": 0.5806,
+      "recall": 0.72,
+      "specificity": 0.9301,
+      "f1": 0.6429,
+      "sensitivity": 0.72
+    },
+    {
+      "threshold": 0.3,
+      "tp": 18,
+      "fp": 13,
+      "tn": 173,
+      "fn": 7,
+      "accuracy": 0.9052,
+      "baselineAccuracy": 0.8531,
+      "balancedAccuracy": 0.8251,
+      "precision": 0.5806,
+      "recall": 0.72,
+      "specificity": 0.9301,
+      "f1": 0.6429,
+      "sensitivity": 0.72
+    },
+    {
+      "threshold": 0.4,
+      "tp": 18,
+      "fp": 13,
+      "tn": 173,
+      "fn": 7,
+      "accuracy": 0.9052,
+      "baselineAccuracy": 0.8531,
+      "balancedAccuracy": 0.8251,
+      "precision": 0.5806,
+      "recall": 0.72,
+      "specificity": 0.9301,
+      "f1": 0.6429,
+      "sensitivity": 0.72
+    },
+    {
+      "threshold": 0.5,
+      "tp": 9,
+      "fp": 2,
+      "tn": 184,
+      "fn": 16,
+      "accuracy": 0.9147,
+      "baselineAccuracy": 0.9479,
+      "balancedAccuracy": 0.6746,
+      "precision": 0.8182,
+      "recall": 0.36,
+      "specificity": 0.9892,
+      "f1": 0.5,
+      "sensitivity": 0.36
+    }
+  ],
+  "confusion_matrix": {
+    "threshold": 0.5,
+    "tp": 9,
+    "fp": 2,
+    "tn": 184,
+    "fn": 16
+  },
+  "calibration": [
+    {
+      "bin": "0–10%",
+      "n": 166,
+      "meanPredicted": 0.05,
+      "observedRate": 0.03
+    },
+    {
+      "bin": "10–20%",
+      "n": 14,
+      "meanPredicted": 0.137,
+      "observedRate": 0.143
+    },
+    {
+      "bin": "20–40%",
+      "n": 0,
+      "meanPredicted": null,
+      "observedRate": null
+    },
+    {
+      "bin": "40–60%",
+      "n": 24,
+      "meanPredicted": 0.467,
+      "observedRate": 0.5
+    },
+    {
+      "bin": "60%+",
+      "n": 7,
+      "meanPredicted": 0.785,
+      "observedRate": 0.857
+    }
+  ],
+  "mechanism_analysis": {
+    "bands": [
+      {
+        "band": "0",
+        "clients": 877,
+        "renewed": 27,
+        "renewalRatePct": 3.1
+      },
+      {
+        "band": "1",
+        "clients": 48,
+        "renewed": 19,
+        "renewalRatePct": 39.6
+      },
+      {
+        "band": "2",
+        "clients": 42,
+        "renewed": 20,
+        "renewalRatePct": 47.6
+      },
+      {
+        "band": "3",
+        "clients": 39,
+        "renewed": 21,
+        "renewalRatePct": 53.8
+      },
+      {
+        "band": "4+",
+        "clients": 58,
+        "renewed": 50,
+        "renewalRatePct": 86.2
+      }
+    ],
+    "rows": [
+      {
+        "mechanismName": "Autoconstrução",
+        "slug": "autoconstrucao",
+        "clients": 98,
+        "renewed": 69,
+        "notRenewed": 29,
+        "renewalRatePct": 70.4,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 67.3,
+        "sampleOk": true
+      },
+      {
+        "mechanismName": "Renda Fixa Escalonada",
+        "slug": "renda_fixa_escalonada",
+        "clients": 68,
+        "renewed": 34,
+        "notRenewed": 34,
+        "renewalRatePct": 50,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 46.9,
+        "sampleOk": true
+      },
+      {
+        "mechanismName": "ShortStay",
+        "slug": "shortstay",
+        "clients": 0,
+        "renewed": 0,
+        "notRenewed": 0,
+        "renewalRatePct": null,
+        "rateWithoutPct": 3.1,
+        "deltaPp": null,
+        "sampleOk": false
+      },
+      {
+        "mechanismName": "Fundo de Investimento (QVRA11)",
+        "slug": "fundo_de_investimento_qvra11",
+        "clients": 76,
+        "renewed": 59,
+        "notRenewed": 17,
+        "renewalRatePct": 77.6,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 74.6,
+        "sampleOk": true
+      },
+      {
+        "mechanismName": "Operações",
+        "slug": "operacoes",
+        "clients": 0,
+        "renewed": 0,
+        "notRenewed": 0,
+        "renewalRatePct": null,
+        "rateWithoutPct": 3.1,
+        "deltaPp": null,
+        "sampleOk": false
+      },
+      {
+        "mechanismName": "Incorporação Financiada (ATLAS)",
+        "slug": "incorporacao_financiada_atlas",
+        "clients": 17,
+        "renewed": 6,
+        "notRenewed": 11,
+        "renewalRatePct": 35.3,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 32.2,
+        "sampleOk": false
+      },
+      {
+        "mechanismName": "Retropatrimônio",
+        "slug": "retropatrimonio",
+        "clients": 2,
+        "renewed": 2,
+        "notRenewed": 0,
+        "renewalRatePct": 100,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 96.9,
+        "sampleOk": false
+      },
+      {
+        "mechanismName": "Usinas Escalonáveis (ÂMPAR)",
+        "slug": "usinas_escalonaveis_ampar",
+        "clients": 10,
+        "renewed": 5,
+        "notRenewed": 5,
+        "renewalRatePct": 50,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 46.9,
+        "sampleOk": false
+      },
+      {
+        "mechanismName": "Trava de Inflação",
+        "slug": "trava_de_inflacao",
+        "clients": 45,
+        "renewed": 31,
+        "notRenewed": 14,
+        "renewalRatePct": 68.9,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 65.8,
+        "sampleOk": true
+      },
+      {
+        "mechanismName": "ARKANSAS",
+        "slug": "arkansas",
+        "clients": 0,
+        "renewed": 0,
+        "notRenewed": 0,
+        "renewalRatePct": null,
+        "rateWithoutPct": 3.1,
+        "deltaPp": null,
+        "sampleOk": false
+      },
+      {
+        "mechanismName": "ALABAMA",
+        "slug": "alabama",
+        "clients": 0,
+        "renewed": 0,
+        "notRenewed": 0,
+        "renewalRatePct": null,
+        "rateWithoutPct": 3.1,
+        "deltaPp": null,
+        "sampleOk": false
+      },
+      {
+        "mechanismName": "ARCADIA",
+        "slug": "arcadia",
+        "clients": 22,
+        "renewed": 12,
+        "notRenewed": 10,
+        "renewalRatePct": 54.5,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 51.5,
+        "sampleOk": false
+      },
+      {
+        "mechanismName": "Leilão Circular (ASPEN)",
+        "slug": "leilao_circular_aspen",
+        "clients": 1,
+        "renewed": 1,
+        "notRenewed": 0,
+        "renewalRatePct": 100,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 96.9,
+        "sampleOk": false
+      },
+      {
+        "mechanismName": "Leilão Serial (Flipping de Leilão)",
+        "slug": "leilao_serial_flipping_de_leilao",
+        "clients": 80,
+        "renewed": 58,
+        "notRenewed": 22,
+        "renewalRatePct": 72.5,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 69.4,
+        "sampleOk": true
+      },
+      {
+        "mechanismName": "Crédito Verde",
+        "slug": "credito_verde",
+        "clients": 37,
+        "renewed": 30,
+        "notRenewed": 7,
+        "renewalRatePct": 81.1,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 78,
+        "sampleOk": true
+      },
+      {
+        "mechanismName": "Liquidez Antifrágil",
+        "slug": "liquidez_antifragil",
+        "clients": 0,
+        "renewed": 0,
+        "notRenewed": 0,
+        "renewalRatePct": null,
+        "rateWithoutPct": 3.1,
+        "deltaPp": null,
+        "sampleOk": false
+      },
+      {
+        "mechanismName": "Renda Sintética",
+        "slug": "renda_sintetica",
+        "clients": 26,
+        "renewed": 20,
+        "notRenewed": 6,
+        "renewalRatePct": 76.9,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 73.8,
+        "sampleOk": false
+      },
+      {
+        "mechanismName": "Escala Imobiliária",
+        "slug": "escala_imobiliaria",
+        "clients": 41,
+        "renewed": 36,
+        "notRenewed": 5,
+        "renewalRatePct": 87.8,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 84.7,
+        "sampleOk": true
+      },
+      {
+        "mechanismName": "ARMADA",
+        "slug": "armada",
+        "clients": 0,
+        "renewed": 0,
+        "notRenewed": 0,
+        "renewalRatePct": null,
+        "rateWithoutPct": 3.1,
+        "deltaPp": null,
+        "sampleOk": false
+      }
+    ],
+    "topRawRate": [
+      {
+        "mechanismName": "Escala Imobiliária",
+        "slug": "escala_imobiliaria",
+        "clients": 41,
+        "renewed": 36,
+        "notRenewed": 5,
+        "renewalRatePct": 87.8,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 84.7,
+        "sampleOk": true
+      },
+      {
+        "mechanismName": "Crédito Verde",
+        "slug": "credito_verde",
+        "clients": 37,
+        "renewed": 30,
+        "notRenewed": 7,
+        "renewalRatePct": 81.1,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 78,
+        "sampleOk": true
+      },
+      {
+        "mechanismName": "Fundo de Investimento (QVRA11)",
+        "slug": "fundo_de_investimento_qvra11",
+        "clients": 76,
+        "renewed": 59,
+        "notRenewed": 17,
+        "renewalRatePct": 77.6,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 74.6,
+        "sampleOk": true
+      }
+    ],
+    "topDelta": [
+      {
+        "mechanismName": "Escala Imobiliária",
+        "slug": "escala_imobiliaria",
+        "clients": 41,
+        "renewed": 36,
+        "notRenewed": 5,
+        "renewalRatePct": 87.8,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 84.7,
+        "sampleOk": true
+      },
+      {
+        "mechanismName": "Crédito Verde",
+        "slug": "credito_verde",
+        "clients": 37,
+        "renewed": 30,
+        "notRenewed": 7,
+        "renewalRatePct": 81.1,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 78,
+        "sampleOk": true
+      },
+      {
+        "mechanismName": "Fundo de Investimento (QVRA11)",
+        "slug": "fundo_de_investimento_qvra11",
+        "clients": 76,
+        "renewed": 59,
+        "notRenewed": 17,
+        "renewalRatePct": 77.6,
+        "rateWithoutPct": 3.1,
+        "deltaPp": 74.6,
+        "sampleOk": true
+      }
+    ]
+  },
+  "sensitivity": [
+    {
+      "cutoff": {
+        "id": "ample",
+        "label": "Corte amplo",
+        "eraStart": "2025-06-01",
+        "eraStartMonth": "2025-06",
+        "rule": "Primeiro mês com >= 27 clientes na 1ª implementação OU >= 50 implementações totais."
+      },
+      "summary": {
+        "total": 1438,
+        "renewed": 137,
+        "notRenewed": 1301,
+        "withMechanism": 190,
+        "withoutMechanism": 1248,
+        "renewalRatePct": 9.5
+      },
+      "metrics": {
+        "threshold": 0.5,
+        "tp": 9,
+        "fp": 2,
+        "tn": 272,
+        "fn": 16,
+        "accuracy": 0.9398,
+        "baselineAccuracy": 0.9632,
+        "balancedAccuracy": 0.6764,
+        "precision": 0.8182,
+        "recall": 0.36,
+        "specificity": 0.9927,
+        "f1": 0.5,
+        "sensitivity": 0.36,
+        "rocAuc": 0.8729,
+        "prAuc": 0.6461,
+        "brier": 0.0454,
+        "baselineBrier": 0.0887
+      },
+      "available": true
+    },
+    {
+      "cutoff": {
+        "id": "intermediate",
+        "label": "Corte intermediário",
+        "eraStart": "2026-01-01",
+        "eraStartMonth": "2026-01",
+        "rule": "Primeiro mês com >= 66 clientes na 1ª implementação OU >= 125 implementações."
+      },
+      "summary": {
+        "total": 1064,
+        "renewed": 137,
+        "notRenewed": 927,
+        "withMechanism": 187,
+        "withoutMechanism": 877,
+        "renewalRatePct": 12.9
+      },
+      "metrics": {
+        "threshold": 0.5,
+        "tp": 9,
+        "fp": 2,
+        "tn": 184,
+        "fn": 16,
+        "accuracy": 0.9147,
+        "baselineAccuracy": 0.9479,
+        "balancedAccuracy": 0.6746,
+        "precision": 0.8182,
+        "recall": 0.36,
+        "specificity": 0.9892,
+        "f1": 0.5,
+        "sensitivity": 0.36,
+        "rocAuc": 0.8633,
+        "prAuc": 0.6573,
+        "brier": 0.0622,
+        "baselineBrier": 0.1141
+      },
+      "available": true
+    },
+    {
+      "cutoff": {
+        "id": "conservative",
+        "label": "Corte conservador",
+        "eraStart": "2026-08-01",
+        "eraStartMonth": "2026-08",
+        "rule": "Primeiro mês com >= 149 clientes na 1ª implementação OU >= 291 implementações."
+      },
+      "summary": {
+        "total": 316,
+        "renewed": 185,
+        "notRenewed": 131,
+        "withMechanism": 193,
+        "withoutMechanism": 123,
+        "renewalRatePct": 58.5
+      },
+      "metrics": {
+        "threshold": 0.5,
+        "tp": 29,
+        "fp": 14,
+        "tn": 18,
+        "fn": 5,
+        "accuracy": 0.7121,
+        "baselineAccuracy": 0.3485,
+        "balancedAccuracy": 0.7077,
+        "precision": 0.6744,
+        "recall": 0.8529,
+        "specificity": 0.5625,
+        "f1": 0.7532,
+        "sensitivity": 0.8529,
+        "rocAuc": 0.7698,
+        "prAuc": 0.7811,
+        "brier": 0.2019,
+        "baselineBrier": 0.2392
+      },
+      "available": true
+    }
+  ],
+  "quality": {
+    "population": "ATENÇÃO",
+    "temporalValidation": "FRACO",
+    "utility": {
+      "ranking": "PASS",
+      "individualClassification": "ATENÇÃO",
+      "volumeEstimate": "PASS"
+    },
+    "comparisonDimensions": {
+      "ranking": "PASS",
+      "individualClassification": "ATENÇÃO",
+      "volumeEstimate": "PASS",
+      "populationQuality": "ATENÇÃO",
+      "temporalValidation": "FRACO"
+    }
+  },
+  "model_a_reference": "exports/modelo_renovacao_base_ativa_snapshot.json",
+  "b2_features_audit": {
+    "tenure_days_at_reference": "Disponível; reference_date antes do desfecho.",
+    "mechanism_slugs": "Point-in-time; não entram no predict B1.",
+    "meetings": "Não reconstruído nesta etapa.",
+    "segment": "Disponível; fora do B1.",
+    "program": "Usado no B1.",
+    "note": "B2 não implementado."
+  }
+}

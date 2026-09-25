@@ -1,0 +1,17 @@
+mechanism_name;clients;renewed;renewal_rate;rate_without;delta_pp;sample_ok
+Autoconstrução;348;95;27.3;4.8;22.5;sim
+Leilão Serial (Flipping de Leilão);320;99;30.9;4.8;26.1;sim
+Fundo de Investimento (QVRA11);280;98;35;4.8;30.2;sim
+Renda Fixa Escalonada;213;52;24.4;4.8;19.6;sim
+Trava de Inflação;142;42;29.6;4.8;24.8;sim
+ARCADIA;129;29;22.5;4.8;17.7;sim
+Escala Imobiliária;75;40;53.3;4.8;48.5;sim
+Renda Sintética;60;28;46.7;4.8;41.9;sim
+Crédito Verde;48;31;64.6;4.8;59.8;sim
+Usinas Escalonáveis (ÂMPAR);48;15;31.3;4.8;26.5;sim
+Incorporação Financiada (ATLAS);45;17;37.8;4.8;33;sim
+ALABAMA;8;2;25;4.8;20.2;nao
+Operações;8;2;25;4.8;20.2;nao
+Retropatrimônio;3;2;66.7;4.8;61.9;nao
+Leilão Circular (ASPEN);2;1;50;4.8;45.2;nao
+ShortStay;1;1;100;4.8;95.2;nao

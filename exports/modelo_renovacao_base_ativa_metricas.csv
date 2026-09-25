@@ -1,0 +1,32 @@
+metrica;valor;explicacao
+ativos_oficiais;1616;analyticalStatus === Ativo
+cycleValid;1592;Ativos com ciclo válido (>=1)
+renovados;211;cycleValid e ciclo>1
+ainda_sem_renovacao_registrada;1381;cycleValid e ciclo=1 (não implica falha de renovação)
+accuracy;0.8662;Holdout 20% hash client_id
+baseline_accuracy;0.9363;Sempre prever não renova
+balanced_accuracy;0.5835;(recall+specificity)/2
+precision;0.4;TP/(TP+FP) threshold 0,5
+recall;0.2105;TP/(TP+FN)
+specificity;0.9565;TN/(TN+FP)
+f1;0.2759;F1 no threshold 0,5
+roc_auc;0.7665;Ranking no holdout
+pr_auc;0.3146;Classe minoritária renovados
+brier;0.095;Erro quadrático probabilístico
+baseline_brier;0.117;p constante = taxa base
+tp;8;Matriz threshold 0,5
+fp;12;Matriz threshold 0,5
+tn;264;Matriz threshold 0,5
+fn;30;Matriz threshold 0,5
+n_train;1278;80% hash holdout
+n_test;314;20% hash holdout
+renovados_com_mecanismo;171;Elegíveis ativos
+renovados_sem_mecanismo;40;Elegíveis ativos
+projecao_clientes_horizonte;252;Fim de ciclo até 31/12 proxy
+projecao_renovacoes_esperadas;38.1;Soma p_i modelo atual
+projecao_faixa_baixa;32;85% soma p
+projecao_faixa_alta;44;115% soma p
+threshold_0_2_balanced_accuracy;0.6957;Sweep threshold 0.2
+threshold_0_3_balanced_accuracy;0.6176;Sweep threshold 0.3
+threshold_0_4_balanced_accuracy;0.6176;Sweep threshold 0.4
+threshold_0_5_balanced_accuracy;0.5835;Sweep threshold 0.5

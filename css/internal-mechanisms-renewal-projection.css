@@ -1,0 +1,332 @@
+/* Projeção Mecanismos × Renovação — layout visual */
+
+.imr-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 1120px;
+}
+
+.imr-hero h1 {
+  margin-bottom: 0.35rem;
+}
+
+.imr-lead {
+  color: var(--muted);
+  max-width: 42rem;
+}
+
+.imr-exploratory-banner {
+  border-left: 3px solid var(--primary);
+  padding: 0.65rem 0.85rem;
+  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.imr-hero-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+@media (max-width: 768px) {
+  .imr-hero-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.imr-model-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.imr-model-a {
+  border-top: 3px solid var(--primary);
+}
+
+.imr-model-b {
+  border-top: 3px solid #2563eb;
+}
+
+.imr-model-kind {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.imr-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  margin-bottom: 0.5rem;
+}
+
+.imr-badge-prod {
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface));
+  color: var(--primary);
+}
+
+.imr-badge-exp {
+  background: color-mix(in srgb, #2563eb 12%, var(--surface));
+  color: #1d4ed8;
+}
+
+.imr-diff-card {
+  margin-top: 0.5rem;
+}
+
+.imr-diff-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.imr-diff-emphasis {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.imr-section {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.35rem;
+  background: var(--surface);
+}
+
+.imr-section-lead {
+  color: var(--muted);
+  margin-top: -0.25rem;
+}
+
+.imr-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.imr-chart-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  background: var(--surface-secondary, var(--surface));
+}
+
+.imr-chart-title {
+  font-size: 0.95rem;
+  margin: 0 0 0.35rem;
+}
+
+.imr-chart-note,
+.imr-chart-legend {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.imr-callout-warn {
+  border: 1px solid color-mix(in srgb, #d18426 45%, var(--border));
+  background: color-mix(in srgb, #d18426 10%, var(--surface));
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  margin: 0.75rem 0 1rem;
+}
+
+.imr-pop-kpis {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.imr-combo-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.imr-metric-group {
+  margin: 1rem 0;
+}
+
+.imr-metric-group h4 {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.imr-confusion-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  max-width: 640px;
+}
+
+.imr-conf-cell {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.imr-conf-human {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.imr-conf-n {
+  font-size: 1.35rem;
+}
+
+.imr-accordion {
+  margin: 1rem 0;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+}
+
+.imr-grouped-metrics .imr-gm-row {
+  margin-bottom: 0.65rem;
+}
+
+.imr-gm-label {
+  font-size: 0.82rem;
+  margin-bottom: 0.25rem;
+}
+
+.imr-gm-bars {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.5rem;
+  align-items: center;
+}
+
+.imr-gm-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  width: 1.2rem;
+}
+
+.imr-bar-a {
+  display: block;
+  height: 8px;
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+.imr-bar-b {
+  display: block;
+  height: 8px;
+  background: #2563eb;
+  border-radius: 4px;
+}
+
+.imr-gm-track {
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  min-height: 8px;
+}
+
+.imr-read-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.imr-read-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.imr-cmp-group td {
+  font-weight: 600;
+  background: var(--surface-secondary, #f5f5f5);
+}
+
+.imr-cmp-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.imr-scatter {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+}
+
+.imr-scatter-dot {
+  fill: var(--primary);
+  opacity: 0.75;
+}
+
+.imr-scatter-axis {
+  font-size: 9px;
+  fill: var(--muted);
+}
+
+.imr-aux summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.imr-limits {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.metric-tooltip-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  position: relative;
+}
+
+.metric-tooltip-trigger {
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.7rem;
+  cursor: help;
+  padding: 0;
+}
+
+.metric-tooltip-panel {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  top: calc(100% + 6px);
+  min-width: 200px;
+  max-width: 320px;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.82rem;
+  background: var(--foreground);
+  color: #fff;
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.metric-tooltip-panel.is-visible {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .imr-confusion-grid {
+    grid-template-columns: 1fr;
+  }
+}

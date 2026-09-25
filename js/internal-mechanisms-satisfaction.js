@@ -91,8 +91,8 @@ function filtersFromForm() {
   });
 }
 
-const IMS_CLIENT_CACHE_VERSION = "2026-09-24-ims-renewal-proxy-v2";
-const IMS_EXPECTED_SERVER_CALCULATION_VERSION = "v2.2026-09-24-ims-renewal-proxy-projection";
+const IMS_CLIENT_CACHE_VERSION = "2026-09-25-ims-satisfaction-v2";
+const IMS_EXPECTED_SERVER_CALCULATION_VERSION = "ims-satisfaction-v1";
 
 function buildApiUrl(extra = {}) {
   const params = internalMechanismsSatisfactionFiltersToSearchParams(state.filters);
@@ -126,305 +126,6 @@ function num1(v) {
 function pctLabel(v) {
   if (v == null || !Number.isFinite(Number(v))) return "Sem dados";
   return `${Number(v).toLocaleString("pt-BR")}%`;
-}
-
-function renewalProjectionFromPayload(p) {
-  return p?.renewalYearEndProjection ?? null;
-}
-
-function isRenewalProjectionRenderable(proj) {
-  if (!proj || proj.error === true) return false;
-  const classif = proj.proxyClassification || proj.proxyCycleEndDate?.validation?.classification;
-  const proxyAvailable =
-    proj.proxyAvailable === true
-    || proj.proxyOperational === true
-    || classif === "A"
-    || classif === "B";
-  const horizonTotal = proj.metrics?.horizon?.total ?? proj.horizonClientCount ?? 0;
-  if (proj.projectionAvailable === true) return true;
-  return proxyAvailable && horizonTotal > 0;
-}
-
-function imsProjMetricCell(label, value) {
-  return `<div class="ims-proj-metric"><span class="ims-proj-metric-label">${escapeHtml(label)}</span><span class="ims-proj-metric-value">${value}</span></div>`;
-}
-
-function imsProjStatRow(label, valueHtml) {
-  return `<div class="ims-proj-stat-row"><span class="ims-proj-stat-label">${escapeHtml(label)}</span><span class="ims-proj-stat-value">${valueHtml}</span></div>`;
-}
-
-function renderYearEndRenewalProjection(proj) {
-  if (!proj) {
-    return `<p class="placeholder-note">Indisponível.</p><p class="note-muted">Dados de validação do proxy ainda não carregados. Use Atualizar ou force=1.</p>`;
-  }
-  if (proj.error === true && !isRenewalProjectionRenderable(proj)) {
-    return `<p class="placeholder-note">Indisponível.</p><p class="note-muted">${
-      proj.validationSummary || "Não foi possível calcular a validação do proxy neste carregamento."
-    }</p>`;
-  }
-
-  const proxy = proj.proxyCycleEndDate || {};
-  const val = proxy.validation || {};
-  const classif = proj.proxyClassification || val.classification;
-  const metrics = proj.metrics || proxy.metrics || {};
-  const cov = metrics.coverage || {};
-  const qual = metrics.quality || {};
-  const horizon = metrics.horizon || {};
-  const dur1 = metrics.durationByCycle?.["1"] || {};
-  const exp = proj.exploratory;
-  const proxyOk =
-    proj.projectionAvailable === true
-    || proj.proxyAvailable === true
-    || proj.proxyOperational === true
-    || classif === "A"
-    || classif === "B";
-  const withoutEnd = Math.max(0, (cov.active ?? 0) - (cov.withEnd ?? 0));
-  const monthRows = horizon.byMonth || horizon.monthly || [];
-  const yearPrefix = String(proj.horizonEnd || horizon.horizonEnd || "").slice(0, 4) || "2026";
-  const monthLabels = {
-    [`${yearPrefix}-09`]: "Setembro",
-    [`${yearPrefix}-10`]: "Outubro",
-    [`${yearPrefix}-11`]: "Novembro",
-    [`${yearPrefix}-12`]: "Dezembro",
-  };
-
-  if (!proxyOk) {
-    return `
-    <div class="ims-projection-block ims-projection-unavailable">
-      <p class="placeholder-note">${escapeHtml(proj.headline || "Indisponível.")}</p>
-      <p class="ims-projection-headline"><strong>${escapeHtml(proj.validationMessage || "Não foi possível validar data_fim_ciclo como uma janela confiável de renovação.")}</strong></p>
-      <p class="note-muted">${escapeHtml(proj.validationSummary || (val.reasons || []).slice(0, 3).join(" "))}</p>
-    </div>`;
-  }
-
-  const horizonTotal = horizon.total ?? proj.horizonClientCount ?? 0;
-  const expectedRatePct = exp?.expectation?.expectedRenewalRatePct;
-  const expectedRenewals = exp?.expectation?.expectedRenewals;
-  const intervalLow = exp?.expectation?.intervalLow;
-  const intervalHigh = exp?.expectation?.intervalHigh;
-  const faixaEstimada =
-    intervalLow != null && intervalHigh != null ? `${fmt.format(intervalLow)}–${fmt.format(intervalHigh)}` : "—";
-  const hasModelKpis = (proj.modelProjectionPublished || exp?.available) && exp?.expectation;
-  const monthMax = Math.max(1, ...monthRows.map((m) => m.count || 0));
-
-  const monthBars = monthRows
-    .map((m) => {
-      const label = monthLabels[m.month] || m.label || m.month;
-      const count = m.count ?? 0;
-      const width = Math.max(count > 0 ? 4 : 0, Math.round((count / monthMax) * 100));
-      return `<div class="ims-proj-month-row">
-        <span class="ims-proj-month-label">${escapeHtml(label)}</span>
-        <div class="ims-proj-month-track" role="presentation"><div class="ims-proj-month-fill" style="width:${width}%"></div></div>
-        <span class="ims-proj-month-value">${fmt.format(count)}</span>
-      </div>`;
-    })
-    .join("");
-
-  const calloutText =
-    proj.disclaimer
-    || "Usamos data_fim_ciclo como aproximação da próxima janela de renovação. Esta é uma análise exploratória e não uma métrica oficial de renovação.";
-
-  const modelPanel =
-    (proj.modelProjectionPublished || exp?.available) && exp?.model
-      ? `<section class="ims-proj-panel ims-proj-model" aria-labelledby="ims-proj-model-title">
-      <h3 class="ims-proj-panel-title" id="ims-proj-model-title">Validação do modelo exploratório</h3>
-      <div class="ims-proj-metrics-grid">
-        ${imsProjMetricCell("Treino", fmt.format(exp.model.trainN ?? 0))}
-        ${imsProjMetricCell("Renovados", fmt.format(exp.model.trainEvents ?? 0))}
-        ${imsProjMetricCell("Taxa base", exp.model.baseRate != null ? pctLabel(exp.model.baseRate * 100) : "—")}
-        ${imsProjMetricCell("ROC-AUC", exp.model.rocAuc ?? "—")}
-        ${imsProjMetricCell("Brier", exp.model.brierScore ?? "—")}
-        ${imsProjMetricCell("Calibração", exp.model.calibrationOk ? "adequada" : "insuficiente")}
-      </div>
-      ${
-        exp.expectation?.narrative
-          ? `<p class="ims-proj-model-narrative">${escapeHtml(exp.expectation.narrative)}</p>`
-          : ""
-      }
-    </section>`
-      : `<p class="note-muted ims-proj-model-placeholder">${escapeHtml(proj.modelProjectionNote || exp?.expectation?.message || "Modelo em validação — expectativa numérica indisponível.")}</p>`;
-
-  const top3 = (exp?.topMechanisms || [])
-    .map((m, i) => {
-      const diff =
-        m.diffPp != null ? `${m.diffPp >= 0 ? "+" : ""}${num1(m.diffPp)} p.p.` : "—";
-      return `<article class="ims-top-mech-card">
-        <div class="ims-top-mech-rank">#${i + 1}</div>
-        <h4 class="ims-top-mech-name">${escapeHtml(m.mechanismName)}</h4>
-        <div class="ims-top-mech-stats">
-          ${imsProjStatRow("Clientes no proxy até 31/12", fmt.format(m.horizonClientsWithEndDate ?? 0))}
-          ${imsProjStatRow("Taxa histórica", `${pctLabel(m.historicalRatePct)} <span class="note-muted">(N=${fmt.format(m.historicalN ?? 0)})</span>`)}
-          ${imsProjStatRow("Δ vs sem mecanismo", diff)}
-          ${imsProjStatRow("Prob. média prevista", pctLabel((m.meanPredictedProbability ?? 0) * 100))}
-          ${imsProjStatRow("Renovações esperadas", num1(m.expectedRenewalsAmongHorizon))}
-        </div>
-      </article>`;
-    })
-    .join("");
-
-  const mechBandsTable = (exp?.mechanismCountBands || []).length
-    ? `<section class="ims-proj-panel ims-proj-bands" aria-labelledby="ims-proj-bands-title">
-      <h3 class="ims-proj-panel-title" id="ims-proj-bands-title">Quantidade de mecanismos no horizonte</h3>
-      <div class="table-wrap">
-        <table class="gd-table ims-table ims-proj-bands-table">
-          <thead><tr>
-            <th>Faixa</th><th class="num">Clientes</th><th class="num">Prob. média</th><th class="num">Esperado</th>
-          </tr></thead>
-          <tbody>${(exp.mechanismCountBands || [])
-            .map(
-              (b) => `<tr>
-                <td><strong>${escapeHtml(b.band)}</strong> mecanismos</td>
-                <td class="num">${fmt.format(b.horizonClients ?? 0)}</td>
-                <td class="num">${pctLabel((b.meanProbability ?? 0) * 100)}</td>
-                <td class="num">${num1(b.expectedRenewals)}</td>
-              </tr>`,
-            )
-            .join("")}</tbody>
-        </table>
-      </div>
-    </section>`
-    : "";
-
-  const distPanel =
-    exp?.available && exp?.probabilityDistribution?.length
-      ? `<section class="ims-proj-panel ims-proj-dist" aria-labelledby="ims-proj-dist-title">
-      <h3 class="ims-proj-panel-title" id="ims-proj-dist-title">Distribuição de probabilidades previstas</h3>
-      <div class="ims-proj-dist-chart">${exp.probabilityDistribution
-        .map((b) => {
-          const max = Math.max(1, ...exp.probabilityDistribution.map((x) => x.count));
-          const h = Math.max(4, Math.round((b.count / max) * 88));
-          return `<div class="ims-proj-dist-col">
-            <span class="ims-proj-dist-value">${fmt.format(b.count)}</span>
-            <div class="ims-proj-dist-bar" style="height:${h}px" role="presentation"></div>
-            <span class="ims-proj-dist-label">${escapeHtml(b.label)}</span>
-          </div>`;
-        })
-        .join("")}</div>
-    </section>`
-      : "";
-
-  const extraWarnings = (proj.uiWarnings || [])
-    .filter(Boolean)
-    .map((w) => `<li>${escapeHtml(w)}</li>`)
-    .join("");
-
-  return `
-  <div class="ims-projection-layout ims-projection-exploratory">
-    <header class="ims-proj-header">
-      <span class="ims-proxy-badge">PROJEÇÃO EXPLORATÓRIA · ${escapeHtml(proj.badge || "PROXY")}</span>
-      <div class="ims-proj-callout" role="note">
-        <p>${escapeHtml(calloutText)}</p>
-      </div>
-    </header>
-
-    <div class="kpi-row kpi-row-primary ims-proj-kpi-primary">
-      ${kpiCard("Clientes no horizonte até 31/12", fmt.format(horizonTotal), "Proxy · fim de ciclo no ano", { featured: true, highlight: true })}
-      ${kpiCard("Expectativa de renovação", hasModelKpis ? pctLabel(expectedRatePct) : "—", "Modelo exploratório", { featured: true })}
-      ${kpiCard("Renovações esperadas", hasModelKpis ? fmt.format(Math.round(expectedRenewals ?? 0)) : "—", "Soma das probabilidades", { featured: true, highlight: true })}
-      ${kpiCard("Faixa estimada", faixaEstimada, "Intervalo plausível", { featured: true })}
-    </div>
-
-    <div class="kpi-row kpi-row-secondary ims-proj-kpi-secondary">
-      ${kpiCard("Pharus", fmt.format(horizon.pharus ?? 0), "No horizonte", { compact: true })}
-      ${kpiCard("Davos", fmt.format(horizon.davos ?? 0), "No horizonte", { compact: true })}
-      <article class="kpi-card kpi-card-compact ims-proj-kpi-proxy">
-        <div class="kpi-label">Classificação do proxy</div>
-        <div class="kpi-value ims-proj-proxy-class">${escapeHtml(classif || "—")}</div>
-        <div class="kpi-note">${escapeHtml(val.classificationLabel || "Proxy razoável")}</div>
-      </article>
-      ${kpiCard("Cobertura data_fim_ciclo", pctLabel(cov.endPct), "Carteira ativa", { compact: true })}
-    </div>
-
-    <p class="note-muted ims-proj-coverage-meta">
-      Ativos sem data: ${fmt.format(withoutEnd)} · Fim de ciclo no passado: ${fmt.format(qual.pastEndOnActive ?? 0)} ·
-      Duração ciclo 1 — mediana ${dur1.median ?? "—"} d (p25 ${dur1.p25 ?? "—"}, p75 ${dur1.p75 ?? "—"})
-    </p>
-
-    ${
-      monthRows.length
-        ? `<section class="ims-proj-panel ims-proj-months" aria-labelledby="ims-proj-months-title">
-      <h3 class="ims-proj-panel-title" id="ims-proj-months-title">Clientes por mês no horizonte</h3>
-      <div class="ims-proj-month-bars">${monthBars}</div>
-    </section>`
-        : ""
-    }
-
-    <details class="ims-proj-howto">
-      <summary>Como ler esta seção</summary>
-      <ul class="ims-proj-howto-list">
-        <li><strong>Clientes no horizonte</strong> — clientes com fim de ciclo até 31/12 usando o proxy.</li>
-        <li><strong>Expectativa de renovação</strong> — percentual médio estimado pelo modelo exploratório.</li>
-        <li><strong>Renovações esperadas</strong> — soma aproximada das probabilidades.</li>
-        <li><strong>Faixa estimada</strong> — intervalo plausível, não garantia.</li>
-        <li><strong>Top mecanismos</strong> — associações observadas, não causalidade.</li>
-      </ul>
-      ${extraWarnings ? `<ul class="note-muted ims-proj-howto-warnings">${extraWarnings}</ul>` : ""}
-    </details>
-
-    ${modelPanel}
-
-    ${
-      top3
-        ? `<section class="ims-proj-panel ims-proj-top-mech" aria-labelledby="ims-proj-top-title">
-      <h3 class="ims-proj-panel-title" id="ims-proj-top-title">Top 3 mecanismos associados à renovação</h3>
-      <div class="ims-top-mech-grid">${top3}</div>
-    </section>`
-        : ""
-    }
-
-    ${mechBandsTable}
-    ${distPanel}
-
-    <div id="imsProjecaoHorizonteTable" class="ims-proj-table-host"></div>
-
-    <p class="note-muted ims-proj-footnote">${escapeHtml(proj.permanenceBiasNote || "")}</p>
-    <p class="note-muted ims-proj-footnote">${escapeHtml(proj.causalNote || "")}</p>
-  </div>`;
-}
-
-function fillProjecaoHorizonteTable(p) {
-  const host = $("imsProjecaoHorizonteTable");
-  const rows = p?.renewalYearEndProjection?.exploratory?.horizonClientsDetail || [];
-  if (!host) return;
-  if (!rows.length) {
-    host.innerHTML = `<p class="note-muted">Tabela de clientes disponível quando o modelo exploratório publicar probabilidades.</p>`;
-    return;
-  }
-  host.innerHTML = `
-    <section class="ims-proj-panel ims-proj-clients-table" aria-labelledby="ims-proj-clients-title">
-      <header class="ims-proj-clients-head">
-        <div>
-          <h3 class="ims-proj-panel-title" id="ims-proj-clients-title">Clientes com fim de ciclo até 31/12 (proxy)</h3>
-          <p class="ims-proj-panel-sub">${fmt.format(rows.length)} clientes</p>
-        </div>
-      </header>
-      ${renderGenericTable(
-        [
-          { label: "Cliente", key: "clientName" },
-          { label: "Código", key: "clientCode" },
-          { label: "EP", key: "ep" },
-          { label: "Programa", key: "program" },
-          { label: "Segmento", key: "segment" },
-          { label: "Fim de ciclo", key: "renewalDueDate" },
-          { label: "Qtde. mecanismos", key: "mechanismCount", num: true, format: (r) => fmt.format(r.mechanismCount ?? 0) },
-          {
-            label: "Prob. renovação",
-            key: "predictedRenewalProbability",
-            num: true,
-            format: (r) => pctLabel((r.predictedRenewalProbability ?? 0) * 100),
-          },
-          {
-            label: "Contrib. esperada",
-            key: "expectedRenewalContribution",
-            num: true,
-            format: (r) => num1(r.expectedRenewalContribution),
-          },
-        ],
-        rows,
-        "projecao-horizonte",
-        "",
-      )}
-    </section>`;
 }
 
 function corrColor(v) {
@@ -471,7 +172,7 @@ function renderMechanismMatrix(model) {
   const guide = `
     <div class="ims-matrix-guide">
       <h3>Como ler esta matriz?</h3>
-      <p>Cada linha representa um mecanismo. As colunas mostram como esse mecanismo se relaciona com satisfação ou renovação.</p>
+      <p>Cada linha representa um mecanismo. As colunas mostram como esse mecanismo se relaciona com satisfação (NPS/CSAT).</p>
       <p>Valores próximos de 0 indicam pouca relação. Valores positivos indicam que as duas coisas tendem a aparecer juntas. Valores negativos indicam relação no sentido oposto.</p>
       <p>Quanto mais forte a cor, maior a relação observada. Isso não significa que o mecanismo causou a mudança.</p>
       <div class="ims-matrix-scale">
@@ -538,11 +239,7 @@ function renderComparisonTable(comVsSem, exportId = "com-sem") {
     )
     .join("");
   const label =
-    exportId === "csat-com-sem"
-      ? "CSAT com/sem mecanismo"
-      : exportId === "renewal-com-sem"
-        ? "Renovação com/sem mecanismo"
-        : "Comparação com/sem mecanismo";
+    exportId === "csat-com-sem" ? "CSAT com/sem mecanismo" : "Comparação com/sem mecanismo";
   return `<div class="table-wrap ims-table-block" data-ims-export-host="${exportId}">
     ${imsTableToolbar(label, exportId)}
     <table class="gd-table ims-table ims-comparison-table">
@@ -843,7 +540,6 @@ function updatePaginatedGenericTables() {
   const p = state.payload;
   if (!p) return;
   fillImsGenericTableSections(p);
-  fillProjecaoHorizonteTable(p);
   rootSyncTableControls();
   bindImsExportsForPage($("page-content"));
 }
@@ -884,21 +580,6 @@ function fillImsGenericTableSections(p) {
       (p.csatAnalysis?.mechanismRanking || []).map((r) => ({ ...r, smallSample: r.clientsWithCsat < IMS_SMALL_SAMPLE_N })),
       "csat-ranking",
       "CSAT por mecanismo",
-    );
-  }
-  const renHost = $("imsRenewalRanking");
-  if (renHost) {
-    renHost.innerHTML = renderGenericTable(
-      [
-        { label: "Mecanismo", key: "mechanismName" },
-        { label: "Elegíveis", key: "eligible", num: true, format: (r) => fmt.format(r.eligible) },
-        { label: "Renovaram", key: "renewed", num: true, format: (r) => fmt.format(r.renewed) },
-        { label: "Taxa %", key: "renewalRatePct", num: true, format: (r) => pctLabel(r.renewalRatePct) },
-        { label: "Δ vs sem mec.", key: "diffVsWithoutMechanismPct", num: true, format: (r) => pctLabel(r.diffVsWithoutMechanismPct) },
-      ],
-      (p.renewalAnalysis?.mechanismRanking || []).map((r) => ({ ...r, smallSample: r.eligible < IMS_SMALL_SAMPLE_N })),
-      "renewal-ranking",
-      "Renovação por mecanismo",
     );
   }
   const tempHost = $("imsTemporalTable");
@@ -974,16 +655,6 @@ function bindImsExportsForPage(root) {
     ],
     rows: p.csatAnalysis?.comVsSem?.table || [],
   }));
-  bindImsExport(root, "renewal-com-sem", () => ({
-    slug: "renovacao_comparacao",
-    columns: [
-      { header: "Indicador", key: "indicator" },
-      { header: "Com mecanismo", key: "with" },
-      { header: "Sem mecanismo", key: "without" },
-      { header: "Diferença", key: "diff" },
-    ],
-    rows: p.renewalAnalysis?.comVsSem?.table || [],
-  }));
   bindImsExport(root, "nps-ranking", () => ({
     slug: "mecanismos_nps",
     columns: [
@@ -1002,16 +673,6 @@ function bindImsExportsForPage(root) {
       { header: "CSAT médio", key: "meanCsat", type: "number" },
     ],
     rows: p.csatAnalysis?.mechanismRanking || [],
-  }));
-  bindImsExport(root, "renewal-ranking", () => ({
-    slug: "mecanismos_renovacao",
-    columns: [
-      { header: "Mecanismo", key: "mechanismName" },
-      { header: "Elegíveis", key: "eligible", type: "number" },
-      { header: "Renovaram", key: "renewed", type: "number" },
-      { header: "Taxa %", key: "renewalRatePct", type: "number" },
-    ],
-    rows: p.renewalAnalysis?.mechanismRanking || [],
   }));
   bindImsExport(root, "temporal-mech", () => ({
     slug: "temporal_mecanismos",
@@ -1054,26 +715,6 @@ function bindImsExportsForPage(root) {
       hasMechanism: r.hasMechanism ? "Sim" : "Não",
     })),
   }));
-  bindImsExport(root, "projecao-horizonte", () => {
-    const exp = p.renewalYearEndProjection?.exploratory;
-    return {
-      slug: "projecao_renovacao_proxy_ate_31_12",
-      columns: [
-        { header: "client_id", key: "client_id" },
-        { header: "client_name", key: "client_name" },
-        { header: "client_code", key: "client_code" },
-        { header: "program", key: "program" },
-        { header: "ep", key: "ep" },
-        { header: "segment", key: "segment" },
-        { header: "cycle_end_date", key: "cycle_end_date" },
-        { header: "mechanism_count", key: "mechanism_count", type: "number" },
-        { header: "mechanism_names", key: "mechanism_names" },
-        { header: "predicted_probability", key: "predicted_probability", type: "number" },
-        { header: "expected_contribution", key: "expected_contribution", type: "number" },
-      ],
-      rows: exp?.exportRows || [],
-    };
-  });
 }
 
 function bindImsClientExports() {
@@ -1096,7 +737,7 @@ function renderLoadingView() {
   if (!content) return;
   content.innerHTML = `<div class="gd-status" role="status">
     <strong>Carregando análise interna</strong>
-    <span>Consultando mecanismos, NPS, CSAT e renovação…</span>
+    <span>Consultando mecanismos, NPS e CSAT…</span>
   </div>`;
 }
 
@@ -1167,27 +808,19 @@ function renderSuccess() {
       <div id="imsCsat"></div>
     </section>
     <section class="section-block">
-      <h2>8. Renovação × Mecanismos</h2>
-      <div id="imsRenewal"></div>
-    </section>
-    <section class="section-block">
-      <h2>9. Projeção de renovação até o final do ano</h2>
-      <div id="imsRenewalProjection"></div>
-    </section>
-    <section class="section-block">
-      <h2>10. Temporalidade — mecanismo antes do NPS</h2>
+      <h2>8. Temporalidade — mecanismo antes do NPS</h2>
       <div id="imsTemporal"></div>
     </section>
     <section class="section-block">
-      <h2>11. Clientes com mecanismo + NPS</h2>
+      <h2>9. Clientes com mecanismo + NPS</h2>
       <div id="imsClientsWithMech"></div>
     </section>
     <section class="section-block">
-      <h2>12. Clientes com NPS e sem mecanismo</h2>
+      <h2>10. Clientes com NPS e sem mecanismo</h2>
       <div id="imsClientsWithoutMech"></div>
     </section>
     <section class="section-block">
-      <h2>13. Clientes por nota de NPS (todos)</h2>
+      <h2>11. Clientes por nota de NPS (todos)</h2>
       <div id="imsClientsAllNps"></div>
     </section>`;
 
@@ -1214,15 +847,6 @@ function renderSuccess() {
     <div class="ims-subsection"><h3>Com vs sem mecanismo</h3>${diag.csat?.hasData ? renderComparisonTable({ table: csat?.table || [] }, "csat-com-sem") : `<p class="placeholder-note">Sem tabela — ver motivo acima.</p>`}</div>
     <div class="ims-subsection"><h3>Distribuição CSAT (1–5)</h3>${diag.csat?.hasData ? renderScoreDistributionChart(csatDist, csatWithN, csatWithoutN) : `<p class="placeholder-note">Sem respostas CSAT no recorte.</p>`}</div>
     <div class="ims-subsection"><h3>CSAT por mecanismo</h3><div id="imsCsatRanking"></div></div>`;
-
-  const ren = p.renewalAnalysis?.comVsSem;
-  $("imsRenewal").innerHTML = `
-    ${renderSectionLead(diag.renewal)}
-    <div class="ims-subsection"><h3>Com vs sem mecanismo</h3>${diag.renewal?.hasData ? renderComparisonTable({ table: ren?.table || [] }, "renewal-com-sem") : `<p class="placeholder-note">Sem tabela — ver motivo acima.</p>`}</div>
-    <div class="ims-subsection"><h3>Renovação por mecanismo</h3><div id="imsRenewalRanking"></div></div>`;
-
-  $("imsRenewalProjection").innerHTML = renderYearEndRenewalProjection(renewalProjectionFromPayload(p));
-  fillProjecaoHorizonteTable(p);
 
   const temp = p.temporal?.npsSummary || {};
   $("imsTemporal").innerHTML = `
@@ -1256,9 +880,6 @@ async function loadData(force = false) {
   renderStateView();
   try {
     let payload = await fetchPageJson(buildApiUrl(), { force, pageId: PAGE_ID });
-    if (!renewalProjectionFromPayload(payload)) {
-      payload = await fetchPageJson(buildApiUrl(), { force: true, pageId: PAGE_ID });
-    }
     state.payload = payload;
     const meta = state.payload?.meta || {};
     const serverCv = meta.serverCalculationVersion || meta.calculationVersion;

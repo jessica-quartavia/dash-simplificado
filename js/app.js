@@ -66,6 +66,10 @@ async function startPortal() {
       "internal-mechanisms-satisfaction",
       () => import("./internal-mechanisms-satisfaction.js").then((m) => m.bootInternalMechanismsSatisfaction()),
     ],
+    [
+      "internal-mechanisms-renewal-projection",
+      () => import("./internal-mechanisms-renewal-projection.js").then((m) => m.bootInternalMechanismsRenewalProjection()),
+    ],
     ["health-score", () => import("./health-score.js").then((m) => m.bootHealthScore())],
     ["quality", () => import("./quality.js").then((m) => m.bootQuality())],
     ["platform-usage", () => import("./platform-usage.js").then((m) => m.bootPlatformUsage())],

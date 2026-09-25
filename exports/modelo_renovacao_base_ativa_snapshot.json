@@ -1,0 +1,622 @@
+{
+  "population": {
+    "activeOfficialAnalytical": 1616,
+    "canonicalRenewalUniverse": 1616,
+    "cycleValid": 1592,
+    "renewed": 211,
+    "notYetRenewedRegistered": 1381,
+    "withMechanism": 764,
+    "withoutMechanism": 852,
+    "renewedWithMechanism": 171,
+    "renewedWithoutMechanism": 40,
+    "targetNote": "renewed_binary=1 se ciclo>1; renewed_binary=0 se ciclo=1 (ainda sem renovação registrada — pode não ter chegado à janela)."
+  },
+  "split": {
+    "type": "hash holdout por client_id",
+    "trainShare": 0.8,
+    "testShare": 0.2,
+    "stratified": false,
+    "temporal": false,
+    "random_state": 42,
+    "nTotal": 1592,
+    "nTrain": 1278,
+    "nTest": 314,
+    "renewedTrain": 173,
+    "notRenewedTrain": 1105,
+    "renewedTest": 38,
+    "notRenewedTest": 276,
+    "baseRate": 0.1354,
+    "trainPct": 80,
+    "testPct": 20
+  },
+  "model_definition": {
+    "type": "Taxas estratificadas (programa × faixa de quantidade de mecanismos) com shrinkage bayesiano simples",
+    "target": {
+      "name": "renewed_binary",
+      "positive": 1,
+      "negative": 0,
+      "derivation": "1 se clients.ciclo > 1 entre clientes cycleValid; 0 se ciclo = 1."
+    },
+    "featuresUsed": [
+      {
+        "name": "program",
+        "type": "categorical",
+        "encoding": "parte da chave de estrato program/band"
+      },
+      {
+        "name": "mechanism_count_band",
+        "type": "categorical",
+        "encoding": "0,1,2,3,4+ — parte da chave de estrato"
+      }
+    ],
+    "featuresExcluded": [
+      {
+        "name": "latest_nps",
+        "reason": "Renovação independente de satisfação nesta versão."
+      },
+      {
+        "name": "latest_csat",
+        "reason": "Idem."
+      },
+      {
+        "name": "implemented_<slug> individuais",
+        "reason": "Não entram no predictClient; usados só em rankings associativos."
+      }
+    ],
+    "formula": {
+      "taxa_base": "renovados_treino / clientes_treino",
+      "taxa_ajustada": "(renovados_estrato + 2 × taxa_base) / (clientes_estrato + 2) quando N_estrato >= 5",
+      "fallback": "p_i = taxa_base quando estrato com N < 5",
+      "clip": "[0,05 ; 0,95]",
+      "stratumKey": "programa × faixa_mecanismos (0,1,2,3,4+)"
+    },
+    "hyperparameters": {
+      "penalty": null,
+      "C": null,
+      "solver": null,
+      "max_iter": null,
+      "class_weight": null,
+      "random_state": null,
+      "fit_intercept": null,
+      "minStratumN": 5,
+      "shrinkagePriorEvents": 2,
+      "probabilityClip": [
+        0.05,
+        0.95
+      ],
+      "holdoutRule": "20% determinístico por hash(client_id), seed=42"
+    }
+  },
+  "parameters": {
+    "penalty": null,
+    "C": null,
+    "solver": null,
+    "max_iter": null,
+    "class_weight": null,
+    "random_state": null,
+    "fit_intercept": null,
+    "minStratumN": 5,
+    "shrinkagePriorEvents": 2,
+    "probabilityClip": [
+      0.05,
+      0.95
+    ],
+    "holdoutRule": "20% determinístico por hash(client_id), seed=42"
+  },
+  "metrics": {
+    "threshold": 0.5,
+    "tp": 8,
+    "fp": 12,
+    "tn": 264,
+    "fn": 30,
+    "accuracy": 0.8662,
+    "baselineAccuracy": 0.9363,
+    "balancedAccuracy": 0.5835,
+    "precision": 0.4,
+    "recall": 0.2105,
+    "specificity": 0.9565,
+    "f1": 0.2759,
+    "sensitivity": 0.2105,
+    "rocAuc": 0.7665,
+    "prAuc": 0.3146,
+    "brier": 0.095,
+    "baselineBrier": 0.117
+  },
+  "thresholds": [
+    {
+      "threshold": 0.2,
+      "tp": 19,
+      "fp": 30,
+      "tn": 246,
+      "fn": 19,
+      "accuracy": 0.8439,
+      "baselineAccuracy": 0.8439,
+      "balancedAccuracy": 0.6957,
+      "precision": 0.3878,
+      "recall": 0.5,
+      "specificity": 0.8913,
+      "f1": 0.4368,
+      "sensitivity": 0.5
+    },
+    {
+      "threshold": 0.3,
+      "tp": 11,
+      "fp": 15,
+      "tn": 261,
+      "fn": 27,
+      "accuracy": 0.8662,
+      "baselineAccuracy": 0.9172,
+      "balancedAccuracy": 0.6176,
+      "precision": 0.4231,
+      "recall": 0.2895,
+      "specificity": 0.9457,
+      "f1": 0.3438,
+      "sensitivity": 0.2895
+    },
+    {
+      "threshold": 0.4,
+      "tp": 11,
+      "fp": 15,
+      "tn": 261,
+      "fn": 27,
+      "accuracy": 0.8662,
+      "baselineAccuracy": 0.9172,
+      "balancedAccuracy": 0.6176,
+      "precision": 0.4231,
+      "recall": 0.2895,
+      "specificity": 0.9457,
+      "f1": 0.3438,
+      "sensitivity": 0.2895
+    },
+    {
+      "threshold": 0.5,
+      "tp": 8,
+      "fp": 12,
+      "tn": 264,
+      "fn": 30,
+      "accuracy": 0.8662,
+      "baselineAccuracy": 0.9363,
+      "balancedAccuracy": 0.5835,
+      "precision": 0.4,
+      "recall": 0.2105,
+      "specificity": 0.9565,
+      "f1": 0.2759,
+      "sensitivity": 0.2105
+    }
+  ],
+  "confusion_matrix": {
+    "threshold": 0.5,
+    "tp": 8,
+    "fp": 12,
+    "tn": 264,
+    "fn": 30
+  },
+  "calibration": [
+    {
+      "bin": "0–10%",
+      "n": 169,
+      "meanPredicted": 0.05,
+      "observedRate": 0.03
+    },
+    {
+      "bin": "10–20%",
+      "n": 89,
+      "meanPredicted": 0.134,
+      "observedRate": 0.135
+    },
+    {
+      "bin": "20–40%",
+      "n": 50,
+      "meanPredicted": 0.336,
+      "observedRate": 0.36
+    },
+    {
+      "bin": "40–60%",
+      "n": 6,
+      "meanPredicted": 0.405,
+      "observedRate": 0.5
+    },
+    {
+      "bin": "60%+",
+      "n": 0,
+      "meanPredicted": null,
+      "observedRate": null
+    }
+  ],
+  "projection": {
+    "proxy": "clients.data_fim_ciclo",
+    "horizonEnd": "2026-12-31",
+    "horizonClients": 252,
+    "pharus": 207,
+    "davos": 45,
+    "byMonth": [
+      {
+        "month": "2026-09",
+        "label": "2026-09",
+        "count": 9
+      },
+      {
+        "month": "2026-10",
+        "label": "2026-10",
+        "count": 155
+      },
+      {
+        "month": "2026-11",
+        "label": "2026-11",
+        "count": 45
+      },
+      {
+        "month": "2026-12",
+        "label": "2026-12",
+        "count": 43
+      }
+    ],
+    "meanProbabilityPct": 15.1,
+    "expectedRenewals": 38.1,
+    "intervalLow": 32,
+    "intervalHigh": 44,
+    "modelPublished": true
+  },
+  "mechanism_analysis": {
+    "countByBand": [
+      {
+        "band": "0",
+        "clients": 839,
+        "renewed": 40,
+        "renewalRatePct": 4.8,
+        "shareOfEligiblePct": 52.7
+      },
+      {
+        "band": "1",
+        "clients": 266,
+        "renewed": 33,
+        "renewalRatePct": 12.4,
+        "shareOfEligiblePct": 16.7
+      },
+      {
+        "band": "2",
+        "clients": 209,
+        "renewed": 28,
+        "renewalRatePct": 13.4,
+        "shareOfEligiblePct": 13.1
+      },
+      {
+        "band": "3",
+        "clients": 147,
+        "renewed": 36,
+        "renewalRatePct": 24.5,
+        "shareOfEligiblePct": 9.2
+      },
+      {
+        "band": "4+",
+        "clients": 131,
+        "renewed": 74,
+        "renewalRatePct": 56.5,
+        "shareOfEligiblePct": 8.2
+      }
+    ],
+    "detailedRows": [
+      {
+        "mechanismId": "97fe019f-84b0-4a4a-bd39-32da5835bf3f",
+        "mechanismName": "ALABAMA",
+        "slug": "alabama",
+        "eligible": 8,
+        "renewed": 2,
+        "notRenewed": 6,
+        "renewalRatePct": 25,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 20.2,
+        "coveragePct": 0.5,
+        "smallSample": true,
+        "sampleLabel": "Amostra pequena"
+      },
+      {
+        "mechanismId": "af6b4aef-6bb8-42fa-9862-feea8a9f68ab",
+        "mechanismName": "ARCADIA",
+        "slug": "arcadia",
+        "eligible": 129,
+        "renewed": 29,
+        "notRenewed": 100,
+        "renewalRatePct": 22.5,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 17.7,
+        "coveragePct": 8,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      },
+      {
+        "mechanismId": "1f328d67-c5b2-485c-b94e-fe2f34568e90",
+        "mechanismName": "Autoconstrução",
+        "slug": "autoconstrucao",
+        "eligible": 348,
+        "renewed": 95,
+        "notRenewed": 253,
+        "renewalRatePct": 27.3,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 22.5,
+        "coveragePct": 22,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      },
+      {
+        "mechanismId": "bc8c6cc9-e206-4b1d-a188-8dc18f2cdf2c",
+        "mechanismName": "Crédito Verde",
+        "slug": "credito_verde",
+        "eligible": 48,
+        "renewed": 31,
+        "notRenewed": 17,
+        "renewalRatePct": 64.6,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 59.8,
+        "coveragePct": 3,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      },
+      {
+        "mechanismId": "ea36c401-d079-4953-abcc-ca0bf13b5a83",
+        "mechanismName": "Escala Imobiliária",
+        "slug": "escala_imobiliaria",
+        "eligible": 75,
+        "renewed": 40,
+        "notRenewed": 35,
+        "renewalRatePct": 53.3,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 48.5,
+        "coveragePct": 4.8,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      },
+      {
+        "mechanismId": "6dd51eb9-438d-4701-9192-9ab76c6aae26",
+        "mechanismName": "Fundo de Investimento (QVRA11)",
+        "slug": "fundo_de_investimento_qvra11",
+        "eligible": 280,
+        "renewed": 98,
+        "notRenewed": 182,
+        "renewalRatePct": 35,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 30.2,
+        "coveragePct": 17.3,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      },
+      {
+        "mechanismId": "72ee22be-1ae0-4df2-9ad5-280aa88f4dec",
+        "mechanismName": "Incorporação Financiada (ATLAS)",
+        "slug": "incorporacao_financiada_atlas",
+        "eligible": 45,
+        "renewed": 17,
+        "notRenewed": 28,
+        "renewalRatePct": 37.8,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 33,
+        "coveragePct": 2.8,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      },
+      {
+        "mechanismId": "b20fda5c-f068-4aff-99d1-f3217c0f35de",
+        "mechanismName": "Leilão Circular (ASPEN)",
+        "slug": "leilao_circular_aspen",
+        "eligible": 2,
+        "renewed": 1,
+        "notRenewed": 1,
+        "renewalRatePct": 50,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 45.2,
+        "coveragePct": 0.1,
+        "smallSample": true,
+        "sampleLabel": "Amostra pequena"
+      },
+      {
+        "mechanismId": "b46832d9-1207-410c-9aef-e2cc6523a083",
+        "mechanismName": "Leilão Serial (Flipping de Leilão)",
+        "slug": "leilao_serial_flipping_de_leilao",
+        "eligible": 320,
+        "renewed": 99,
+        "notRenewed": 221,
+        "renewalRatePct": 30.9,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 26.1,
+        "coveragePct": 20.3,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      },
+      {
+        "mechanismId": "6f7b1396-6d55-4ac7-88a2-9b10f4ea2abd",
+        "mechanismName": "Operações",
+        "slug": "operacoes",
+        "eligible": 8,
+        "renewed": 2,
+        "notRenewed": 6,
+        "renewalRatePct": 25,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 20.2,
+        "coveragePct": 0.5,
+        "smallSample": true,
+        "sampleLabel": "Amostra pequena"
+      },
+      {
+        "mechanismId": "27fc426f-63a1-44f8-a271-ad11a9e25b0e",
+        "mechanismName": "Renda Fixa Escalonada",
+        "slug": "renda_fixa_escalonada",
+        "eligible": 213,
+        "renewed": 52,
+        "notRenewed": 161,
+        "renewalRatePct": 24.4,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 19.6,
+        "coveragePct": 13.4,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      },
+      {
+        "mechanismId": "cf9f0093-4270-42a7-a1d5-c7f07d45d2b8",
+        "mechanismName": "Renda Sintética",
+        "slug": "renda_sintetica",
+        "eligible": 60,
+        "renewed": 28,
+        "notRenewed": 32,
+        "renewalRatePct": 46.7,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 41.9,
+        "coveragePct": 3.7,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      },
+      {
+        "mechanismId": "81b80524-8ad4-4374-93ea-32859a486582",
+        "mechanismName": "Retropatrimônio",
+        "slug": "retropatrimonio",
+        "eligible": 3,
+        "renewed": 2,
+        "notRenewed": 1,
+        "renewalRatePct": 66.7,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 61.9,
+        "coveragePct": 0.2,
+        "smallSample": true,
+        "sampleLabel": "Amostra pequena"
+      },
+      {
+        "mechanismId": "3455963d-f1ab-4889-8b84-e5af160530f5",
+        "mechanismName": "ShortStay",
+        "slug": "shortstay",
+        "eligible": 1,
+        "renewed": 1,
+        "notRenewed": 0,
+        "renewalRatePct": 100,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 95.2,
+        "coveragePct": 0.1,
+        "smallSample": true,
+        "sampleLabel": "Amostra pequena"
+      },
+      {
+        "mechanismId": "84ab2408-d7f5-4a71-83da-e4e599c339b5",
+        "mechanismName": "Trava de Inflação",
+        "slug": "trava_de_inflacao",
+        "eligible": 142,
+        "renewed": 42,
+        "notRenewed": 100,
+        "renewalRatePct": 29.6,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 24.8,
+        "coveragePct": 8.8,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      },
+      {
+        "mechanismId": "835296ba-0802-4a8c-b561-6b6db1811bda",
+        "mechanismName": "Usinas Escalonáveis (ÂMPAR)",
+        "slug": "usinas_escalonaveis_ampar",
+        "eligible": 48,
+        "renewed": 15,
+        "notRenewed": 33,
+        "renewalRatePct": 31.3,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 26.5,
+        "coveragePct": 3,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      }
+    ],
+    "topRawRate": [
+      {
+        "mechanismId": "bc8c6cc9-e206-4b1d-a188-8dc18f2cdf2c",
+        "mechanismName": "Crédito Verde",
+        "slug": "credito_verde",
+        "eligible": 48,
+        "renewed": 31,
+        "notRenewed": 17,
+        "renewalRatePct": 64.6,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 59.8,
+        "coveragePct": 3,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      },
+      {
+        "mechanismId": "ea36c401-d079-4953-abcc-ca0bf13b5a83",
+        "mechanismName": "Escala Imobiliária",
+        "slug": "escala_imobiliaria",
+        "eligible": 75,
+        "renewed": 40,
+        "notRenewed": 35,
+        "renewalRatePct": 53.3,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 48.5,
+        "coveragePct": 4.8,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      },
+      {
+        "mechanismId": "cf9f0093-4270-42a7-a1d5-c7f07d45d2b8",
+        "mechanismName": "Renda Sintética",
+        "slug": "renda_sintetica",
+        "eligible": 60,
+        "renewed": 28,
+        "notRenewed": 32,
+        "renewalRatePct": 46.7,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 41.9,
+        "coveragePct": 3.7,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      }
+    ],
+    "topAssociation": [
+      {
+        "mechanismId": "bc8c6cc9-e206-4b1d-a188-8dc18f2cdf2c",
+        "mechanismName": "Crédito Verde",
+        "slug": "credito_verde",
+        "eligible": 48,
+        "renewed": 31,
+        "notRenewed": 17,
+        "renewalRatePct": 64.6,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 59.8,
+        "coveragePct": 3,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      },
+      {
+        "mechanismId": "ea36c401-d079-4953-abcc-ca0bf13b5a83",
+        "mechanismName": "Escala Imobiliária",
+        "slug": "escala_imobiliaria",
+        "eligible": 75,
+        "renewed": 40,
+        "notRenewed": 35,
+        "renewalRatePct": 53.3,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 48.5,
+        "coveragePct": 4.8,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      },
+      {
+        "mechanismId": "cf9f0093-4270-42a7-a1d5-c7f07d45d2b8",
+        "mechanismName": "Renda Sintética",
+        "slug": "renda_sintetica",
+        "eligible": 60,
+        "renewed": 28,
+        "notRenewed": 32,
+        "renewalRatePct": 46.7,
+        "withoutMechanismRatePct": 4.8,
+        "diffVsWithoutMechanismPp": 41.9,
+        "coveragePct": 3.7,
+        "smallSample": false,
+        "sampleLabel": "OK"
+      }
+    ],
+    "renewedWithMechanism": 171,
+    "renewedWithoutMechanism": 40
+  },
+  "utility": {
+    "ranking": "PASS",
+    "individualClassification": "ATENÇÃO",
+    "volumeEstimate": "PASS"
+  },
+  "calculation_version": "baseline-active-v1-2026-09-25-ims-renewal-population-v1-v2.2026-09-25-ims-renewal-canonical-population",
+  "generated_at": "2026-09-25T17:53:20.234Z"
+}

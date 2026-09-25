@@ -16,6 +16,7 @@
     { "source": "/api/temporal-indicators", "destination": "/api/dashboard?page=temporal_indicators" },
     { "source": "/api/statistical-crosses", "destination": "/api/dashboard?page=statistical_crosses" },
     { "source": "/api/internal-mechanisms-satisfaction", "destination": "/api/dashboard?page=internal_mechanisms_satisfaction" },
+    { "source": "/api/internal-mechanisms-renewal-projection", "destination": "/api/dashboard?page=internal_mechanisms_renewal_projection" },
     { "source": "/api/health-score", "destination": "/api/dashboard?page=health_score" },
     { "source": "/api/quality", "destination": "/api/dashboard?page=quality" },
     { "source": "/api/platform-usage", "destination": "/api/dashboard?page=platform_usage" },

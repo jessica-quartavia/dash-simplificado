@@ -1,0 +1,22 @@
+metrica;valor;explicacao
+era_start_primary;2026-01-01;Primeiro mês com >= 66 clientes na 1ª implementação OU >= 125 implementações.
+population_n;1064;Casos resolvidos na era
+renewed;137;ciclo>1 observado
+not_renewed;927;desfecho negativo observável
+threshold;0.5;Holdout temporal B1
+tp;9;Holdout temporal B1
+fp;2;Holdout temporal B1
+tn;184;Holdout temporal B1
+fn;16;Holdout temporal B1
+accuracy;0.9147;Holdout temporal B1
+baselineAccuracy;0.9479;Holdout temporal B1
+balancedAccuracy;0.6746;Holdout temporal B1
+precision;0.8182;Holdout temporal B1
+recall;0.36;Holdout temporal B1
+specificity;0.9892;Holdout temporal B1
+f1;0.5;Holdout temporal B1
+sensitivity;0.36;Holdout temporal B1
+rocAuc;0.8633;Holdout temporal B1
+prAuc;0.6573;Holdout temporal B1
+brier;0.0622;Holdout temporal B1
+baselineBrier;0.1141;Holdout temporal B1

@@ -199,6 +199,8 @@ const PAGE_BOOT_RECOVER = {
   satisfaction: () => import("./satisfaction.js").then((mod) => mod.bootSatisfaction()),
   internal_mechanisms_satisfaction: () =>
     import("./internal-mechanisms-satisfaction.js").then((mod) => mod.bootInternalMechanismsSatisfaction()),
+  internal_mechanisms_renewal_projection: () =>
+    import("./internal-mechanisms-renewal-projection.js").then((mod) => mod.bootInternalMechanismsRenewalProjection()),
 };
 
 function isStillPreparing() {

@@ -67,6 +67,10 @@ test("vercel.json rewrites preservam URLs legadas de dashboard", () => {
     rewrites["/api/internal-mechanisms-satisfaction"],
     "/api/dashboard?page=internal_mechanisms_satisfaction",
   );
+  assert.equal(
+    rewrites["/api/internal-mechanisms-renewal-projection"],
+    "/api/dashboard?page=internal_mechanisms_renewal_projection",
+  );
 });
 
 test("vercel.json rewrites preservam URLs legadas de analytics", () => {
@@ -135,8 +139,12 @@ test("analytics retorna 404 para action inexistente", async () => {
 test("dashboard handlers map é explícito (sem import dinâmico arbitrário)", () => {
   assert.equal(DASHBOARD_PAGE_HANDLERS.general.handler, handleGeneralDataRequest);
   assert.equal(DASHBOARD_PAGE_HANDLERS.meetings.handler, handleMeetingsRequest);
-  assert.equal(Object.keys(DASHBOARD_PAGE_HANDLERS).length, 18);
+  assert.equal(Object.keys(DASHBOARD_PAGE_HANDLERS).length, 19);
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/internal-mechanisms-satisfaction"], "internal_mechanisms_satisfaction");
+  assert.equal(
+    DASHBOARD_LEGACY_PATHS["/api/internal-mechanisms-renewal-projection"],
+    "internal_mechanisms_renewal_projection",
+  );
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/ep-performance"], "ep_performance");
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/temporal-indicators"], "temporal_indicators");
   assert.equal(DASHBOARD_LEGACY_PATHS["/api/statistical-crosses"], "statistical_crosses");
