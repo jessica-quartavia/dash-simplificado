@@ -185,6 +185,25 @@ test("frontend projeção montado", () => {
   assert.match(js, /renderMetricTooltip/);
 });
 
+test("payload inclui businessRenewal do Modelo A", () => {
+  const ds = fixtureDataset();
+  const raw = fixtureRawFromDataset(ds);
+  const payload = buildInternalMechanismsRenewalProjectionPagePayload(ds, raw, { filters: { status: "active" } });
+  assert.ok(payload.businessRenewal?.comVsSem?.withMechanism);
+  assert.ok(Array.isArray(payload.businessRenewal.mechanismRanking));
+});
+
+test("frontend ordem negócio antes dos modelos", () => {
+  const js = readFileSync(resolve(root, "js/internal-mechanisms-renewal-projection.js"), "utf8");
+  assert.match(js, /Renovação × Mecanismos/);
+  const biz = js.indexOf("renderBusinessRenewal");
+  const models = js.indexOf("renderModelsIntro");
+  assert.ok(biz > 0 && models > biz);
+  const order = js.indexOf("${renderBusinessRenewal(p)}");
+  const orderModels = js.indexOf("${renderModelsIntro()}");
+  assert.ok(order > 0 && orderModels > order);
+});
+
 test("frontend projeção usa gráficos e accordion auxiliar", () => {
   const js = readFileSync(resolve(root, "js/internal-mechanisms-renewal-projection.js"), "utf8");
   assert.match(js, /imr-charts/);

@@ -10,6 +10,71 @@ export function imrChartCard(title, bodyHtml, { legend = "", note = "", classNam
   </article>`;
 }
 
+export function renewalRateSideBySide(comVsSem) {
+  const w = comVsSem?.withMechanism || {};
+  const wo = comVsSem?.withoutMechanism || {};
+  const diff = comVsSem?.diffPct;
+  const items = [
+    {
+      label: "Com mecanismo",
+      rate: w.ratePct,
+      tip: `Total elegíveis: ${w.eligible ?? "—"} · Renovados: ${w.renewed ?? "—"} · Taxa: ${w.ratePct ?? "—"}%`,
+    },
+    {
+      label: "Sem mecanismo",
+      rate: wo.ratePct,
+      tip: `Total elegíveis: ${wo.eligible ?? "—"} · Renovados: ${wo.renewed ?? "—"} · Taxa: ${wo.ratePct ?? "—"}% · Diferença vs com: ${diff != null ? `${diff} p.p.` : "—"}`,
+    },
+  ];
+  const max = Math.max(...items.map((i) => Number(i.rate) || 0), 1);
+  const plotH = 160;
+  return `<div class="imr-renewal-compare-bars">${items
+    .map((item) => {
+      const rate = Number(item.rate) || 0;
+      const h = Math.max(rate > 0 ? 8 : 0, Math.round((rate / max) * plotH));
+      return `<div class="imr-renewal-compare-col" title="${escapeHtml(item.tip)}">
+        <div class="imr-renewal-compare-value">${rate.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</div>
+        <div class="imr-renewal-compare-track"><div class="imr-renewal-compare-fill" style="height:${h}px"></div></div>
+        <div class="imr-renewal-compare-label">${escapeHtml(item.label)}</div>
+      </div>`;
+    })
+    .join("")}</div>`;
+}
+
+export function mechanismRankingChart(rows = [], minSample = 30, limit = 15) {
+  const list = (rows || [])
+    .filter((r) => !r.smallSample && (r.eligible ?? 0) >= minSample && r.renewalRatePct != null)
+    .sort((a, b) => (b.renewalRatePct ?? -1) - (a.renewalRatePct ?? -1))
+    .slice(0, limit);
+  if (!list.length) return `<p class="placeholder-note">Sem mecanismos com amostra mínima.</p>`;
+  const max = Math.max(...list.map((r) => r.renewalRatePct), 1);
+  return `<div class="hbar-list imr-mech-rank-chart">${list
+    .map((r) => {
+      const w = ((r.renewalRatePct ?? 0) / max) * 100;
+      const tip = `${r.mechanismName} · N=${r.eligible} · renovados ${r.renewed} · taxa ${r.renewalRatePct}% · sem mec. ${r.withoutMechanismRatePct ?? "—"}% · Δ ${r.diffVsWithoutMechanismPp ?? "—"} p.p.`;
+      return `<div class="hbar" title="${escapeHtml(tip)}"><div class="hbar-label">${escapeHtml(r.mechanismName)}</div><div class="hbar-track"><span style="width:${w}%"></span></div><div class="hbar-val">${Number(r.renewalRatePct).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</div></div>`;
+    })
+    .join("")}</div>`;
+}
+
+export function mechanismBandBusinessChart(bands = []) {
+  const items = (bands || [])
+    .filter((b) => (b.clients ?? 0) > 0)
+    .map((b) => ({
+      label: b.band === "4+" ? "4+" : String(b.band),
+      count: b.renewalRatePct ?? 0,
+      percent: b.renewalRatePct ?? 0,
+      title: `N=${b.clients} · renovados ${b.renewed} · taxa ${b.renewalRatePct ?? "—"}%`,
+    }));
+  if (!items.length) return `<p class="placeholder-note">Sem faixas.</p>`;
+  return `<div class="imr-band-business">${items
+    .map(
+      (b) =>
+        `<div class="imr-band-business-col" title="${escapeHtml(b.title)}"><div class="imr-band-business-rate">${Number(b.count).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</div><div class="imr-band-business-label">${escapeHtml(b.label)} mec.</div></div>`,
+    )
+    .join("")}</div>`;
+}
+
 export function bandRateChart(bands = []) {
   const items = (bands || [])
     .filter((b) => b.clients > 0)
@@ -125,6 +190,49 @@ export function mechanismHorizontalBars(rows = [], limit = 12) {
     .map((i) => {
       const w = (i.count / max) * 100;
       return `<div class="hbar" title="${escapeHtml(i.title)}"><div class="hbar-label">${escapeHtml(i.label)}</div><div class="hbar-track"><span style="width:${w}%"></span></div><div class="hbar-val">${i.count}%</div></div>`;
+    })
+    .join("")}</div>`;
+}
+
+const fmtInt = new Intl.NumberFormat("pt-BR");
+
+export function horizonMonthColumnChart(monthRows, monthLabels, horizonTotal) {
+  if (!monthRows?.length) return `<p class="placeholder-note">Sem meses no horizonte.</p>`;
+  const max = Math.max(1, ...monthRows.map((m) => m.count || 0));
+  const plotH = 168;
+  return `<div class="imr-horizon-month-chart">${monthRows
+    .map((m) => {
+      const label = monthLabels[m.month] || m.label || m.month;
+      const count = m.count ?? 0;
+      const share =
+        horizonTotal > 0 ? Math.round((count / horizonTotal) * 1000) / 10 : null;
+      const tip = `Mês: ${label} · Quantidade: ${fmtInt.format(count)} · Participação no horizonte: ${share != null ? `${share}%` : "—"}`;
+      const h = Math.max(count > 0 ? 10 : 0, Math.round((count / max) * plotH));
+      return `<div class="imr-horizon-month-col" title="${escapeHtml(tip)}">
+        <div class="imr-horizon-month-val">${fmtInt.format(count)}</div>
+        <div class="imr-horizon-month-track" role="presentation"><div class="imr-horizon-month-fill" style="height:${h}px"></div></div>
+        <div class="imr-horizon-month-lbl">${escapeHtml(label)}</div>
+      </div>`;
+    })
+    .join("")}</div>`;
+}
+
+export function projectionTopMechanismsHBars(mechanisms = []) {
+  const list = (mechanisms || []).filter((m) => m.historicalRatePct != null);
+  if (!list.length) return `<p class="placeholder-note">Sem mecanismos.</p>`;
+  const max = Math.max(...list.map((m) => m.historicalRatePct ?? 0), 1);
+  return `<div class="hbar-list imr-proj-top-hbars">${list
+    .map((m) => {
+      const rate = m.historicalRatePct ?? 0;
+      const w = (rate / max) * 100;
+      const diff =
+        m.diffPp != null ? `${m.diffPp >= 0 ? "+" : ""}${Number(m.diffPp).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} p.p.` : "—";
+      const tip = `${m.mechanismName} · Taxa: ${rate}% · N: ${m.historicalN ?? "—"} · Δ: ${diff} · Horizonte: ${m.horizonClientsWithEndDate ?? 0}`;
+      return `<div class="hbar" title="${escapeHtml(tip)}">
+        <div class="hbar-label">${escapeHtml(m.mechanismName)}</div>
+        <div class="hbar-track"><span style="width:${w}%"></span></div>
+        <div class="hbar-val">${Number(rate).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</div>
+      </div>`;
     })
     .join("")}</div>`;
 }

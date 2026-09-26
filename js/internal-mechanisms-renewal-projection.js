@@ -9,21 +9,22 @@ import { normalizeProgramFilter, programSelectOptions } from "../lib/analytics/f
 import { createPageRefresh } from "./components/page-refresh.js";
 import { fetchPageJson, mapLoadError, clearPageCache } from "./utils/page-load.js";
 import { escapeHtml } from "./general-charts.mjs";
-import { bindFilterBar, renderFilterBar } from "./components/filters/filter-bar.js";
+import { bindFilterBar, renderFilterBar, bindTableExport, renderTableToolbar } from "./components/filters/filter-bar.js";
 import { mountPageFilters } from "./components/filters/filter-shell.js";
 import { registerPageExportContext } from "./page-export-registry.js";
 import { renderMetricTooltip, bindMetricTooltips, METRIC_TOOLTIPS } from "./components/metric-tooltip.js";
 import { renderYearEndRenewalProjection } from "./imr-year-end-projection.mjs";
+import { exportToCsv, exportToExcel, exportFilename } from "./utils/table-export.js";
 import {
   imrChartCard,
-  donut,
-  vBars,
   mechanismBandCombo,
   groupedMetricCompare,
   brierCompareChart,
-  mechanismHorizontalBars,
-  scatterSampleQuality,
   adoptionTimelineChart,
+  renewalRateSideBySide,
+  mechanismRankingChart,
+  mechanismBandBusinessChart,
+  donut,
 } from "./imr-charts.mjs";
 import { downloadCsv, normalizeFilename, sectionsToCsvText, buildTableSection } from "./export-csv.js";
 
@@ -32,7 +33,15 @@ const fmt = new Intl.NumberFormat("pt-BR");
 const fmtPct = (v) =>
   v == null || !Number.isFinite(Number(v)) ? "—" : `${(Number(v) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
 
-const state = { mounted: false, payload: null, loading: false, error: null, filters: defaultInternalMechanismsSatisfactionFilters() };
+const state = {
+  mounted: false,
+  payload: null,
+  loading: false,
+  error: null,
+  filters: defaultInternalMechanismsSatisfactionFilters(),
+  mechSearch: "",
+  tablePager: {},
+};
 let eventsBound = false;
 let unbindFilters = () => {};
 let unbindFilterMount = () => {};
@@ -46,6 +55,43 @@ const FILTER_FIELDS = [
 
 function $(id) {
   return document.getElementById(id);
+}
+
+const MECH_TABLE_EXPORT = "imr-mech-ranking";
+const MECH_EXPORT_COLUMNS = [
+  { key: "mechanismName", header: "Mecanismo" },
+  { key: "eligible", header: "Clientes", type: "number" },
+  { key: "renewed", header: "Renovados", type: "number" },
+  { key: "renewalRatePct", header: "Taxa de renovação (%)" },
+  { key: "withoutMechanismRatePct", header: "Taxa sem mecanismo (%)" },
+  { key: "diffVsWithoutMechanismPp", header: "Delta p.p." },
+  { key: "sampleLabel", header: "Amostra" },
+];
+
+function pct1(v) {
+  if (v == null || !Number.isFinite(Number(v))) return "—";
+  return `${Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+}
+
+function pp1(v) {
+  if (v == null || !Number.isFinite(Number(v))) return "—";
+  const n = Number(v);
+  return `${n >= 0 ? "+" : ""}${n.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} p.p.`;
+}
+
+function getMechPager() {
+  if (!state.tablePager[MECH_TABLE_EXPORT]) state.tablePager[MECH_TABLE_EXPORT] = { page: 1, pageSize: 10 };
+  return state.tablePager[MECH_TABLE_EXPORT];
+}
+
+function sortedMechRows(p) {
+  const biz = p?.businessRenewal || {};
+  const rows = [...(biz.mechanismRanking || p?.modelA?.mechanismRanking || [])];
+  const q = String(state.mechSearch || "").trim().toLowerCase();
+  const filtered = q ? rows.filter((r) => String(r.mechanismName || "").toLowerCase().includes(q)) : rows;
+  return filtered.sort(
+    (a, b) => (b.renewalRatePct ?? -1) - (a.renewalRatePct ?? -1) || (b.eligible ?? 0) - (a.eligible ?? 0),
+  );
 }
 
 function num(v) {
@@ -102,15 +148,157 @@ function renderHero(p) {
   return `<header class="imr-hero">
     <p class="eyebrow">Análises internas</p>
     <h1>Projeção Mecanismos × Renovação</h1>
-    <p class="imr-lead">Comparamos duas formas de treinar o mesmo modelo para entender qual representa melhor a relação entre mecanismos e renovação.</p>
+    <p class="imr-lead">Primeiro o que os dados mostram sobre renovação e mecanismos; depois a projeção operacional e, por fim, como os modelos funcionam.</p>
     <p class="imr-exploratory-banner" role="note">${escapeHtml(p.exploratoryNote || "")}</p>
+  </header>`;
+}
+
+function renderComSemCards(com) {
+  const w = com?.withMechanism || {};
+  const wo = com?.withoutMechanism || {};
+  const diff = com?.diffPct;
+  const card = (title, data) => `<article class="imr-comsem-card">
+    <h3>${escapeHtml(title)}</h3>
+    <p><span class="imr-comsem-k">${renderMetricTooltip("Clientes elegíveis", METRIC_TOOLTIPS.eligibleClients)}</span> <strong>${num(data.eligible)}</strong></p>
+    <p><span class="imr-comsem-k">Clientes renovados</span> <strong>${num(data.renewed)}</strong></p>
+    <p><span class="imr-comsem-k">${renderMetricTooltip("Taxa de renovação", METRIC_TOOLTIPS.renewalRate)}</span> <strong class="imr-comsem-rate">${pct1(data.ratePct)}</strong></p>
+  </article>`;
+  return `<div class="imr-comsem-grid">
+    ${card("Com mecanismo", w)}
+    ${card("Sem mecanismo", wo)}
+    <article class="imr-comsem-card imr-comsem-diff">
+      <h3>${renderMetricTooltip("Diferença", METRIC_TOOLTIPS.deltaPp)}</h3>
+      <p class="imr-comsem-rate">${pp1(diff)}</p>
+      <p class="note-muted">Taxa com mecanismo menos taxa sem mecanismo</p>
+    </article>
+  </div>`;
+}
+
+function renderTopMechCards(top = []) {
+  if (!top.length) return "";
+  return `<div class="imr-top-mech">
+    <h3>Maiores taxas históricas de renovação</h3>
+    <div class="imr-top-mech-grid">${top
+      .slice(0, 3)
+      .map(
+        (r, i) => `<article class="imr-top-mech-card"><span class="imr-top-rank">TOP ${i + 1}</span>
+        <h4>${escapeHtml(r.mechanismName)}</h4>
+        <p>${renderMetricTooltip("Taxa de renovação", METRIC_TOOLTIPS.renewalRate)} <strong>${pct1(r.renewalRatePct)}</strong></p>
+        <p>${renderMetricTooltip("Amostra", METRIC_TOOLTIPS.sampleSize)} N=${num(r.eligible)} · renovados ${num(r.renewed)}</p>
+        <p>${renderMetricTooltip("Δ p.p.", METRIC_TOOLTIPS.deltaPp)} ${pp1(r.diffVsWithoutMechanismPp)}</p>
+      </article>`,
+      )
+      .join("")}</div></div>`;
+}
+
+function renderMechTablePagination(total) {
+  const pager = getMechPager();
+  const pages = Math.max(1, Math.ceil(total / pager.pageSize) || 1);
+  return `<div class="table-pagination ims-table-pagination" data-imr-table="${MECH_TABLE_EXPORT}">
+    <button type="button" class="btn btn-secondary btn-sm imr-table-prev" ${pager.page <= 1 ? "disabled" : ""}>Anterior</button>
+    <label class="ims-page-size-label">Por página<select class="imr-table-page-size">
+      <option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option>
+    </select></label>
+    <span>Página ${pager.page} · ${fmt.format(total)} linhas</span>
+    <button type="button" class="btn btn-secondary btn-sm imr-table-next" ${pager.page >= pages ? "disabled" : ""}>Próxima</button>
+  </div>`;
+}
+
+function renderMechRankingTable(p) {
+  const rows = sortedMechRows(p);
+  const pager = getMechPager();
+  const start = (pager.page - 1) * pager.pageSize;
+  const pageRows = rows.slice(start, start + pager.pageSize);
+  const body = pageRows
+    .map(
+      (r) => `<tr>
+      <td>${escapeHtml(r.mechanismName)}</td>
+      <td class="num">${num(r.eligible)}</td>
+      <td class="num">${num(r.renewed)}</td>
+      <td class="num">${pct1(r.renewalRatePct)}</td>
+      <td class="num">${pct1(r.withoutMechanismRatePct)}</td>
+      <td class="num">${pp1(r.diffVsWithoutMechanismPp)}</td>
+      <td>${escapeHtml(r.sampleLabel || (r.smallSample ? "Pequena" : "OK"))}</td>
+    </tr>`,
+    )
+    .join("");
+  return `<div class="imr-mech-table-host" data-ims-export-host="${MECH_TABLE_EXPORT}">
+    <label class="imr-mech-search">Buscar mecanismo<input type="search" class="imr-mech-search-input" value="${escapeHtml(state.mechSearch)}" placeholder="Nome do mecanismo" /></label>
+    ${renderTableToolbar({ countLabel: `${fmt.format(rows.length)} mecanismos`, exportPrefix: MECH_TABLE_EXPORT })}
+    <div class="table-wrap"><table class="gd-table imr-mech-table">
+      <thead><tr>
+        <th>Mecanismo</th>
+        <th class="num">${renderMetricTooltip("Clientes", METRIC_TOOLTIPS.eligibleClients)}</th>
+        <th class="num">Renovados</th>
+        <th class="num">${renderMetricTooltip("Taxa", METRIC_TOOLTIPS.renewalRate)}</th>
+        <th class="num">Taxa sem mecanismo</th>
+        <th class="num">${renderMetricTooltip("Δ p.p.", METRIC_TOOLTIPS.deltaPp)}</th>
+        <th>${renderMetricTooltip("Amostra", METRIC_TOOLTIPS.sampleSize)}</th>
+      </tr></thead>
+      <tbody>${body || `<tr><td colspan="7" class="placeholder-note">Sem mecanismos no recorte.</td></tr>`}</tbody>
+    </table></div>
+    ${renderMechTablePagination(rows.length)}
+  </div>`;
+}
+
+function renderBusinessRenewal(p) {
+  const biz = p.businessRenewal || {};
+  const com = biz.comVsSem || p.modelA?.comVsSem;
+  const minN = biz.minSample ?? 30;
+  const bands = biz.mechanismBands || p.modelA?.charts?.mechanismBands || [];
+  const ranking = biz.mechanismRanking || p.modelA?.mechanismRanking || [];
+  const top = biz.topByRawRate || p.modelA?.topByRawRate || [];
+  return `<section class="imr-section imr-business" id="imr-renovacao-mecanismos">
+    <h2>Renovação × Mecanismos</h2>
+    <p class="imr-section-lead">Antes de olhar os modelos, veja como a renovação se comporta entre clientes com e sem mecanismos.</p>
+    <p class="note-muted">População: clientes <strong>ativos</strong> com ciclo válido (Modelo A / base operacional).</p>
+    ${renderComSemCards(com)}
+    ${imrChartCard(
+      "Taxa de renovação: com vs sem mecanismo",
+      renewalRateSideBySide(com),
+      {
+        legend:
+          "Percentual de clientes ativos com ciclo válido que já renovaram pelo menos uma vez.",
+      },
+    )}
+    <p class="imr-assoc-note callout-note">Clientes com mecanismos apresentam uma taxa histórica diferente de renovação, mas isso mostra ${renderMetricTooltip("associação", METRIC_TOOLTIPS.association)} e não prova que o mecanismo causou a renovação.</p>
+    <h3>Renovação por mecanismo</h3>
+    ${imrChartCard("Taxa de renovação por mecanismo", mechanismRankingChart(ranking, minN), {
+      note: "Somente mecanismos com amostra mínima válida.",
+    })}
+    ${renderTopMechCards(top)}
+    ${renderMechRankingTable(p)}
+    <h3>Renovação por quantidade de mecanismos</h3>
+    ${imrChartCard(
+      "Taxa por faixa de quantidade",
+      mechanismBandBusinessChart(bands),
+      {
+        legend:
+          "Mostra como a taxa histórica de renovação varia conforme a quantidade de mecanismos implementados.",
+      },
+    )}
+  </section>`;
+}
+
+function renderProjectionBusiness(p) {
+  return `<section class="imr-section imr-projection-business" id="imr-projecao-atual">
+    <h2>Projeção atual de renovação</h2>
+    <span class="imr-badge imr-badge-prod">MODELO A · PRODUÇÃO</span>
+    <p class="imr-section-lead">Estimativa exploratória até 31/12 com o modelo em produção (proxy data_fim_ciclo).</p>
+    ${renderYearEndRenewalProjection(p.modelA?.renewalYearEndProjection)}
+  </section>`;
+}
+
+function renderModelsIntro() {
+  return `<section class="imr-section imr-models-intro">
+    <h2>Modelos preditivos</h2>
+    <p class="imr-section-lead">A partir daqui entram treino, teste e métricas técnicas dos dois modelos (A = base ativa · B = base completa).</p>
     <div class="imr-hero-cards">
       <article class="imr-model-card imr-model-a"><span class="imr-badge imr-badge-prod">PRODUÇÃO ATUAL</span><h3>Modelo A</h3><p class="imr-model-kind">Base ativa</p><p>Aprende apenas com os clientes que estão ativos hoje.</p></article>
       <article class="imr-model-card imr-model-b"><span class="imr-badge imr-badge-exp">EXPERIMENTO</span><h3>Modelo B</h3><p class="imr-model-kind">Base completa</p><p>Aprende com todo o histórico de clientes, independentemente do status atual.</p></article>
     </div>
-    <article class="imr-diff-card callout-note"><div class="imr-diff-cols"><div><strong>Modelo A</strong><p>Olha o presente.</p></div><div><strong>Modelo B</strong><p>Olha todo o histórico.</p></div></div>
-    <p class="imr-diff-emphasis">Os dois usam a mesma fórmula. O que muda é quem entra no treinamento.</p></article>
-  </header>`;
+    <p class="imr-diff-emphasis">Os dois usam a mesma fórmula. O que muda é quem entra no treinamento.</p>
+  </section>`;
 }
 
 function renderModelSection(model, tagClass, title, subtitle) {
@@ -157,18 +345,17 @@ function renderModelSection(model, tagClass, title, subtitle) {
     ${warn}
     <h3>População</h3>
     <div class="kpi-row imr-pop-kpis">${popCards.map(([l, v]) => kpi(l, num(v))).join("")}</div>
-    <div class="imr-chart-grid">
+    ${
+      tagClass === "imr-model-b"
+        ? `<div class="imr-chart-grid">
       ${imrChartCard("Com vs sem mecanismo", donut(charts.mechanismSplit || []), { note: "Clientes com pelo menos um mecanismo implementado." })}
-      ${imrChartCard(
-        tagClass === "imr-model-a" ? "Renovação na população" : "Renovação registrada",
-        donut(charts.renewalSplit || []),
-        { legend: tagClass === "imr-model-a" ? "Ativos podem ainda não ter chegado à janela de renovação." : "" },
-      )}
+      ${imrChartCard("Renovação registrada", donut(charts.renewalSplit || []), {})}
       ${statusChart}
-    </div>
+    </div>`
+        : ""
+    }
     ${adoption}
-    <h3>Quantidade de mecanismos</h3>
-    ${mechanismBandCombo(charts.mechanismBands || [])}
+    ${tagClass === "imr-model-b" ? `<h3>Quantidade de mecanismos</h3>${mechanismBandCombo(charts.mechanismBands || [])}` : ""}
     <h3>Treino e teste</h3>
     <p class="note-muted">${renderMetricTooltip("Holdout", METRIC_TOOLTIPS.trainSplit)} · ${escapeHtml(model.split?.hashHoldoutRule || model.split?.type || "80/20")}</p>
     <div class="kpi-row">${kpi("Treino", num(model.split?.nTrain))}${kpi("Teste", num(model.split?.nTest))}${kpi("Renovados treino", num(model.split?.renewedTrain))}${kpi("Renovados teste", num(model.split?.renewedTest))}</div>
@@ -228,31 +415,23 @@ function cmpVal(row, side, metric) {
   return num(v);
 }
 
-function renderMechanisms(p) {
-  const ins = p.mechanismInsights || {};
-  return `<section class="imr-section">
-    <h2>Mecanismos × renovação</h2>
-    <p class="note-muted">${escapeHtml(ins.note || p.causalNote || "")}</p>
-    <div class="imr-chart-grid">
-      ${imrChartCard(
-        "Taxa de renovação por quantidade de mecanismos",
-        vBars(
-          (ins.bands || []).map((b) => ({
-            label: b.band === "4+" ? "4+" : b.band,
-            count: b.renewalRatePct ?? 0,
-            percent: b.renewalRatePct,
-          })),
-        ),
-        { legend: "Percentual de clientes da população analisada que já renovaram (Modelo A · ciclo válido)." },
-      )}
-      ${imrChartCard("Top mecanismos (taxa)", mechanismHorizontalBars(ins.ranking || []), {
-        legend: "Taxa maior não prova que o mecanismo causou a renovação.",
-      })}
-      ${imrChartCard("Taxa × tamanho da amostra", scatterSampleQuality(ins.scatter || []), {
-        note: "Cautela com taxas altas e N pequeno.",
-      })}
-    </div>
-  </section>`;
+function renderSuccess() {
+  const root = $("page-content");
+  if (!root || !state.payload) return;
+  const p = state.payload;
+  root.innerHTML = `<div class="imr-page">
+    ${renderHero(p)}
+    ${renderBusinessRenewal(p)}
+    ${renderProjectionBusiness(p)}
+    ${renderModelsIntro()}
+    ${renderModelSection(p.modelA || {}, "imr-model-a", "Modelo A — Base ativa", "Usa somente clientes atualmente ativos.")}
+    ${renderModelSection(p.modelB || {}, "imr-model-b", "Modelo B — Base completa", "Usa todo o histórico de clientes disponível, independentemente do status atual.")}
+    ${renderComparison(p)}
+    ${renderAuxiliary(p.historicalComparablePopulation)}
+    ${renderFooter()}
+  </div>`;
+  bindMetricTooltips(root);
+  bindImrPageUi(root);
 }
 
 function renderAuxiliary(h) {
@@ -288,24 +467,56 @@ function renderFooter() {
   </section>`;
 }
 
-function renderSuccess() {
-  const root = $("page-content");
-  if (!root || !state.payload) return;
-  const p = state.payload;
-  root.innerHTML = `<div class="imr-page">
-    ${renderHero(p)}
-    ${renderModelSection(p.modelA || {}, "imr-model-a", "Modelo A — Base ativa", "Usa somente clientes atualmente ativos.")}
-    ${renderModelSection(p.modelB || {}, "imr-model-b", "Modelo B — Base completa", "Usa todo o histórico de clientes disponível, independentemente do status atual.")}
-    ${renderComparison(p)}
-    ${renderMechanisms(p)}
-    <section class="imr-section imr-projection"><h2>Projeção operacional</h2><span class="imr-badge imr-badge-prod">MODELO A · PRODUÇÃO</span>
-    <h3>Projeção atual até 31/12</h3>
-    ${renderYearEndRenewalProjection(p.modelA?.renewalYearEndProjection)}
-    <p class="note-muted">${escapeHtml(p.modelB?.projectionNote || "")}</p></section>
-    ${renderAuxiliary(p.historicalComparablePopulation)}
-    ${renderFooter()}
-  </div>`;
-  bindMetricTooltips(root);
+function bindImrPageUi(root) {
+  const host = root.querySelector(`[data-ims-export-host="${MECH_TABLE_EXPORT}"]`);
+  if (host) {
+    bindTableExport(host, (format) => {
+      const rows = sortedMechRows(state.payload).map((r) => ({
+        mechanismName: r.mechanismName,
+        eligible: r.eligible,
+        renewed: r.renewed,
+        renewalRatePct: r.renewalRatePct,
+        withoutMechanismRatePct: r.withoutMechanismRatePct,
+        diffVsWithoutMechanismPp: r.diffVsWithoutMechanismPp,
+        sampleLabel: r.sampleLabel,
+      }));
+      if (!rows.length) return;
+      const filename = exportFilename(`imr_renovacao_mecanismos_${MECH_TABLE_EXPORT}`, format === "xlsx" ? "xlsx" : "csv");
+      if (format === "xlsx") exportToExcel({ rows, columns: MECH_EXPORT_COLUMNS, filename });
+      else exportToCsv({ rows, columns: MECH_EXPORT_COLUMNS, filename });
+    });
+  }
+  const sizeSel = root.querySelector(".imr-table-page-size");
+  if (sizeSel) sizeSel.value = String(getMechPager().pageSize);
+  root.addEventListener("click", (e) => {
+    if (!state.payload) return;
+    const prev = e.target.closest(".imr-table-prev");
+    const next = e.target.closest(".imr-table-next");
+    if (prev || next) {
+      const pager = getMechPager();
+      pager.page = prev ? Math.max(1, pager.page - 1) : pager.page + 1;
+      renderSuccess();
+      return;
+    }
+  });
+  root.addEventListener("change", (e) => {
+    if (e.target.matches(".imr-table-page-size")) {
+      getMechPager().pageSize = Number(e.target.value) || 10;
+      getMechPager().page = 1;
+      renderSuccess();
+    }
+  });
+  root.addEventListener(
+    "input",
+    (e) => {
+      if (e.target.matches(".imr-mech-search-input")) {
+        state.mechSearch = e.target.value;
+        getMechPager().page = 1;
+        renderSuccess();
+      }
+    },
+    true,
+  );
 }
 
 function renderStateView() {

@@ -286,6 +286,132 @@
   font-size: 0.9rem;
 }
 
+.imr-business h3 {
+  margin-top: 1.25rem;
+}
+
+.imr-comsem-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+@media (max-width: 900px) {
+  .imr-comsem-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.imr-comsem-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  background: var(--surface-secondary, var(--surface));
+}
+
+.imr-comsem-card h3 {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
+}
+
+.imr-comsem-rate {
+  font-size: 1.35rem;
+}
+
+.imr-comsem-diff {
+  border-top: 3px solid var(--primary);
+}
+
+.imr-renewal-compare-bars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: end;
+  min-height: 200px;
+  padding: 0.5rem 0;
+}
+
+.imr-renewal-compare-col {
+  text-align: center;
+}
+
+.imr-renewal-compare-track {
+  height: 160px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: color-mix(in srgb, var(--border) 40%, transparent);
+  border-radius: 6px;
+  margin: 0.35rem 0;
+}
+
+.imr-renewal-compare-fill {
+  width: 48%;
+  background: var(--primary);
+  border-radius: 6px 6px 0 0;
+}
+
+.imr-renewal-compare-value {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.imr-top-mech-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.imr-top-mech-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem;
+}
+
+.imr-top-rank {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.imr-mech-search {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.imr-mech-search-input {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 0.35rem;
+}
+
+.imr-band-business {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.imr-band-business-col {
+  text-align: center;
+  padding: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.imr-band-business-rate {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.imr-models-intro {
+  background: color-mix(in srgb, var(--muted) 4%, var(--surface));
+}
+
 .metric-tooltip-wrap {
   display: inline-flex;
   align-items: center;
@@ -328,5 +454,491 @@
 @media (max-width: 640px) {
   .imr-confusion-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* —— Projeção até 31/12 (bloco visual) —— */
+.imr-page .imr-projection-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 0.5rem;
+}
+
+.imr-page .imr-proj-block {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.35rem 1.5rem;
+  background: #fafaf9;
+  box-shadow: var(--shadow-soft);
+}
+
+.imr-page .imr-proj-block-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.imr-page .imr-proj-block-title-sm {
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.imr-page .imr-proj-block-sub {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  max-width: 40rem;
+}
+
+.imr-page .imr-proj-block-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.imr-page .imr-proj-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+
+.imr-page .imr-proj-badge-assoc {
+  background: color-mix(in srgb, var(--primary) 12%, #fff);
+  color: var(--primary);
+}
+
+.imr-page .imr-proj-badge-raw {
+  background: #f5f5f4;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.imr-page .imr-proj-horizon-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.imr-page .imr-proj-callout {
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border-left: 3px solid var(--primary);
+  background: var(--surface);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.88rem;
+}
+
+.imr-page .imr-proj-mini-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+}
+
+.imr-page .imr-proj-mini-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  text-align: center;
+}
+
+.imr-page .imr-proj-mini-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
+}
+
+.imr-page .imr-proj-mini-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.imr-page .imr-horizon-month-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 0.75rem;
+  min-height: 200px;
+  padding: 0.5rem 0.25rem 0;
+  background: var(--surface);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.imr-page .imr-horizon-month-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  cursor: default;
+}
+
+.imr-page .imr-horizon-month-val {
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.imr-page .imr-horizon-month-track {
+  width: 100%;
+  max-width: 56px;
+  height: 168px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: color-mix(in srgb, var(--muted) 8%, #fff);
+  border-radius: 6px 6px 0 0;
+}
+
+.imr-page .imr-horizon-month-fill {
+  width: 72%;
+  border-radius: 6px 6px 0 0;
+  background: var(--primary);
+  min-height: 4px;
+}
+
+.imr-page .imr-horizon-month-lbl {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: lowercase;
+  color: var(--muted);
+}
+
+.imr-page .imr-proj-highlight {
+  background: var(--surface);
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  border-top: 3px solid var(--primary);
+}
+
+.imr-page .imr-proj-highlight-eyebrow {
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.imr-page .imr-proj-highlight-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.imr-page .imr-proj-highlight-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.imr-page .imr-proj-highlight-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.imr-page .imr-proj-highlight-value {
+  font-size: 1.65rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.imr-page .imr-proj-highlight-accent .imr-proj-highlight-value {
+  color: var(--primary);
+}
+
+.imr-page .imr-proj-highlight-foot {
+  margin: 1rem 0 0;
+  font-size: 0.82rem;
+}
+
+.imr-page .imr-proj-validation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.imr-page .imr-proj-metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+}
+
+.imr-page .imr-proj-metric-card-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+  line-height: 1.35;
+}
+
+.imr-page .imr-proj-metric-card-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.imr-page .imr-proj-metric-card-note {
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.imr-page .imr-proj-num-lg {
+  font-size: 1.75rem;
+}
+
+.imr-page .imr-proj-num-md {
+  font-size: 1.35rem;
+}
+
+.imr-page .imr-proj-mech-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.imr-page .imr-proj-mech-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.imr-page .imr-proj-mech-rank {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.imr-page .imr-proj-mech-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.imr-page .imr-proj-mech-hero {
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.imr-page .imr-proj-mech-hero-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+
+.imr-page .imr-proj-mech-hero-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--primary);
+}
+
+.imr-page .imr-proj-mech-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.84rem;
+  padding: 0.2rem 0;
+}
+
+.imr-page .imr-proj-mech-meta-label {
+  color: var(--muted);
+  flex: 1;
+  min-width: 0;
+}
+
+.imr-page .imr-proj-mech-meta-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.imr-page .imr-proj-mech-horizon {
+  margin-top: 0.35rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed var(--border);
+}
+
+.imr-page .imr-proj-mech-horizon-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.imr-page .imr-proj-causal-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+}
+
+.imr-page .imr-proj-top-chart {
+  padding-top: 1rem;
+}
+
+.imr-page .imr-proj-top-hbars .hbar {
+  margin-bottom: 0.5rem;
+}
+
+.imr-page .imr-proj-raw-table th,
+.imr-page .imr-proj-raw-table td {
+  font-size: 0.88rem;
+}
+
+.imr-page .imr-proj-howto {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 1rem;
+  background: var(--surface);
+}
+
+.imr-page .imr-proj-howto summary {
+  cursor: pointer;
+  padding: 0.75rem 0;
+  font-weight: 600;
+  font-size: 0.92rem;
+  list-style: none;
+}
+
+.imr-page .imr-proj-howto summary::-webkit-details-marker {
+  display: none;
+}
+
+.imr-page .imr-proj-howto-body {
+  padding-bottom: 1rem;
+}
+
+.imr-page .imr-proj-howto-steps {
+  margin: 0 0 1rem;
+  padding-left: 1.2rem;
+  line-height: 1.55;
+  font-size: 0.9rem;
+}
+
+.imr-page .imr-proj-formula-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.imr-page .imr-proj-formula-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.15rem;
+}
+
+.imr-page .imr-proj-formula {
+  font-size: 0.95rem;
+  background: #f5f5f4;
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+}
+
+.imr-page .imr-proj-howto-list {
+  margin: 0 0 0.75rem;
+  padding-left: 1.2rem;
+  font-size: 0.88rem;
+}
+
+.imr-page .imr-proj-dist-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 120px;
+  padding: 0.5rem 0.25rem 0;
+  background: var(--surface);
+  border-radius: 8px;
+}
+
+.imr-page .imr-proj-dist-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.imr-page .imr-proj-dist-value {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.imr-page .imr-proj-dist-bar {
+  width: 100%;
+  max-width: 40px;
+  background: var(--primary);
+  border-radius: 4px 4px 0 0;
+}
+
+.imr-page .imr-proj-dist-label {
+  font-size: 0.65rem;
+  text-align: center;
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+.imr-page .imr-proj-footnote {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 900px) {
+  .imr-page .imr-proj-horizon-kpis,
+  .imr-page .imr-proj-highlight-grid,
+  .imr-page .imr-proj-validation-grid,
+  .imr-page .imr-proj-mini-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .imr-page .imr-proj-mech-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 540px) {
+  .imr-page .imr-proj-horizon-kpis,
+  .imr-page .imr-proj-highlight-grid,
+  .imr-page .imr-proj-validation-grid,
+  .imr-page .imr-proj-mini-row {
+    grid-template-columns: 1fr;
+  }
+
+  .imr-page .imr-horizon-month-chart {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 0.5rem;
+  }
+
+  .imr-page .imr-horizon-month-col {
+    min-width: 52px;
   }
 }

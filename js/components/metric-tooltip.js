@@ -57,11 +57,36 @@ export const METRIC_TOOLTIPS = Object.freeze({
   projectionBand: "Intervalo aproximado para comunicar a incerteza da estimativa.",
   proxyCycleEnd:
     "Usamos data_fim_ciclo como aproximação da janela de renovação, porque não existe uma data oficial de renovação.",
+  eligibleClients:
+    "Clientes que entram na análise de renovação por terem ciclo válido (renovação inferida por ciclo).",
+  renewalRate: "Percentual dos clientes desse grupo que já renovaram pelo menos uma vez.",
+  deltaPp: "Diferença em pontos percentuais em relação à taxa de referência.",
+  sampleSize: "Quantidade de clientes elegíveis usada para calcular a taxa.",
+  probability: "Chance estimada de renovação para um cliente, após calibragem do modelo.",
   conservativeBrier: "A amostra menor deixou as probabilidades mais instáveis.",
   shrinkage: "Evita confiar demais em grupos com poucos clientes.",
   probabilityClip: "Evita que o modelo diga que uma renovação é impossível ou garantida.",
   minStratum:
     "O modelo só usa a taxa específica de um grupo quando há clientes suficientes para não confiar em uma amostra muito pequena.",
   specificity: "Entre os que não renovaram, quantos o modelo acertou.",
-  association: "Relação observada no histórico — não prova que o mecanismo causou a renovação.",
+  association:
+    "Os grupos podem ser diferentes em vários outros aspectos, como tempo de casa, programa, perfil ou nível de acompanhamento. Relação observada no histórico — não prova que o mecanismo causou a renovação.",
+  faixa: "Intervalo plausível para comunicar incerteza da estimativa — não é garantia de resultado.",
+  expectativa: "Percentual médio das probabilidades individuais estimadas pelo modelo em produção.",
+  rocAucExplainer:
+    "Mostra se o modelo consegue ordenar clientes de maior e menor chance de renovação. Quanto mais perto de 100%, melhor.",
+  brierExplainer: "Mede o erro das probabilidades previstas. Quanto menor, melhor.",
+  baseRateTraining: "Percentual de clientes renovados no conjunto usado para treinamento.",
+  calibrationOk:
+    "Significa que as probabilidades previstas estão razoavelmente próximas do que ocorre na prática.",
+  historicalMechanismRate: "Percentual de clientes da amostra histórica desse mecanismo que já renovaram.",
+  deltaVsWithoutMechanism:
+    "Diferença entre a taxa histórica de renovação dos clientes com esse mecanismo e a taxa dos clientes sem mecanismo.",
+  expectedRenewalsMechanism:
+    "É a soma das probabilidades dos clientes desse mecanismo que estão no horizonte atual.",
+  cycle1DurationMedian: "Mediana da duração observada do primeiro ciclo.",
+  associationBadge:
+    "Ranking por diferença histórica em relação a clientes sem mecanismo — mede associação observada, não causalidade.",
+  rawRateBadge:
+    "Ranking só pela taxa bruta de renovação no histórico — não ajusta por comparação com o grupo sem mecanismo.",
 });

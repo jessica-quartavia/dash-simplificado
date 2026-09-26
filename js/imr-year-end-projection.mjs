@@ -1,5 +1,7 @@
 /** Projeção 31/12 — página Mecanismos × Renovação. */
 import { escapeHtml } from "./general-charts.mjs";
+import { renderMetricTooltip, METRIC_TOOLTIPS } from "./components/metric-tooltip.js";
+import { horizonMonthColumnChart, projectionTopMechanismsHBars } from "./imr-charts.mjs";
 
 const fmt = new Intl.NumberFormat("pt-BR");
 const fmt1 = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -18,8 +20,9 @@ function kpiCard(label, value, note, options = {}) {
   const classes = ["kpi-card"];
   if (options.highlight) classes.push("kpi-card-highlight");
   if (options.compact) classes.push("kpi-card-compact");
+  const labelHtml = options.rawLabel ? label : escapeHtml(label);
   return `<article class="${classes.join(" ")}">
-    <div class="kpi-label">${escapeHtml(label)}</div>
+    <div class="kpi-label">${labelHtml}</div>
     <div class="kpi-value">${value}</div>
     ${note ? `<div class="kpi-note">${escapeHtml(note)}</div>` : ""}
   </article>`;
@@ -36,23 +39,51 @@ function _renderRenewalPopulationNoteUnused(p) {
 }
 
 function renderModelHowToBlock(exp) {
-  const audit = exp?.modelAudit;
-  if (!audit) return "";
-  const perf = audit.performance || {};
-  return `<details class="ims-proj-howto ims-proj-model-howto">
+  if (!exp?.available && !exp?.model) return "";
+  return `<details class="imr-proj-howto">
     <summary>Como calculamos?</summary>
-    <p class="note-muted">Estimamos a chance de renovação de cada cliente usando o comportamento histórico de clientes semelhantes (estratificação programa × faixa de mecanismos). As probabilidades individuais são somadas para estimar o número esperado de renovações.</p>
-    <ul class="ims-proj-howto-list">
-      <li><strong>Modelo</strong> — ${escapeHtml(audit.algorithm || "—")}</li>
-      <li><strong>Amostra treino</strong> — ${fmt.format(audit.sampleSizes?.nTrain ?? 0)} clientes (${fmt.format(audit.sampleSizes?.renewedTrain ?? 0)} renovados)</li>
-      <li><strong>ROC-AUC (holdout)</strong> — ${perf.rocAuc ?? "—"} · <strong>PR-AUC</strong> — ${perf.prAuc ?? "—"}</li>
-      <li><strong>Brier</strong> — ${perf.brier ?? "—"} (baseline ${perf.baselineBrier ?? "—"})</li>
-      <li><strong>Acurácia holdout</strong> — ${perf.accuracy != null ? pctLabel(perf.accuracy * 100) : "—"} · balanced ${perf.balancedAccuracy != null ? pctLabel(perf.balancedAccuracy * 100) : "—"}</li>
-      <li><strong>Precisão / Recall</strong> — ${perf.precision != null ? pctLabel(perf.precision * 100) : "—"} / ${perf.recall != null ? pctLabel(perf.recall * 100) : "—"} (limiar ${audit.performance?.threshold ?? 0.5})</li>
-      <li><strong>Calibração</strong> — ${audit.calibrationOk ? "adequada para soma de probabilidades" : "atenção"}</li>
-    </ul>
-    ${audit.interpretationPlain ? `<p class="note-muted">${escapeHtml(audit.interpretationPlain)}</p>` : ""}
+    <div class="imr-proj-howto-body">
+      <ol class="imr-proj-howto-steps">
+        <li>Cada cliente no horizonte recebe uma <strong>probabilidade</strong> de renovação.</li>
+        <li><strong>Somamos</strong> todas as probabilidades.</li>
+        <li>O total é o número <strong>esperado</strong> de renovações.</li>
+      </ol>
+      <div class="imr-proj-formula-cards">
+        <p><span class="imr-proj-formula-label">Renovações esperadas</span> <code class="imr-proj-formula">Σ p<sub>i</sub></code></p>
+        <p><span class="imr-proj-formula-label">Expectativa média</span> <code class="imr-proj-formula">Σ p<sub>i</sub> / N</code></p>
+      </div>
+      <p class="note-muted">Usamos o histórico de clientes semelhantes (programa × quantidade de mecanismos) — sem alterar o Modelo A em produção.</p>
+    </div>
   </details>`;
+}
+
+function imrProjMiniCard(labelHtml, value, { tip = "" } = {}) {
+  const tipAttr = tip ? ` title="${escapeHtml(tip)}"` : "";
+  return `<article class="imr-proj-mini-card"${tipAttr}>
+    <div class="imr-proj-mini-label">${labelHtml}</div>
+    <div class="imr-proj-mini-value">${value}</div>
+  </article>`;
+}
+
+function imrProjMetricCard(labelHtml, value, note = "") {
+  return `<article class="imr-proj-metric-card">
+    <div class="imr-proj-metric-card-label">${labelHtml}</div>
+    <div class="imr-proj-metric-card-value">${value}</div>
+    ${note ? `<div class="imr-proj-metric-card-note">${escapeHtml(note)}</div>` : ""}
+  </article>`;
+}
+
+function formatRocPct(roc) {
+  if (roc == null || !Number.isFinite(Number(roc))) return "—";
+  const n = Number(roc);
+  const pct = n <= 1 ? n * 100 : n;
+  return `${pct.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+}
+
+function ppDisplay(v) {
+  if (v == null || !Number.isFinite(Number(v))) return "—";
+  const n = Number(v);
+  return `${n >= 0 ? "+" : ""}${n.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} p.p.`;
 }
 
 function isRenewalProjectionRenderable(proj) {
@@ -105,10 +136,10 @@ function renderYearEndRenewalProjection(proj) {
   const monthRows = horizon.byMonth || horizon.monthly || [];
   const yearPrefix = String(proj.horizonEnd || horizon.horizonEnd || "").slice(0, 4) || "2026";
   const monthLabels = {
-    [`${yearPrefix}-09`]: "Setembro",
-    [`${yearPrefix}-10`]: "Outubro",
-    [`${yearPrefix}-11`]: "Novembro",
-    [`${yearPrefix}-12`]: "Dezembro",
+    [`${yearPrefix}-09`]: "set",
+    [`${yearPrefix}-10`]: "out",
+    [`${yearPrefix}-11`]: "nov",
+    [`${yearPrefix}-12`]: "dez",
   };
 
   if (!proxyOk) {
@@ -128,68 +159,176 @@ function renderYearEndRenewalProjection(proj) {
   const faixaEstimada =
     intervalLow != null && intervalHigh != null ? `${fmt.format(intervalLow)}–${fmt.format(intervalHigh)}` : "—";
   const hasModelKpis = (proj.modelProjectionPublished || exp?.available) && exp?.expectation;
-  const monthMax = Math.max(1, ...monthRows.map((m) => m.count || 0));
-
-  const monthBars = monthRows
-    .map((m) => {
-      const label = monthLabels[m.month] || m.label || m.month;
-      const count = m.count ?? 0;
-      const width = Math.max(count > 0 ? 4 : 0, Math.round((count / monthMax) * 100));
-      return `<div class="ims-proj-month-row">
-        <span class="ims-proj-month-label">${escapeHtml(label)}</span>
-        <div class="ims-proj-month-track" role="presentation"><div class="ims-proj-month-fill" style="width:${width}%"></div></div>
-        <span class="ims-proj-month-value">${fmt.format(count)}</span>
-      </div>`;
-    })
-    .join("");
+  const durationTip = `p25 = ${dur1.p25 ?? "—"} · mediana = ${dur1.median ?? "—"} · p75 = ${dur1.p75 ?? "—"} (dias)`;
+  const durationDisplay =
+    dur1.median != null ? `${fmt.format(dur1.median)} dias` : "—";
 
   const calloutText =
     proj.disclaimer
-    || "Usamos data_fim_ciclo como aproximação da próxima janela de renovação. Esta é uma análise exploratória e não uma métrica oficial de renovação.";
+    || "Usamos data_fim_ciclo como aproximação da próxima janela de renovação. Esta projeção apoia o planejamento — não é métrica oficial de renovação.";
+
+  const horizonSummary = `<section class="imr-proj-block imr-proj-horizon-summary" aria-labelledby="imr-proj-horizon-summary-title">
+    <h3 class="imr-proj-block-title" id="imr-proj-horizon-summary-title">Resumo do horizonte</h3>
+    <p class="imr-proj-block-sub note-muted">Clientes com fim de ciclo previsto até 31/12 (proxy <code>data_fim_ciclo</code>).</p>
+    <div class="imr-proj-horizon-kpis">
+      ${imrProjMetricCard("Clientes no horizonte", `<span class="imr-proj-num-lg">${fmt.format(horizonTotal)}</span>`)}
+      ${imrProjMetricCard("Pharus", fmt.format(horizon.pharus ?? 0))}
+      ${imrProjMetricCard("Davos", fmt.format(horizon.davos ?? 0))}
+    </div>
+    <p class="imr-proj-callout note-muted" role="note">${escapeHtml(calloutText)}</p>
+  </section>`;
+
+  const monthSection =
+    monthRows.length
+      ? `<section class="imr-proj-block imr-proj-months" aria-labelledby="imr-proj-months-title">
+      <h3 class="imr-proj-block-title" id="imr-proj-months-title">Clientes por mês no horizonte</h3>
+      <p class="imr-proj-block-sub note-muted">Quantidade de clientes com fim de ciclo previsto em cada mês até 31/12.</p>
+      <div class="imr-proj-mini-row">
+        ${imrProjMiniCard("Sem data", fmt.format(withoutEnd))}
+        ${imrProjMiniCard("Fim de ciclo no passado", fmt.format(qual.pastEndOnActive ?? 0))}
+        ${imrProjMiniCard(
+          renderMetricTooltip("Duração típica do ciclo 1", METRIC_TOOLTIPS.cycle1DurationMedian),
+          durationDisplay,
+          { tip: durationTip },
+        )}
+      </div>
+      ${horizonMonthColumnChart(monthRows, monthLabels, horizonTotal)}
+    </section>`
+      : "";
+
+  const projectionHero = `<section class="imr-proj-block imr-proj-highlight" aria-labelledby="imr-proj-highlight-title">
+    <p class="imr-proj-highlight-eyebrow">Projeção até 31/12</p>
+    <div class="imr-proj-highlight-grid">
+      <div class="imr-proj-highlight-item">
+        <span class="imr-proj-highlight-label">Clientes no horizonte</span>
+        <span class="imr-proj-highlight-value">${fmt.format(horizonTotal)}</span>
+      </div>
+      <div class="imr-proj-highlight-item">
+        <span class="imr-proj-highlight-label">${renderMetricTooltip("Expectativa média", METRIC_TOOLTIPS.expectativa || METRIC_TOOLTIPS.expectedRate)}</span>
+        <span class="imr-proj-highlight-value">${hasModelKpis ? `~${pctLabel(expectedRatePct)}` : "—"}</span>
+      </div>
+      <div class="imr-proj-highlight-item imr-proj-highlight-accent">
+        <span class="imr-proj-highlight-label">${renderMetricTooltip("Renovações esperadas", METRIC_TOOLTIPS.expectedRenewals)}</span>
+        <span class="imr-proj-highlight-value">${hasModelKpis ? num1(expectedRenewals) : "—"}</span>
+      </div>
+      <div class="imr-proj-highlight-item">
+        <span class="imr-proj-highlight-label">${renderMetricTooltip("Faixa esperada", METRIC_TOOLTIPS.faixa || METRIC_TOOLTIPS.projectionBand)}</span>
+        <span class="imr-proj-highlight-value">${faixaEstimada}</span>
+      </div>
+    </div>
+    <p class="imr-proj-highlight-foot note-muted">Esse número é obtido somando as probabilidades individuais dos clientes no horizonte.</p>
+  </section>`;
 
   const modelPanel =
     (proj.modelProjectionPublished || exp?.available) && exp?.model
-      ? `<section class="ims-proj-panel ims-proj-model" aria-labelledby="ims-proj-model-title">
-      <h3 class="ims-proj-panel-title" id="ims-proj-model-title">Validação do modelo exploratório</h3>
-      <div class="ims-proj-metrics-grid">
-        ${imsProjMetricCell("Treino", fmt.format(exp.model.trainN ?? 0))}
-        ${imsProjMetricCell("Renovados", fmt.format(exp.model.trainEvents ?? 0))}
-        ${imsProjMetricCell("Taxa base", exp.model.baseRate != null ? pctLabel(exp.model.baseRate * 100) : "—")}
-        ${imsProjMetricCell("ROC-AUC", exp.model.rocAuc ?? "—")}
-        ${imsProjMetricCell("Brier", exp.model.brierScore ?? "—")}
-        ${imsProjMetricCell("Calibração", exp.model.calibrationOk ? "adequada" : "insuficiente")}
+      ? `<section class="imr-proj-block imr-proj-validation" aria-labelledby="imr-proj-validation-title">
+      <h3 class="imr-proj-block-title" id="imr-proj-validation-title">Validação do modelo</h3>
+      <p class="imr-proj-block-sub note-muted">Como avaliamos se as probabilidades do modelo fazem sentido.</p>
+      <div class="imr-proj-validation-grid">
+        ${imrProjMetricCard("Treino", `<span class="imr-proj-num-md">${fmt.format(exp.model.trainN ?? 0)}</span>`, "clientes")}
+        ${imrProjMetricCard("Renovados no treino", fmt.format(exp.model.trainEvents ?? 0))}
+        ${imrProjMetricCard(renderMetricTooltip("Taxa base", METRIC_TOOLTIPS.baseRateTraining), exp.model.baseRate != null ? pctLabel(exp.model.baseRate * 100) : "—")}
+        ${imrProjMetricCard(renderMetricTooltip("ROC-AUC", METRIC_TOOLTIPS.rocAucExplainer), formatRocPct(exp.model.rocAuc))}
+        ${imrProjMetricCard(renderMetricTooltip("Brier", METRIC_TOOLTIPS.brierExplainer), exp.model.brierScore != null ? Number(exp.model.brierScore).toFixed(3) : "—")}
+        ${imrProjMetricCard(
+          renderMetricTooltip("Calibração", METRIC_TOOLTIPS.calibrationOk),
+          exp.model.calibrationOk ? "Adequada" : "Insuficiente",
+        )}
       </div>
-      ${
-        exp.expectation?.narrative
-          ? `<p class="ims-proj-model-narrative">${escapeHtml(exp.expectation.narrative)}</p>`
-          : ""
-      }
     </section>`
-      : `<p class="note-muted ims-proj-model-placeholder">${escapeHtml(proj.modelProjectionNote || exp?.expectation?.message || "Modelo em validação — expectativa numérica indisponível.")}</p>`;
+      : `<p class="note-muted imr-proj-model-placeholder">${escapeHtml(proj.modelProjectionNote || exp?.expectation?.message || "Modelo em validação — expectativa numérica indisponível.")}</p>`;
 
-  const top3 = (exp?.topMechanismsAdjusted || exp?.topMechanisms || [])
+  const topMechList = exp?.topMechanismsAdjusted || exp?.topMechanisms || [];
+  const top3Cards = topMechList
     .map((m, i) => {
-      const diff =
-        m.diffPp != null ? `${m.diffPp >= 0 ? "+" : ""}${num1(m.diffPp)} p.p.` : "—";
-      return `<article class="ims-top-mech-card">
-        <div class="ims-top-mech-rank">#${i + 1}</div>
-        <h4 class="ims-top-mech-name">${escapeHtml(m.mechanismName)}</h4>
-        <div class="ims-top-mech-stats">
-          ${imsProjStatRow("Clientes no proxy até 31/12", fmt.format(m.horizonClientsWithEndDate ?? 0))}
-          ${imsProjStatRow("Taxa histórica", `${pctLabel(m.historicalRatePct)} <span class="note-muted">(N=${fmt.format(m.historicalN ?? 0)})</span>`)}
-          ${imsProjStatRow("Δ vs sem mecanismo", diff)}
-          ${imsProjStatRow("Prob. média prevista", pctLabel((m.meanPredictedProbability ?? 0) * 100))}
-          ${imsProjStatRow("Renovações esperadas", num1(m.expectedRenewalsAmongHorizon))}
+      const histRate = m.historicalRatePct != null ? pctLabel(m.historicalRatePct) : "—";
+      const meanProb = pctLabel((m.meanPredictedProbability ?? 0) * 100);
+      return `<article class="imr-proj-mech-card">
+        <div class="imr-proj-mech-rank">#${i + 1}</div>
+        <h4 class="imr-proj-mech-name">${escapeHtml(m.mechanismName)}</h4>
+        <div class="imr-proj-mech-hero">
+          <span class="imr-proj-mech-hero-label">${renderMetricTooltip("Taxa histórica", METRIC_TOOLTIPS.historicalMechanismRate)}</span>
+          <span class="imr-proj-mech-hero-value">${histRate}</span>
+        </div>
+        <div class="imr-proj-mech-meta">
+          <div class="imr-proj-mech-meta-row">
+            <span class="imr-proj-mech-meta-label">${renderMetricTooltip("Δ vs sem mecanismo", METRIC_TOOLTIPS.deltaVsWithoutMechanism)}</span>
+            <span class="imr-proj-mech-meta-value">${ppDisplay(m.diffPp)}</span>
+          </div>
+          <div class="imr-proj-mech-meta-row">
+            <span class="imr-proj-mech-meta-label">N histórico</span>
+            <span class="imr-proj-mech-meta-value">${fmt.format(m.historicalN ?? 0)}</span>
+          </div>
+        </div>
+        <div class="imr-proj-mech-horizon">
+          <p class="imr-proj-mech-horizon-title">No horizonte atual</p>
+          <div class="imr-proj-mech-meta-row">
+            <span class="imr-proj-mech-meta-label">Clientes</span>
+            <span class="imr-proj-mech-meta-value">${fmt.format(m.horizonClientsWithEndDate ?? 0)}</span>
+          </div>
+          <div class="imr-proj-mech-meta-row">
+            <span class="imr-proj-mech-meta-label">Probabilidade média prevista</span>
+            <span class="imr-proj-mech-meta-value">${meanProb}</span>
+          </div>
+          <div class="imr-proj-mech-meta-row">
+            <span class="imr-proj-mech-meta-label">${renderMetricTooltip("Renovações esperadas", METRIC_TOOLTIPS.expectedRenewalsMechanism)}</span>
+            <span class="imr-proj-mech-meta-value">${num1(m.expectedRenewalsAmongHorizon)}</span>
+          </div>
         </div>
       </article>`;
     })
     .join("");
 
-  const mechBandsTable = (exp?.mechanismCountBands || []).length
-    ? `<section class="ims-proj-panel ims-proj-bands" aria-labelledby="ims-proj-bands-title">
-      <h3 class="ims-proj-panel-title" id="ims-proj-bands-title">Quantidade de mecanismos no horizonte</h3>
+  const top3Section = top3Cards
+    ? `<section class="imr-proj-block imr-proj-top-mech" aria-labelledby="imr-proj-top-title">
+      <div class="imr-proj-block-head">
+        <span class="imr-proj-badge imr-proj-badge-assoc">${renderMetricTooltip("ASSOCIAÇÃO OBSERVADA", METRIC_TOOLTIPS.associationBadge)}</span>
+        <h3 class="imr-proj-block-title" id="imr-proj-top-title">Top 3 mecanismos com maior associação observada à renovação</h3>
+      </div>
+      <p class="imr-proj-block-sub note-muted">Esses mecanismos apareceram com taxas de renovação historicamente mais altas que o grupo sem mecanismos.</p>
+      <p class="imr-proj-causal-note callout-note">Isso não significa que o mecanismo causou a renovação.</p>
+      <div class="imr-proj-mech-grid">${top3Cards}</div>
+    </section>
+    <section class="imr-proj-block imr-proj-top-chart" aria-labelledby="imr-proj-top-chart-title">
+      <h4 class="imr-proj-block-title imr-proj-block-title-sm" id="imr-proj-top-chart-title">Taxa histórica — top 3</h4>
+      ${projectionTopMechanismsHBars(topMechList)}
+    </section>`
+    : "";
+
+  const rawRows = exp?.topMechanismsByRawRate || [];
+  const rawTable = rawRows.length
+    ? `<section class="imr-proj-block imr-proj-raw-rates" aria-labelledby="imr-proj-raw-title">
+      <div class="imr-proj-block-head">
+        <span class="imr-proj-badge imr-proj-badge-raw">${renderMetricTooltip("TAXA BRUTA", METRIC_TOOLTIPS.rawRateBadge)}</span>
+        <h3 class="imr-proj-block-title" id="imr-proj-raw-title">Maiores taxas históricas de renovação</h3>
+      </div>
+      <p class="imr-proj-block-sub note-muted">Ranking descritivo. Não é o mesmo que associação ajustada.</p>
       <div class="table-wrap">
-        <table class="gd-table ims-table ims-proj-bands-table">
+        <table class="gd-table imr-proj-raw-table">
+          <thead><tr>
+            <th>Mecanismo</th><th class="num">Taxa</th><th class="num">N</th><th class="num">Renovados</th><th class="num">Δ vs sem mecanismo</th>
+          </tr></thead>
+          <tbody>${rawRows
+            .map(
+              (m) => `<tr>
+                <td>${escapeHtml(m.mechanismName)}</td>
+                <td class="num">${pctLabel(m.historicalRatePct)}</td>
+                <td class="num">${fmt.format(m.historicalN ?? 0)}</td>
+                <td class="num">${fmt.format(m.historicalRenewed ?? 0)}</td>
+                <td class="num">—</td>
+              </tr>`,
+            )
+            .join("")}</tbody>
+        </table>
+      </div>
+    </section>`
+    : "";
+
+  const mechBandsTable = (exp?.mechanismCountBands || []).length
+    ? `<section class="imr-proj-block imr-proj-bands" aria-labelledby="imr-proj-bands-title">
+      <h3 class="imr-proj-block-title" id="imr-proj-bands-title">Quantidade de mecanismos no horizonte</h3>
+      <div class="table-wrap">
+        <table class="gd-table ims-table imr-proj-bands-table">
           <thead><tr>
             <th>Faixa</th><th class="num">Clientes</th><th class="num">Prob. média</th><th class="num">Esperado</th>
           </tr></thead>
@@ -210,16 +349,17 @@ function renderYearEndRenewalProjection(proj) {
 
   const distPanel =
     exp?.available && exp?.probabilityDistribution?.length
-      ? `<section class="ims-proj-panel ims-proj-dist" aria-labelledby="ims-proj-dist-title">
-      <h3 class="ims-proj-panel-title" id="ims-proj-dist-title">Distribuição de probabilidades previstas</h3>
-      <div class="ims-proj-dist-chart">${exp.probabilityDistribution
+      ? `<section class="imr-proj-block imr-proj-dist" aria-labelledby="imr-proj-dist-title">
+      <h3 class="imr-proj-block-title" id="imr-proj-dist-title">Como estão distribuídas as chances de renovação?</h3>
+      <p class="note-muted imr-proj-block-sub">Mostra quantos clientes estão em cada faixa de probabilidade estimada pelo Modelo A.</p>
+      <div class="imr-proj-dist-chart">${exp.probabilityDistribution
         .map((b) => {
           const max = Math.max(1, ...exp.probabilityDistribution.map((x) => x.count));
           const h = Math.max(4, Math.round((b.count / max) * 88));
-          return `<div class="ims-proj-dist-col">
-            <span class="ims-proj-dist-value">${fmt.format(b.count)}</span>
-            <div class="ims-proj-dist-bar" style="height:${h}px" role="presentation"></div>
-            <span class="ims-proj-dist-label">${escapeHtml(b.label)}</span>
+          return `<div class="imr-proj-dist-col">
+            <span class="imr-proj-dist-value">${fmt.format(b.count)}</span>
+            <div class="imr-proj-dist-bar" style="height:${h}px" role="presentation"></div>
+            <span class="imr-proj-dist-label">${escapeHtml(b.label)}</span>
           </div>`;
         })
         .join("")}</div>
@@ -231,92 +371,31 @@ function renderYearEndRenewalProjection(proj) {
     .map((w) => `<li>${escapeHtml(w)}</li>`)
     .join("");
 
-  return `
-  <div class="ims-projection-layout ims-projection-exploratory">
-    <header class="ims-proj-header">
-      <span class="ims-proxy-badge">PROJEÇÃO EXPLORATÓRIA · ${escapeHtml(proj.badge || "PROXY")}</span>
-      <div class="ims-proj-callout" role="note">
-        <p>${escapeHtml(calloutText)}</p>
-      </div>
-    </header>
-
-    <div class="kpi-row kpi-row-primary ims-proj-kpi-primary">
-      ${kpiCard("Clientes no horizonte até 31/12", fmt.format(horizonTotal), "Proxy · fim de ciclo no ano", { featured: true, highlight: true })}
-      ${kpiCard("Expectativa de renovação", hasModelKpis ? pctLabel(expectedRatePct) : "—", "Modelo exploratório", { featured: true })}
-      ${kpiCard("Renovações esperadas", hasModelKpis ? fmt.format(Math.round(expectedRenewals ?? 0)) : "—", "Soma das probabilidades", { featured: true, highlight: true })}
-      ${kpiCard("Faixa estimada", faixaEstimada, "Intervalo plausível", { featured: true })}
-    </div>
-
-    <div class="kpi-row kpi-row-secondary ims-proj-kpi-secondary">
-      ${kpiCard("Pharus", fmt.format(horizon.pharus ?? 0), "No horizonte", { compact: true })}
-      ${kpiCard("Davos", fmt.format(horizon.davos ?? 0), "No horizonte", { compact: true })}
-      <article class="kpi-card kpi-card-compact ims-proj-kpi-proxy">
-        <div class="kpi-label">Classificação do proxy</div>
-        <div class="kpi-value ims-proj-proxy-class">${escapeHtml(classif || "—")}</div>
-        <div class="kpi-note">${escapeHtml(val.classificationLabel || "Proxy razoável")}</div>
-      </article>
-      ${kpiCard("Cobertura data_fim_ciclo", pctLabel(cov.endPct), "Carteira ativa", { compact: true })}
-    </div>
-
-    <p class="note-muted ims-proj-coverage-meta">
-      Ativos sem data: ${fmt.format(withoutEnd)} · Fim de ciclo no passado: ${fmt.format(qual.pastEndOnActive ?? 0)} ·
-      Duração ciclo 1 — mediana ${dur1.median ?? "—"} d (p25 ${dur1.p25 ?? "—"}, p75 ${dur1.p75 ?? "—"})
-    </p>
-
-    ${
-      monthRows.length
-        ? `<section class="ims-proj-panel ims-proj-months" aria-labelledby="ims-proj-months-title">
-      <h3 class="ims-proj-panel-title" id="ims-proj-months-title">Clientes por mês no horizonte</h3>
-      <div class="ims-proj-month-bars">${monthBars}</div>
-    </section>`
-        : ""
-    }
-
-    <details class="ims-proj-howto">
+  const readHowTo = `<details class="imr-proj-howto imr-proj-howto-read">
       <summary>Como ler esta seção</summary>
-      <ul class="ims-proj-howto-list">
-        <li><strong>Clientes no horizonte</strong> — clientes com fim de ciclo até 31/12 usando o proxy.</li>
-        <li><strong>Expectativa de renovação</strong> — percentual médio estimado pelo modelo exploratório.</li>
-        <li><strong>Renovações esperadas</strong> — soma aproximada das probabilidades.</li>
-        <li><strong>Faixa estimada</strong> — intervalo plausível, não garantia.</li>
-        <li><strong>Top mecanismos</strong> — associações observadas, não causalidade.</li>
+      <ul class="imr-proj-howto-list">
+        <li><strong>Horizonte</strong> — clientes com fim de ciclo até 31/12 pelo proxy.</li>
+        <li><strong>Projeção</strong> — soma das probabilidades individuais.</li>
+        <li><strong>Top mecanismos</strong> — associação histórica, não causalidade.</li>
       </ul>
-      ${extraWarnings ? `<ul class="note-muted ims-proj-howto-warnings">${extraWarnings}</ul>` : ""}
-    </details>
+      ${extraWarnings ? `<ul class="note-muted imr-proj-howto-warnings">${extraWarnings}</ul>` : ""}
+    </details>`;
 
+  return `
+  <div class="imr-projection-layout">
+    ${horizonSummary}
+    ${monthSection}
+    ${projectionHero}
     ${modelPanel}
+    ${top3Section}
+    ${rawTable}
     ${renderModelHowToBlock(exp)}
-
-    ${
-      top3
-        ? `<section class="ims-proj-panel ims-proj-top-mech" aria-labelledby="ims-proj-top-title">
-      <h3 class="ims-proj-panel-title" id="ims-proj-top-title">Top 3 mecanismos com maior associação observada à renovação</h3>
-      <div class="ims-top-mech-grid">${top3}</div>
-    </section>`
-        : ""
-    }
-
-    ${
-      (exp?.topMechanismsByRawRate || []).length
-        ? `<section class="ims-proj-panel ims-proj-top-raw" aria-labelledby="ims-proj-raw-title">
-      <h3 class="ims-proj-panel-title" id="ims-proj-raw-title">Maiores taxas históricas (referência — não é o Top 3 ajustado)</h3>
-      <ul class="note-muted">${(exp.topMechanismsByRawRate || [])
-        .map(
-          (m, i) =>
-            `<li>#${i + 1} ${escapeHtml(m.mechanismName)} — ${pctLabel(m.historicalRatePct)} (N=${fmt.format(m.historicalN)})</li>`,
-        )
-        .join("")}</ul>
-    </section>`
-        : ""
-    }
-
+    ${readHowTo}
     ${mechBandsTable}
     ${distPanel}
-
-    <div id="imsProjecaoHorizonteTable" class="ims-proj-table-host"></div>
-
-    <p class="note-muted ims-proj-footnote">${escapeHtml(proj.permanenceBiasNote || "")}</p>
-    <p class="note-muted ims-proj-footnote">${escapeHtml(proj.causalNote || "")}</p>
+    <div id="imsProjecaoHorizonteTable" class="imr-proj-table-host"></div>
+    <p class="note-muted imr-proj-footnote">${escapeHtml(proj.permanenceBiasNote || "")}</p>
+    <p class="note-muted imr-proj-footnote">${escapeHtml(proj.causalNote || "")}</p>
   </div>`;
 }
 
