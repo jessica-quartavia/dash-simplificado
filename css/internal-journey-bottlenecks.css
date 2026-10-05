@@ -244,44 +244,6 @@
   width: 5rem;
 }
 
-.ijb-heatmap-row-label {
-  text-align: left;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.ijb-heatmap-cell {
-  text-align: right;
-  min-width: 5.5rem;
-}
-
-.ijb-heatmap-pct {
-  display: block;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.ijb-heatmap-n {
-  display: block;
-  font-size: 0.72rem;
-  color: var(--muted);
-}
-
-.ijb-heatmap-legend {
-  margin: 0.65rem 0 0;
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-.ijb-heatmap-legend-muted {
-  margin-top: 0.25rem;
-  font-size: 0.75rem;
-}
-
-.ijb-heatmap-insights {
-  margin-top: 0.75rem;
-}
-
 .ijb-ranking-list {
   margin: 0;
   padding-left: 1.25rem;

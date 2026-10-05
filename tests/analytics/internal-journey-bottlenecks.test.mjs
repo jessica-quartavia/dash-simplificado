@@ -10,13 +10,11 @@ import {
   PAGE_ACCESS_REGISTRY,
 } from "../../lib/access/access-policy.mjs";
 import {
-  buildFirstMeetingOnboardingHeatmap,
   buildInternalJourneyBottlenecksPayload,
   classifyAttentionLevel,
   countDaysWithoutMeetingAtLeast,
   IJB_EP_MIN_N,
 } from "../../lib/analytics/internal-journey-bottlenecks.mjs";
-import { buildFirstMeetingHeatmapInsights } from "../../lib/analytics/internal-journey-bottlenecks-insights.mjs";
 import { filterJourneyBottleneckRows, defaultInternalJourneyBottlenecksFilters } from "../../lib/analytics/internal-journey-bottlenecks-filters.mjs";
 import { sortUnknownLast } from "../../lib/analytics/filters/sort-categories.mjs";
 import { getPageFilterContract } from "../../lib/analytics/filters/page-contracts.mjs";
@@ -367,7 +365,8 @@ test("payload compute com linhas mock", () => {
   assert.equal(payload.defaultStatusFilter, "active");
   assert.ok(Array.isArray(payload.filterOptions?.engineers));
   assert.ok(Array.isArray(payload.rankings));
-  assert.ok(payload.firstMeetingOnboardingHeatmap?.rows?.length >= 1);
+  assert.equal(payload.firstMeetingOnboardingHeatmap, undefined);
+  assert.equal(payload.firstMeetingHeatmapInsights, undefined);
   assert.equal(payload.cancellationCompare, undefined);
   assert.equal(payload.quality, undefined);
   assert.equal(payload.programTable, undefined);
@@ -422,7 +421,9 @@ test("UX: blocos removidos e heatmap EP dropdown", () => {
   assert.doesNotMatch(js, /Gargalos por programa/);
   assert.doesNotMatch(js, /Qualidade dos dados/);
   assert.match(js, /Há quanto tempo os clientes não fazem reunião/);
-  assert.match(js, /ijb-heatmap/);
+  assert.doesNotMatch(js, /Primeira reunião × conclusão do onboarding/);
+  assert.doesNotMatch(js, /renderHeatmap/);
+  assert.doesNotMatch(js, /ijb-heatmap/);
   assert.match(js, /ijbEpFilter/);
   assert.match(js, /Todos os EPs/);
   assert.match(js, /kpiPctPrimary/);
@@ -446,23 +447,6 @@ test("UX: blocos removidos e heatmap EP dropdown", () => {
   assert.match(js, /ijb-cell-alert/);
   assert.match(js, /window\.scrollTo/);
   assert.match(js, /ijb-table-wrap/);
-});
-
-test("heatmap matriz e insights", () => {
-  const rows = [
-    mockRow({ clientId: "a", daysToFirstMeeting: 3, completedOnboarding: true, firstMeetingCompleted: true }),
-    mockRow({ clientId: "b", daysToFirstMeeting: 5, completedOnboarding: true, firstMeetingCompleted: true }),
-    mockRow({ clientId: "c", daysToFirstMeeting: 40, completedOnboarding: false, firstMeetingCompleted: true }),
-    mockRow({ clientId: "d", firstMeetingCompleted: false, completedOnboarding: false }),
-  ];
-  const hm = buildFirstMeetingOnboardingHeatmap(rows);
-  assert.ok(hm.rows.some((r) => r.bucketId === "0-7"));
-  assert.ok(hm.denominatorNote.includes("faixa"));
-  const row07 = hm.rows.find((r) => r.bucketId === "0-7");
-  assert.equal(row07.n, 2);
-  assert.equal(row07.completed.count, 2);
-  const insights = buildFirstMeetingHeatmapInsights(hm);
-  assert.ok(Array.isArray(insights));
 });
 
 test("handler registrado no router", () => {

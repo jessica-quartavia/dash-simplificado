@@ -216,20 +216,6 @@ function onboardingLabel(completed) {
   return "—";
 }
 
-function heatmapIntensity(pctVal) {
-  const p = Number(pctVal);
-  if (!Number.isFinite(p)) return 0;
-  return Math.min(1, Math.max(0, p / 100));
-}
-
-function heatmapCellStyle(pctVal, tone = "coral") {
-  const t = heatmapIntensity(pctVal);
-  if (tone === "neutral") {
-    return `background: color-mix(in srgb, var(--muted) ${Math.round(4 + t * 18)}%, var(--surface));`;
-  }
-  return `background: color-mix(in srgb, var(--primary) ${Math.round(6 + t * 28)}%, var(--surface));`;
-}
-
 function epOptionsFromPayload(p) {
   const eps = (p?.epTable || []).map((r) => r.ep).filter(Boolean);
   return sortLabelsUnknownLast(eps);
@@ -364,53 +350,6 @@ function renderRecencyChart(p) {
       </div>`;
       })
       .join("")}</div>
-  </section>`;
-}
-
-function renderHeatmap(p) {
-  const hm = p.firstMeetingOnboardingHeatmap;
-  const rows = hm?.rows || [];
-  if (!rows.length) return "";
-  const body = rows
-    .map((row) => {
-      const c = row.completed || {};
-      const nc = row.notCompleted || {};
-      const tipDone = `${row.bucket}\nOnboarding concluído\nClientes: ${fmt.format(c.count ?? 0)}\nConclusão: ${pct(c.pctOfRow)}\nBase da faixa: ${fmt.format(row.n)}`;
-      const tipOpen = `${row.bucket}\nOnboarding não concluído\nClientes: ${fmt.format(nc.count ?? 0)}\nNão conclusão: ${pct(nc.pctOfRow)}\nBase da faixa: ${fmt.format(row.n)}`;
-      return `<tr>
-        <th scope="row" class="ijb-heatmap-row-label">${escapeHtml(row.bucket)}</th>
-        <td class="ijb-heatmap-cell num" style="${heatmapCellStyle(c.pctOfRow)}" title="${escapeHtml(tipDone)}">
-          <span class="ijb-heatmap-pct">${pct(c.pctOfRow)}</span>
-          <span class="ijb-heatmap-n">${fmt.format(c.count ?? 0)}</span>
-        </td>
-        <td class="ijb-heatmap-cell num" style="${heatmapCellStyle(nc.pctOfRow, "neutral")}" title="${escapeHtml(tipOpen)}">
-          <span class="ijb-heatmap-pct">${pct(nc.pctOfRow)}</span>
-          <span class="ijb-heatmap-n">${fmt.format(nc.count ?? 0)}</span>
-        </td>
-        <td class="num ijb-heatmap-base">${fmt.format(row.n)}</td>
-      </tr>`;
-    })
-    .join("");
-  const hmInsights = (p.firstMeetingHeatmapInsights || []).map((t) => `<li>${escapeHtml(t)}</li>`).join("");
-  return `<section class="ijb-section">
-    ${sectionHead(
-      "Primeira reunião × conclusão do onboarding",
-      "Veja como a conclusão do onboarding varia conforme o tempo até a primeira reunião.",
-    )}
-    <div class="table-wrap ijb-table-wrap">
-      <table class="gd-table ijb-table ijb-heatmap">
-        <thead><tr>
-          <th>Tempo até 1ª reunião</th>
-          <th class="num">Onboarding concluído</th>
-          <th class="num">Onboarding não concluído</th>
-          <th class="num col-narrow">N faixa</th>
-        </tr></thead>
-        <tbody>${body}</tbody>
-      </table>
-    </div>
-    <p class="ijb-heatmap-legend">${escapeHtml(hm?.denominatorNote || "Percentuais calculados dentro de cada faixa de tempo até a primeira reunião.")}</p>
-    <p class="ijb-heatmap-legend ijb-heatmap-legend-muted">Quanto mais intensa a célula, maior a concentração de clientes naquele resultado.</p>
-    ${hmInsights ? `<ul class="ijb-insight-list ijb-heatmap-insights">${hmInsights}</ul>` : ""}
   </section>`;
 }
 
@@ -666,7 +605,6 @@ function renderPageHtml(p) {
     ${renderVelocity(p)}
     ${renderMeetingsCadence(p)}
     ${renderRecencyChart(p)}
-    ${renderHeatmap(p)}
     ${renderRankings(p)}
     ${renderMeetingTypes(p)}
     ${renderEpSection(p)}
