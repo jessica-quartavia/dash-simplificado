@@ -232,6 +232,18 @@ export const PAGES = [
     implemented: true,
   },
   {
+    id: "internal_journey_bottlenecks",
+    hash: "internal-journey-bottlenecks",
+    aliases: ["internal_journey_bottlenecks", "gargalos-jornada", "gargalos-da-jornada"],
+    group: "internal",
+    navLabel: "Gargalos da Jornada",
+    title: "Gargalos da Jornada",
+    eyebrow: "Análises internas",
+    description:
+      "Gargalos de onboarding, reuniões e cadência — insights associativos sobre fricção na jornada inicial.",
+    implemented: true,
+  },
+  {
     id: "reports",
     hash: "reports",
     aliases: ["relatorios", "relatórios"],

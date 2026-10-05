@@ -201,6 +201,8 @@ const PAGE_BOOT_RECOVER = {
     import("./internal-mechanisms-satisfaction.js").then((mod) => mod.bootInternalMechanismsSatisfaction()),
   internal_mechanisms_renewal_projection: () =>
     import("./internal-mechanisms-renewal-projection.js").then((mod) => mod.bootInternalMechanismsRenewalProjection()),
+  internal_journey_bottlenecks: () =>
+    import("./internal-journey-bottlenecks.js").then((mod) => mod.bootInternalJourneyBottlenecks()),
 };
 
 function isStillPreparing() {

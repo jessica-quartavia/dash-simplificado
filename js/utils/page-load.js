@@ -17,6 +17,7 @@ const CACHE_TTL_MS = {
   statistical_crosses: 10 * 60 * 1000,
   internal_mechanisms_satisfaction: 0,
   internal_mechanisms_renewal_projection: 0,
+  internal_journey_bottlenecks: 0,
   health_score: 5 * 60 * 1000,
   executive_summary: 5 * 60 * 1000,
   quality: 10 * 60 * 1000,

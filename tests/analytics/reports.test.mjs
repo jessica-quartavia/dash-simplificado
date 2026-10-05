@@ -63,7 +63,12 @@ test("Relatórios em Análises internas (após Mecanismos × Satisfação)", () 
   const overview = PAGES.filter((item) => item.group === "overview").map((item) => item.navLabel);
   assert.deepEqual(overview, ["Resumo Executivo", "Dados Gerais"]);
   const internal = PAGES.filter((item) => item.group === "internal").map((item) => item.navLabel);
-  assert.deepEqual(internal, ["Mecanismos × Satisfação", "Relatórios"]);
+  assert.deepEqual(internal, [
+    "Mecanismos × Satisfação",
+    "Projeção Mecanismos × Renovação",
+    "Gargalos da Jornada",
+    "Relatórios",
+  ]);
 });
 
 test("título obrigatório com trim e limite", () => {

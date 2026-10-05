@@ -185,17 +185,21 @@ test("Produto herda Líderes e ganha Relatórios (Análises internas)", () => {
   assert.equal(canAccessPage(product, "satisfaction"), true);
   assert.equal(canAccessPage(product, "support"), false);
   for (const page of PAGES) {
-    if (page.id === "reports") continue;
+    if (page.id === "reports" || page.id === "internal_journey_bottlenecks") continue;
     assert.equal(canAccessPage(product, page.id), canAccessPage(leader, page.id), page.id);
   }
   assert.equal(canAccessPage(product, ACCESS_MANAGEMENT_PAGE_ID), false);
 });
 
-test("menu Produto: Análises internas só com Relatórios", () => {
-  const menu = filterPagesForMenu(access(["product"]));
+test("menu Produto: Análises internas com Gargalos e Relatórios", () => {
+  const leader = access(["leaders"]);
+  const product = access(["product"]);
+  const menu = filterPagesForMenu(product);
   const internal = menu.find((group) => group.id === "internal");
   assert.ok(internal, "categoria internal");
-  assert.deepEqual(internal.pages.map((page) => page.id), ["reports"]);
+  assert.equal(canAccessPage(product, "internal_journey_bottlenecks"), true);
+  assert.equal(canAccessPage(leader, "internal_journey_bottlenecks"), false);
+  assert.deepEqual(internal.pages.map((page) => page.id), ["internal_journey_bottlenecks", "reports"]);
   const reportEntries = menu.flatMap((group) => group.pages.filter((page) => page.id === "reports"));
   assert.equal(reportEntries.length, 1);
   assert.equal(reportEntries[0].allowed, true);
