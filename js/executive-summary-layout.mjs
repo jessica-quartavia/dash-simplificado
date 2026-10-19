@@ -1,7 +1,14 @@
 /**
  * Renderização visual do Resumo Executivo — somente markup/CSS classes.
  */
-import { escapeHtml, hBars, rankedBars, acquisitionColumns, mechanismDistributionBars, intentionEffectiveColumns } from "./general-charts.mjs";
+import {
+  escapeHtml,
+  hBars,
+  rankedBars,
+  mechanismDistributionBars,
+  acquisitionChurnBalanceColumns,
+  cancellationIntentionPedidoColumns,
+} from "./general-charts.mjs";
 
 const fmt = new Intl.NumberFormat("pt-BR");
 const pctFmt = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
@@ -136,8 +143,8 @@ function renderBase(block) {
   const income = metric(block, "median_monthly_income");
   const contribution = metric(block, "median_last_contribution");
   const reserve = metric(block, "median_liquidity_reserve");
-  const acquisition = metric(block, "acquisition_last_3_months");
-  const acqSeries = Array.isArray(acquisition.value) ? acquisition.value : [];
+  const acquisitionBalance = metric(block, "acquisition_churn_balance_monthly");
+  const acqSeries = Array.isArray(acquisitionBalance.value) ? acquisitionBalance.value : [];
   const segmentItems = (segments.value || []).map((item) => ({
     label: item.label,
     count: item.count,
@@ -173,7 +180,7 @@ function renderBase(block) {
         ${execKpi({ label: "Reserva mediana", value: money(reserve.value), note: coverageNote(reserve), mini: true })}
       </div>
     </div>
-    ${execChart("Aquisição — últimos 3 meses", acquisitionColumns(acqSeries, 3), "executive-chart-card--compact")}`,
+    ${execChart("Aquisição × churn × balança (12 meses)", acquisitionChurnBalanceColumns(acqSeries, 12), "executive-chart-card--wide executive-chart-card--compact")}`,
     block.status,
   );
 }
@@ -255,7 +262,7 @@ function renderValue(block, chartExpanded = {}) {
   if (!block) return execSection("Entrega de valor", "", "error");
   const clients = metric(block, "clients_with_implemented_mechanisms");
   const rate = metric(block, "clients_implementation_rate");
-  const distribution = metric(block, "mechanism_type_distribution");
+  const distribution = metric(block, "mechanism_count_distribution");
   const distItems = (distribution.value?.full || distribution.value?.top || distribution.value || []).map((item) => ({
     label: item.label,
     count: item.count ?? item.clients ?? 0,
@@ -286,7 +293,7 @@ function renderValue(block, chartExpanded = {}) {
         })}
       </div>
       ${execChart(
-        "Distribuição dos mecanismos",
+        "Quantidade de mecanismos por cliente",
         mechanismDistributionBars(distItems, { limit: 8, expanded: distExpanded, chartId: "mechanismDistribution" }),
         "executive-chart-card--distribution",
       )}
@@ -379,7 +386,7 @@ function renderHealth(block) {
     </div>
     ${execChart(
       "Cancelamentos × intenções (mensal)",
-      intentionEffectiveColumns(monthlyRows, 12),
+      cancellationIntentionPedidoColumns(monthlyRows, 12),
       "executive-chart-card--wide executive-chart-card--monthly",
     )}
     <div class="executive-grid executive-grid--health-bottom">

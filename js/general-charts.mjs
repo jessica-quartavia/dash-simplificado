@@ -355,11 +355,84 @@ export function intentionEffectiveColumns(series, limit = 12) {
       secondaryLabel: "Efet.",
       primaryClass: "intention",
       secondaryClass: "effective",
-      legendPrimary: "Intenções/pedidos",
-      legendSecondary: "Efetivados",
+      legendPrimary: "Intenções",
+      legendSecondary: "Churn efetivo",
       emptyNote: "Sem meses históricos para exibir.",
     },
   );
+}
+
+/** Intenção × pedido × churn efetivo por mês. */
+export function cancellationIntentionPedidoColumns(series, limit = 12) {
+  const visible = (series || []).slice(-limit);
+  if (!visible.length) {
+    return `<p class="placeholder-note">Sem meses históricos para exibir.</p>`;
+  }
+  const maxValue = Math.max(
+    ...visible.flatMap((i) => [i.intentions || 0, i.pedidos || 0, i.effective || 0]),
+    0,
+  );
+  const plotH = 160;
+  const long = Number(limit) >= 12;
+  const minCol = 72;
+  return `<div class="acq-chart-scroll"><div class="acq-chart-grid triple-chart" style="min-width:${visible.length * minCol}px" data-cols="${visible.length}">${visible
+    .map((i) => {
+      const a = Number(i.intentions || 0);
+      const b = Number(i.pedidos || 0);
+      const c = Number(i.effective || 0);
+      const px = (v) => (maxValue > 0 && v ? Math.max(Math.round((v / maxValue) * plotH), 4) : 0);
+      return `<div class="acq-col triple-col" title="${escapeHtml(i.month)}: int ${a} · ped ${b} · efet ${c}">
+        <div class="triple-bars">
+          <div class="dual-bar-group"><div class="acq-col-value">${a.toLocaleString("pt-BR")}</div><div class="acq-col-bar dual-bar intention" style="height:${px(a)}px"></div><div class="dual-bar-series-label">Int.</div></div>
+          <div class="dual-bar-group"><div class="acq-col-value">${b.toLocaleString("pt-BR")}</div><div class="acq-col-bar dual-bar pedido" style="height:${px(b)}px"></div><div class="dual-bar-series-label">Ped.</div></div>
+          <div class="dual-bar-group"><div class="acq-col-value">${c.toLocaleString("pt-BR")}</div><div class="acq-col-bar dual-bar effective" style="height:${px(c)}px"></div><div class="dual-bar-series-label">Churn</div></div>
+        </div>
+        <div class="acq-col-label">${escapeHtml(monthShortLabel(i.month, long))}</div>
+      </div>`;
+    })
+    .join("")}</div></div>
+    <p class="chart-legend-note"><span class="swatch intention"></span> Intenções <span class="swatch pedido"></span> Pedidos <span class="swatch effective"></span> Churn efetivo</p>
+    <p class="chart-legend-note chart-legend-note--muted">Séries independentes por data canônica de cada estágio.</p>`;
+}
+
+/** Aquisição × churn (barras) + balança líquida (valores abaixo). */
+export function acquisitionChurnBalanceColumns(series, limit = 12) {
+  const visible = (series || []).slice(-limit);
+  if (!visible.length) {
+    return `<p class="placeholder-note">Sem meses históricos para exibir.</p>`;
+  }
+  const dual = dualGroupedColumns(
+    visible.map((i) => ({
+      month: i.month,
+      acquisitions: i.acquisitions ?? 0,
+      churn: i.churn ?? 0,
+    })),
+    {
+      limit: visible.length,
+      primaryKey: "acquisitions",
+      secondaryKey: "churn",
+      primaryLabel: "Aquis.",
+      secondaryLabel: "Churn",
+      primaryClass: "acquisition",
+      secondaryClass: "churn",
+      legendPrimary: "Aquisições",
+      legendSecondary: "Churns",
+      emptyNote: "Sem meses históricos para exibir.",
+    },
+  );
+  const balanceRow = visible
+    .map((i) => {
+      const bal = i.balance ?? (i.acquisitions ?? 0) - (i.churn ?? 0);
+      const cls = bal > 0 ? "balance-positive" : bal < 0 ? "balance-negative" : "balance-zero";
+      return `<div class="acq-balance-cell ${cls}" title="Balança = clientes adquiridos no mês menos clientes em churn no mês.">
+        <span class="acq-balance-label">${escapeHtml(monthShortLabel(i.month, limit >= 12))}</span>
+        <strong>${bal > 0 ? "+" : ""}${bal.toLocaleString("pt-BR")}</strong>
+      </div>`;
+    })
+    .join("");
+  return `${dual}
+    <div class="acq-balance-strip" aria-label="Balança líquida mensal">${balanceRow}</div>
+    <p class="chart-legend-note chart-legend-note--muted">Balança = aquisição − churn no mês.</p>`;
 }
 
 /** Utilização por tipo — duas barras horizontais empilhadas (estilo V1). */

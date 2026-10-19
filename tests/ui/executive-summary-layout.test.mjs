@@ -19,11 +19,11 @@ const mockPayload = {
       median_monthly_income: { value: 40000, coverage: { percent: 91.9 } },
       median_last_contribution: { value: 5000, coverage: { percent: 88 } },
       median_liquidity_reserve: { value: 165651, coverage: { percent: 85 } },
-      acquisition_last_3_months: {
+      acquisition_churn_balance_monthly: {
         value: [
-          { month: "2025-12", acquiredClients: 3 },
-          { month: "2026-01", acquiredClients: 5 },
-          { month: "2026-02", acquiredClients: 4 },
+          { month: "2025-12", acquisitions: 3, churn: 1, balance: 2 },
+          { month: "2026-01", acquisitions: 5, churn: 2, balance: 3 },
+          { month: "2026-02", acquisitions: 4, churn: 4, balance: 0 },
         ],
       },
     },
@@ -51,7 +51,7 @@ const mockPayload = {
     metrics: {
       clients_with_implemented_mechanisms: { value: 100 },
       clients_implementation_rate: { value: 55, numerator: 100, denominator: 180 },
-      mechanism_type_distribution: { value: { top: [{ label: "M1", count: 10, percent: 50 }] } },
+      mechanism_count_distribution: { value: { top: [{ label: "1 mecanismo", count: 10, percent: 50 }] } },
     },
   },
   clientHealth: {
@@ -129,7 +129,7 @@ test("Base usa grid de KPIs e mini-cards financeiros", () => {
   assert.match(html, /executive-grid--base-secondary/);
   assert.match(html, /executive-grid--mini-kpis/);
   assert.match(html, /executive-kpi--accent/);
-  assert.match(html, /Aquisição — últimos 3 meses/);
+  assert.match(html, /Aquisição × churn × balança/);
 });
 
 test("Engajamento usa grid 3x2 compacto", () => {

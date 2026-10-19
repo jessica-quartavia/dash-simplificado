@@ -3,11 +3,13 @@ import { analyticalStatusDisplayLabel } from "../lib/analytics/analytical-cancel
 import {
   defaultRenewalFilters,
   filterRenewalClients,
+  normalizeRenewalFilters,
   RENEWED_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
   sortRenewalClients,
   DEFAULT_STATUS_FILTER,
 } from "../lib/analytics/renewal-filters.mjs";
+import { RENEWAL_INFERRED_MONTHLY_PROXY } from "../lib/analytics/renewal-metrics.mjs";
 import {
   distributionsFromRenewalRows,
   summarizeRenewalRows,
@@ -17,7 +19,7 @@ import { createFilterChangeHandler } from "../lib/analytics/filters/filter-state
 import { normalizeProgramFilter, programSelectOptions } from "../lib/analytics/filters/program.mjs";
 import { createPageRefresh } from "./components/page-refresh.js";
 import { fetchPageJson, mapLoadError } from "./utils/page-load.js";
-import { donut, escapeHtml, hBars } from "./general-charts.mjs";
+import { acquisitionColumns, donut, escapeHtml, hBars } from "./general-charts.mjs";
 import {
   bindFilterBar,
   bindTableExport,
@@ -55,6 +57,7 @@ const FILTER_FIELDS = [
   { kind: "select", id: "rnSegment", key: "segment", label: "Segmento", dynamic: true, allLabel: "Todos" },
   { kind: "select", id: "rnProgram", key: "program", label: "Programa", dynamic: true, allLabel: "Todos" },
   { kind: "select", id: "rnRenewed", key: "renewed", label: "Renovou", options: RENEWED_FILTER_OPTIONS },
+  { kind: "period", id: "rnPeriod", fromId: "rnFrom", toId: "rnTo" },
 ];
 
 function $(id) {
@@ -66,14 +69,17 @@ function uniqueSorted(values) {
 }
 
 function filtersFromForm() {
-  return {
+  return normalizeRenewalFilters({
     search: $("rnSearch")?.value || "",
     status: $("rnStatus")?.value || DEFAULT_STATUS_FILTER,
     engineer: $("rnEngineer")?.value || "all",
     segment: $("rnSegment")?.value || "all",
     program: normalizeProgramFilter($("rnProgram")?.value || "all"),
     renewed: $("rnRenewed")?.value || "all",
-  };
+    period: $("rnPeriod")?.value || "all",
+    from: $("rnFrom")?.value || "",
+    to: $("rnTo")?.value || "",
+  });
 }
 
 function filteredRows() {
@@ -87,7 +93,7 @@ function filteredRows() {
 function currentSummary() {
   const rows = filteredRows();
   const summary = summarizeRenewalRows(rows);
-  const dist = distributionsFromRenewalRows(rows);
+  const dist = distributionsFromRenewalRows(rows, { filters: state.filters });
   return { rows, summary, dist };
 }
 
@@ -160,7 +166,9 @@ function renderSuccess() {
 
     <section class="section-block">
       <h2>Distribuições</h2>
+      <p class="text-muted chart-legend-note--muted" title="O período afeta métricas temporais de renovação. Indicadores de carteira atual continuam representando o stock do recorte (status, EP, etc.).">${escapeHtml(RENEWAL_INFERRED_MONTHLY_PROXY)}</p>
       <div class="chart-grid">
+        <article class="chart-card chart-card--wide"><h3>Renovações inferidas por mês (proxy)</h3><div id="rnChartMonthly"></div></article>
         <article class="chart-card"><h3>Renovação inferida</h3><div id="rnChartRenewed"></div></article>
         <article class="chart-card"><h3>Contagem de renovações</h3><div id="rnChartCount"></div></article>
         <article class="chart-card"><h3>Renovados por EP</h3><div id="rnChartEngineer"></div></article>
@@ -203,6 +211,14 @@ function renderSuccess() {
     </section>
   `;
 
+  const monthlySeries = (dist.renewalsInferredByMonth || []).map((item) => ({
+    month: item.month,
+    acquiredClients: item.count,
+  }));
+  $("rnChartMonthly")
+    && ($("rnChartMonthly").innerHTML = monthlySeries.length
+      ? acquisitionColumns(monthlySeries, 12)
+      : `<p class="placeholder-note">Sem datas de início de ciclo para clientes renovados no recorte.</p>`);
   $("rnChartRenewed") && ($("rnChartRenewed").innerHTML = donut(dist.renewedYesNo.filter((i) => i.count > 0)));
   $("rnChartCount") && ($("rnChartCount").innerHTML = hBars(dist.renewalCountBands.filter((i) => i.count > 0)));
   $("rnChartEngineer") && ($("rnChartEngineer").innerHTML = hBars(dist.renewedByEngineer.filter((i) => i.count > 0), 12));
