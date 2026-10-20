@@ -2,8 +2,20 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   resolveEffectiveChurnDate,
+  resolveAnalyticalChurnDate,
   auditEffectiveChurnDateAdjustments,
 } from "../../lib/analytics/analytical-cancellation.mjs";
+
+test("resolveAnalyticalChurnDate prefere effective", () => {
+  assert.equal(
+    resolveAnalyticalChurnDate("2026-10-01", "2026-09-01").toISOString().slice(0, 10),
+    "2026-09-01",
+  );
+  assert.equal(
+    resolveAnalyticalChurnDate("2026-08-01", null).toISOString().slice(0, 10),
+    "2026-08-01",
+  );
+});
 
 test("effective churn — após fim de ciclo usa data_fim_ciclo", () => {
   const effective = resolveEffectiveChurnDate("2026-10-20", "2026-09-30");

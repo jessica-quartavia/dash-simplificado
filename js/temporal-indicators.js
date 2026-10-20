@@ -28,7 +28,7 @@ import { exportFilename, exportToCsv, exportToExcel } from "./utils/table-export
 const fmt = new Intl.NumberFormat("pt-BR");
 
 const METHODOLOGY_NOTE =
-  "Âncora de churn: churn_efetivado_at > distrato_assinado_at > data_churn. Janelas pré-cancelamento: 30, 60, 90 e 180 dias (baseline 91–180 dias). Associações observadas são descritivas — não implicam causalidade.";
+  "Para análises temporais, quando o churn foi registrado após o fim do ciclo, consideramos o fim do ciclo (data_fim_ciclo) como data analítica do churn. Janelas pré-cancelamento: 30, 60, 90 e 180 dias (baseline 91–180 dias). Associações observadas são descritivas — não implicam causalidade.";
 
 const RECENCY_EXPORT_COLUMNS = [
   { key: "name", header: "Cliente" },

@@ -191,7 +191,7 @@ export function acquisitionChurnBalanceCombo(series, limit = 12) {
           ${balanceDots}
         </svg>
       </div>
-      <p class="exec-chart-footnote">Balança = aquisições − churn no mês.</p>
+      <p class="exec-chart-footnote">Balança = aquisições − churn no mês. Churn mensal usa data analítica (effectiveCancellationDate).</p>
     </div>`;
 }
 
