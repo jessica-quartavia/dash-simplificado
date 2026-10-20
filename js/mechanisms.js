@@ -13,7 +13,12 @@ import {
   filterPortfolio,
   portfolioSize,
 } from "../lib/analytics/mechanism-filters.mjs";
-import { summarizeEngineerBars, summarizeMechanismRows } from "../lib/analytics/mechanism-metrics.mjs";
+import {
+  formatMechanismCountBandLabel,
+  formatMechanismStatusLabel,
+  summarizeEngineerBars,
+  summarizeMechanismRows,
+} from "../lib/analytics/mechanism-metrics.mjs";
 import { donut, escapeHtml, hBars, mechanismTypeDualBars } from "./general-charts.mjs";
 import { resolvePeriod } from "../lib/analytics/filters/period.mjs";
 import { resolveVisibleFilterFields } from "../lib/analytics/filters/page-contracts.mjs";
@@ -378,8 +383,16 @@ function renderSuccess() {
     </section>
   `;
 
-  if ($("mkChartStatus")) $("mkChartStatus").innerHTML = donut(summary.statusDist.filter((i) => i.count > 0));
-  if ($("mkChartCount")) $("mkChartCount").innerHTML = hBars(summary.countDist.filter((i) => i.count > 0));
+  const statusDist = (summary.statusDist || []).map((i) => ({
+    ...i,
+    label: formatMechanismStatusLabel(i.label),
+  }));
+  const countDist = (summary.countDist || []).map((i) => ({
+    ...i,
+    label: formatMechanismCountBandLabel(i.label),
+  }));
+  if ($("mkChartStatus")) $("mkChartStatus").innerHTML = donut(statusDist.filter((i) => i.count > 0));
+  if ($("mkChartCount")) $("mkChartCount").innerHTML = hBars(countDist.filter((i) => i.count > 0));
   if ($("mkChartCatalog")) $("mkChartCatalog").innerHTML = donut(summary.catalogDist);
   if ($("mkChartTypes")) $("mkChartTypes").innerHTML = mechanismTypeDualBars(summary.typeUsage, { expanded: state.showAllTypes });
   if ($("mkChartMonths")) $("mkChartMonths").innerHTML = hBars(summary.months);

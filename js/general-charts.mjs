@@ -216,7 +216,7 @@ export function donut(items) {
   return `<div class="donut-wrap"><svg class="donut" viewBox="0 0 120 120" width="120" height="120" aria-hidden="true">${arcs}<circle cx="60" cy="60" r="28" fill="#ffffff"></circle></svg><div class="legend">${legend}</div></div>`;
 }
 
-function monthShortLabel(ym, long) {
+export function monthShortLabel(ym, long) {
   const [y, m] = String(ym).split("-");
   const names = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
   const idx = Number(m) - 1;

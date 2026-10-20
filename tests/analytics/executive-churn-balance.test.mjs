@@ -9,8 +9,12 @@ test("balança mensal = aquisição − churn", () => {
   const balance = buildAcquisitionChurnBalanceSeries(
     [{ month: "2026-01", acquiredClients: 5 }],
     [{ month: "2026-01", churnClients: 2 }],
+    12,
+    new Date("2026-06-01T12:00:00Z"),
   );
-  assert.equal(balance[0].balance, 3);
+  assert.equal(balance.length, 12);
+  const jan = balance.find((r) => r.month === "2026-01");
+  assert.equal(jan?.balance, 3);
 });
 
 test("churn mensal ignora intenção sem status cancelado confirmado", () => {

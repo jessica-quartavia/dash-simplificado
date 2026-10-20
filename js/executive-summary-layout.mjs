@@ -6,9 +6,8 @@ import {
   hBars,
   rankedBars,
   mechanismDistributionBars,
-  acquisitionChurnBalanceColumns,
-  cancellationIntentionPedidoColumns,
 } from "./general-charts.mjs";
+import { acquisitionChurnBalanceCombo, cancellationFlowGrouped } from "./executive-charts.mjs";
 
 const fmt = new Intl.NumberFormat("pt-BR");
 const pctFmt = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
@@ -180,7 +179,7 @@ function renderBase(block) {
         ${execKpi({ label: "Reserva mediana", value: money(reserve.value), note: coverageNote(reserve), mini: true })}
       </div>
     </div>
-    ${execChart("Aquisição × churn × balança (12 meses)", acquisitionChurnBalanceColumns(acqSeries, 12), "executive-chart-card--wide executive-chart-card--compact")}`,
+    ${execChart("Aquisição × churn × balança (12 meses)", acquisitionChurnBalanceCombo(acqSeries, 12), "executive-chart-card--wide executive-chart-card--combo")}`,
     block.status,
   );
 }
@@ -335,7 +334,7 @@ function renderIntentionDestination(block) {
   );
 }
 
-function renderHealth(block) {
+function renderHealth(block, payload = {}) {
   if (!block) return execSection("Saúde do cliente", "", "error");
   const nps = metric(block, "nps");
   const shares = metric(block, "promoters_detractors_share");
@@ -347,7 +346,8 @@ function renderHealth(block) {
   const promoters = shares.value?.promoters;
   const detractors = shares.value?.detractors;
   const neutrals = shares.value?.neutrals;
-  const monthlyRows = Array.isArray(monthly.value) ? monthly.value.slice(-6) : [];
+  const monthlyRows = Array.isArray(monthly.value) ? monthly.value : [];
+  const chartRefDate = payload?.generatedAt ? new Date(payload.generatedAt) : new Date();
   const reasonItems = (reasons.value || []).map((item) => ({
     label: item.label,
     count: item.count,
@@ -386,8 +386,8 @@ function renderHealth(block) {
     </div>
     ${execChart(
       "Cancelamentos × intenções (mensal)",
-      cancellationIntentionPedidoColumns(monthlyRows, 12),
-      "executive-chart-card--wide executive-chart-card--monthly",
+      cancellationFlowGrouped(monthlyRows, 12, chartRefDate),
+      "executive-chart-card--wide executive-chart-card--combo executive-chart-card--flow",
     )}
     <div class="executive-grid executive-grid--health-bottom">
       ${execChart(
@@ -489,7 +489,7 @@ export function renderExecutiveDashboard(payload = {}, { chartExpanded = {} } = 
       ${renderOnboarding(payload.onboarding)}
       ${renderEngagement(payload.engagement)}
       ${renderValue(payload.valueDelivery, chartExpanded)}
-      ${renderHealth(payload.clientHealth)}
+      ${renderHealth(payload.clientHealth, payload)}
       ${renderIntentionDestination(payload.clientHealth)}
       ${renderEp(payload.ep)}
       ${renderTemporal(payload.temporal)}

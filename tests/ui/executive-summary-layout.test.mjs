@@ -66,7 +66,12 @@ const mockPayload = {
         },
       },
       csat_average: { value: 4.8, coverage: { responses: 120 } },
-      cancellation_intention_vs_effective: { value: [{ month: "2026-01", effective: 2, intentions: 5 }] },
+      cancellation_intention_vs_effective: {
+        value: [
+          { month: "2026-01", effective: 2, intentions: 5, pedidos: 3 },
+          { month: "2026-02", effective: 1, intentions: 4, pedidos: 2 },
+        ],
+      },
       top_cancellation_reasons: { value: [{ label: "Financeiro", count: 3, percent: 40 }], note: "Motivos não categorizados excluídos." },
       intention_destination_branches: {
         value: {
@@ -130,6 +135,9 @@ test("Base usa grid de KPIs e mini-cards financeiros", () => {
   assert.match(html, /executive-grid--mini-kpis/);
   assert.match(html, /executive-kpi--accent/);
   assert.match(html, /Aquisição × churn × balança/);
+  assert.match(html, /exec-combo-chart/);
+  assert.match(html, /exec-chart-balance-line/);
+  assert.doesNotMatch(html, /acq-balance-strip/);
 });
 
 test("Engajamento usa grid 3x2 compacto", () => {
@@ -149,6 +157,9 @@ test("Saúde subdivide NPS, split bar, cancelamentos e renovação", () => {
   const html = renderExecutiveDashboard(mockPayload);
   assert.match(html, /executive-grid--health-top/);
   assert.match(html, /executive-split-bar/);
+  assert.match(html, /Cancelamentos × intenções/);
+  assert.match(html, /exec-chart-bar--intention/);
+  assert.match(html, /Intenção → pedido/);
   assert.match(html, /executive-grid--health-bottom/);
   assert.match(html, /Renovações por clientes ativos/);
   assert.match(html, /8,8%/);

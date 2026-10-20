@@ -3121,6 +3121,224 @@
   font-size: 0.8125rem;
 }
 
+.executive-chart-card--combo .executive-chart-card__body {
+  padding-top: 4px;
+}
+
+.exec-chart-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.exec-combo-chart--flow .exec-chart-kpis {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.exec-chart-kpi {
+  background: color-mix(in srgb, var(--surface) 92%, var(--border));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.exec-chart-kpi--emphasis .exec-chart-kpi__value {
+  color: var(--primary);
+}
+
+.exec-chart-kpi__label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-family: var(--font-heading);
+}
+
+.exec-chart-kpi__value {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1.2;
+}
+
+.exec-chart-kpi__note {
+  font-size: 0.6875rem;
+  color: var(--muted);
+  line-height: 1.25;
+}
+
+.exec-combo-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.exec-combo-chart__scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+.exec-combo-chart__svg {
+  display: block;
+  width: 100%;
+  min-width: 520px;
+  height: auto;
+}
+
+.exec-chart-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  font-size: 0.8125rem;
+  color: var(--foreground);
+}
+
+.exec-chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.exec-chart-legend__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.exec-chart-legend__swatch--acq {
+  background: var(--foreground);
+}
+
+.exec-chart-legend__swatch--churn {
+  background: var(--primary);
+}
+
+.exec-chart-legend__swatch--balance {
+  background: transparent;
+  border: 2px solid #64748b;
+  border-radius: 999px;
+  width: 8px;
+  height: 8px;
+}
+
+.exec-chart-legend__swatch--intention {
+  background: #64748b;
+}
+
+.exec-chart-legend__swatch--pedido {
+  background: var(--color-warning, #d18426);
+}
+
+.exec-chart-gridline {
+  stroke: color-mix(in srgb, var(--border) 85%, transparent);
+  stroke-width: 1;
+}
+
+.exec-chart-zero {
+  stroke: color-mix(in srgb, var(--muted) 50%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.exec-chart-baseline {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.exec-chart-axis-y,
+.exec-chart-axis-x {
+  fill: var(--muted);
+  font-size: 11px;
+  font-family: var(--font-body);
+}
+
+.exec-chart-bar--acq {
+  fill: color-mix(in srgb, var(--foreground) 38%, transparent);
+}
+
+.exec-chart-bar--churn {
+  fill: var(--primary);
+  opacity: 0.95;
+}
+
+.exec-chart-bar--intention {
+  fill: #64748b;
+}
+
+.exec-chart-bar--pedido {
+  fill: var(--color-warning, #d18426);
+}
+
+.exec-chart-balance-line {
+  stroke: #64748b;
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.92;
+}
+
+.exec-chart-line-dot {
+  fill: var(--surface);
+  stroke: #64748b;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.exec-chart-line-dot:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.exec-chart-line-label {
+  fill: #64748b;
+  font-size: 10px;
+  font-weight: 500;
+  font-family: var(--font-body);
+}
+
+.exec-chart-hit {
+  pointer-events: all;
+}
+
+.exec-chart-bar-value {
+  fill: color-mix(in srgb, var(--foreground) 88%, var(--muted));
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  pointer-events: none;
+}
+
+@media (max-width: 1100px) {
+  .exec-combo-chart--dense-labels .exec-chart-bar-value {
+    display: none;
+  }
+}
+
+.exec-chart-footnote {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+@media (max-width: 1100px) {
+  .exec-combo-chart--flow .exec-chart-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 1100px) {
   .executive-grid--headline,
   .executive-grid--3,
@@ -3157,6 +3375,12 @@
 @media (max-width: 640px) {
   .executive-dashboard {
     gap: 28px;
+  }
+
+  .exec-chart-kpis,
+  .exec-combo-chart .exec-chart-kpis,
+  .exec-combo-chart--flow .exec-chart-kpis {
+    grid-template-columns: 1fr 1fr;
   }
 
   .executive-grid--headline,
