@@ -39,17 +39,34 @@ function svgTooltip(lines) {
   return lines.filter(Boolean).join("\n");
 }
 
-const BAR_VALUE_OFFSET = 6;
+const BAR_VALUE_OFFSET = 5;
+const FLOW_SERIES_NOTE =
+  "As séries são independentes por data de cada estágio e não representam necessariamente a conversão do mesmo cliente.";
 
 function intPtBr(value) {
   return fmt.format(Math.round(Number(value) || 0));
 }
 
+function formatBalance(value) {
+  const n = Math.round(Number(value) || 0);
+  if (n > 0) return `+${fmt.format(n)}`;
+  return fmt.format(n);
+}
+
+function monthTipLabel(ym, longMonths) {
+  return `Mês: ${monthShortLabel(ym, true)}`;
+}
+
 /** Rótulo acima da barra (centro x); omitir zero quando showWhenZero=false. */
-function barValueLabel(x, barTopY, value, { showWhenZero = false } = {}) {
+function barValueLabel(x, barTopY, value, { showWhenZero = false, baselineY = null } = {}) {
   const v = Math.round(Number(value) || 0);
   if (!showWhenZero && v <= 0) return "";
-  const y = Math.max(12, barTopY - BAR_VALUE_OFFSET);
+  const barH = baselineY != null ? baselineY - barTopY : 999;
+  let y = barTopY - BAR_VALUE_OFFSET;
+  if (barH < 6 && baselineY != null) {
+    y = baselineY - BAR_VALUE_OFFSET - 1;
+  }
+  y = Math.max(11, y);
   return `<text class="exec-chart-bar-value" x="${x}" y="${y}" text-anchor="middle">${escapeHtml(intPtBr(v))}</text>`;
 }
 
@@ -57,7 +74,7 @@ function execChartKpiRow(items) {
   const cells = items
     .map(
       (item) => `
-      <div class="exec-chart-kpi${item.emphasis ? " exec-chart-kpi--emphasis" : ""}">
+      <div class="exec-chart-kpi${item.emphasis ? " exec-chart-kpi--emphasis" : ""}"${item.title ? ` title="${escapeAttr(item.title)}"` : ""}>
         <span class="exec-chart-kpi__label">${escapeHtml(item.label)}</span>
         <strong class="exec-chart-kpi__value">${item.value}</strong>
         ${item.note ? `<span class="exec-chart-kpi__note">${escapeHtml(item.note)}</span>` : ""}
@@ -65,6 +82,13 @@ function execChartKpiRow(items) {
     )
     .join("");
   return `<div class="exec-chart-kpis">${cells}</div>`;
+}
+
+function escapeAttr(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;");
 }
 
 function execLegend(items) {
@@ -102,14 +126,14 @@ export function acquisitionChurnBalanceCombo(series, limit = 12) {
   const span = yTop - yBottom || 1;
 
   const W = 880;
-  const H = 300;
-  const pad = { l: 52, r: 20, t: 36, b: 44 };
+  const H = 272;
+  const pad = { l: 48, r: 16, t: 28, b: 36 };
   const plotW = W - pad.l - pad.r;
   const plotH = H - pad.t - pad.b;
   const n = visible.length;
   const slot = plotW / n;
-  const barW = Math.min(24, slot * 0.3);
-  const gap = 5;
+  const barW = Math.min(20, Math.max(10, slot * 0.26));
+  const gap = 4;
   const denseLabels = n >= 10 || slot < 58;
 
   const yPx = (v) => pad.t + plotH - ((v - yBottom) / span) * plotH;
@@ -136,10 +160,10 @@ export function acquisitionChurnBalanceCombo(series, limit = 12) {
     const churnH = zeroY - yPx(churn);
     const monthLabel = monthShortLabel(row.month, longMonths);
     const tip = svgTooltip([
-      monthLabel,
+      monthTipLabel(row.month, longMonths),
       `Aquisições: ${fmt.format(acq)}`,
-      `Churn: ${fmt.format(churn)}`,
-      `Balança: ${bal > 0 ? "+" : ""}${fmt.format(bal)}`,
+      `Churns: ${fmt.format(churn)}`,
+      `Balança: ${formatBalance(bal)}`,
     ]);
 
     const acqTop = yPx(acq);
@@ -148,11 +172,11 @@ export function acquisitionChurnBalanceCombo(series, limit = 12) {
       <rect class="exec-chart-bar exec-chart-bar--acq" x="${acqX}" y="${acqTop}" width="${barW}" height="${Math.max(0, acqH)}" rx="2">
         <title>${escapeHtml(tip)}</title>
       </rect>
-      ${barValueLabel(acqX + barW / 2, acqTop, acq)}
+      ${barValueLabel(acqX + barW / 2, acqTop, acq, { baselineY: zeroY })}
       <rect class="exec-chart-bar exec-chart-bar--churn" x="${churnX}" y="${churnTop}" width="${barW}" height="${Math.max(0, churnH)}" rx="2">
         <title>${escapeHtml(tip)}</title>
       </rect>
-      ${barValueLabel(churnX + barW / 2, churnTop, churn)}
+      ${barValueLabel(churnX + barW / 2, churnTop, churn, { baselineY: zeroY })}
       <text class="exec-chart-axis-x" x="${cx}" y="${H - 12}" text-anchor="middle">${escapeHtml(monthLabel)}</text>
     </g>`);
 
@@ -162,19 +186,19 @@ export function acquisitionChurnBalanceCombo(series, limit = 12) {
   const polyline = linePts.map((p) => `${p.x},${p.y}`).join(" ");
   const balanceDots = linePts
     .map(
-      (p, idx) => `<circle class="exec-chart-line-dot" cx="${p.x}" cy="${p.y}" r="3.5" tabindex="0">
+      (p, idx) => `<circle class="exec-chart-line-dot" cx="${p.x}" cy="${p.y}" r="2.5" tabindex="0">
         <title>${escapeHtml(p.tip)}</title>
-      </circle>${idx === linePts.length - 1 ? `<text class="exec-chart-line-label" x="${p.x}" y="${p.y - 9}" text-anchor="middle">${p.bal > 0 ? "+" : ""}${fmt.format(p.bal)}</text>` : ""}`,
+      </circle>${idx === linePts.length - 1 ? `<text class="exec-chart-line-label" x="${p.x}" y="${p.y - 8}" text-anchor="middle">${formatBalance(p.bal)}</text>` : ""}`,
     )
     .join("");
 
-  const accumLabel = balanceAccum > 0 ? `+${fmt.format(balanceAccum)}` : fmt.format(balanceAccum);
+  const accumLabel = formatBalance(balanceAccum);
 
   return `
     ${execChartKpiRow([
-      { label: "Aquisições (12m)", value: fmt.format(totalAcquisitions) },
-      { label: "Churns (12m)", value: fmt.format(totalChurn), emphasis: true },
-      { label: "Balança acumulada", value: accumLabel, note: "Soma mensal no período" },
+      { label: "Aquisições (12m)", value: fmt.format(totalAcquisitions), note: "Novos clientes no período" },
+      { label: "Churns (12m)", value: fmt.format(totalChurn), emphasis: true, note: "Data analítica de churn" },
+      { label: "Balança acumulada", value: accumLabel, note: "Soma mensal (aquisição − churn)" },
     ])}
     <div class="exec-combo-chart${denseLabels ? " exec-combo-chart--dense-labels" : ""}">
       ${execLegend([
@@ -218,14 +242,15 @@ export function cancellationFlowGrouped(series, limit = 12, referenceDate = new 
   );
 
   const W = 880;
-  const H = 300;
-  const pad = { l: 52, r: 20, t: 36, b: 44 };
+  const H = 272;
+  const pad = { l: 48, r: 16, t: 28, b: 36 };
   const plotW = W - pad.l - pad.r;
   const plotH = H - pad.t - pad.b;
   const n = visible.length;
   const slot = plotW / n;
-  const barW = Math.min(18, slot * 0.22);
-  const innerGap = 5;
+  const barW = Math.min(16, Math.max(8, slot * 0.2));
+  const innerGap = 4;
+  const baselineY = pad.t + plotH;
   const svgMinWidth = Math.max(640, n * 68);
   const denseLabels = n >= 10 || slot < 52;
 
@@ -249,27 +274,24 @@ export function cancellationFlowGrouped(series, limit = 12, referenceDate = new 
     const monthKey = row.month || row.label;
     const monthLabel = monthShortLabel(monthKey, longMonths);
     const tip = svgTooltip([
-      monthLabel,
+      monthTipLabel(monthKey, longMonths),
       `Intenções: ${fmt.format(intentions)}`,
       `Pedidos: ${fmt.format(pedidos)}`,
       `Churn efetivo: ${fmt.format(effective)}`,
     ]);
-    const tipBase = (seriesLabel, value, help) =>
-      svgTooltip([monthLabel, `${seriesLabel}: ${fmt.format(value)}`, help]);
 
-    const bar = (x, value, cls, label, help) => {
+    const bar = (x, value, cls) => {
       const top = yPx(value);
-      const h = plotH - top;
-      return `<rect class="exec-chart-bar ${cls}" x="${x}" y="${top}" width="${barW}" height="${Math.max(0, h)}" rx="2">
-        <title>${escapeHtml(tipBase(label, value, help))}</title>
+      return `<rect class="exec-chart-bar ${cls}" x="${x}" y="${top}" width="${barW}" height="${Math.max(0, baselineY - top)}" rx="2">
+        <title>${escapeHtml(tip)}</title>
       </rect>
-      ${barValueLabel(x + barW / 2, top, value)}`;
+      ${barValueLabel(x + barW / 2, top, value, { baselineY })}`;
     };
 
     return `<g class="exec-chart-bar-group">
-      ${bar(x0, intentions, "exec-chart-bar--intention", "Intenções", "Sinalização inicial de possível cancelamento")}
-      ${bar(x0 + barW + innerGap, pedidos, "exec-chart-bar--pedido", "Pedidos", "Pedido formal de cancelamento")}
-      ${bar(x0 + (barW + innerGap) * 2, effective, "exec-chart-bar--churn", "Churn efetivo", "Cancelamento consolidado")}
+      ${bar(x0, intentions, "exec-chart-bar--intention")}
+      ${bar(x0 + barW + innerGap, pedidos, "exec-chart-bar--pedido")}
+      ${bar(x0 + (barW + innerGap) * 2, effective, "exec-chart-bar--churn")}
       <rect class="exec-chart-hit" x="${x0 - 4}" y="${pad.t}" width="${totalW + 8}" height="${plotH}" fill="transparent">
         <title>${escapeHtml(tip)}</title>
       </rect>
@@ -279,20 +301,18 @@ export function cancellationFlowGrouped(series, limit = 12, referenceDate = new 
 
   return `
     ${execChartKpiRow([
-      { label: "Intenções", value: fmt.format(totalIntentions) },
-      { label: "Pedidos", value: fmt.format(totalPedidos) },
-      { label: "Churn efetivo", value: fmt.format(totalEffective), emphasis: true },
+      { label: "Intenções", value: fmt.format(totalIntentions), note: "12 meses exibidos" },
+      { label: "Pedidos", value: fmt.format(totalPedidos), note: "12 meses exibidos" },
+      { label: "Churn efetivo", value: fmt.format(totalEffective), emphasis: true, note: "Data analítica" },
       {
-        label: "Intenção → pedido",
+        label: "Pedidos / Intenções",
         value: pctRatio(totalPedidos, totalIntentions),
         note: "Razão agregada no período",
-      },
-      {
-        label: "Pedido → churn",
-        value: pctRatio(totalEffective, totalPedidos),
-        note: "Razão agregada no período",
+        title:
+          "Razão agregada entre a quantidade de pedidos e intenções no período. Não representa necessariamente conversão do mesmo cliente.",
       },
     ])}
+    <p class="exec-chart-series-note">${escapeHtml(FLOW_SERIES_NOTE)}</p>
     <div class="exec-combo-chart exec-combo-chart--flow${denseLabels ? " exec-combo-chart--dense-labels" : ""}">
       ${execLegend([
         { kind: "intention", label: "Intenções" },
@@ -306,6 +326,6 @@ export function cancellationFlowGrouped(series, limit = 12, referenceDate = new 
           ${groups.join("")}
         </svg>
       </div>
-      <p class="exec-chart-footnote">Séries independentes por data canônica de cada estágio.</p>
+      <p class="exec-chart-footnote">Churn efetivo usa a mesma data analítica da aba Cancelamentos.</p>
     </div>`;
 }

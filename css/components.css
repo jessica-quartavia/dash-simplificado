@@ -3133,7 +3133,7 @@
 }
 
 .exec-combo-chart--flow .exec-chart-kpis {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .exec-chart-kpi {
@@ -3161,10 +3161,18 @@
 
 .exec-chart-kpi__value {
   font-family: var(--font-heading);
-  font-size: 1.125rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--foreground);
-  line-height: 1.2;
+  line-height: 1.15;
+}
+
+.exec-chart-kpi--emphasis.exec-chart-kpi--emphasis {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+}
+
+.exec-chart-kpi--emphasis .exec-chart-kpi__value {
+  color: #e85d3a;
 }
 
 .exec-chart-kpi__note {
@@ -3217,27 +3225,27 @@
 }
 
 .exec-chart-legend__swatch--acq {
-  background: var(--foreground);
+  background: #9ca3af;
 }
 
 .exec-chart-legend__swatch--churn {
-  background: var(--primary);
+  background: #e85d3a;
 }
 
 .exec-chart-legend__swatch--balance {
   background: transparent;
-  border: 2px solid #64748b;
+  border: 2px solid #475569;
   border-radius: 999px;
   width: 8px;
   height: 8px;
 }
 
 .exec-chart-legend__swatch--intention {
-  background: #64748b;
+  background: #94a3b8;
 }
 
 .exec-chart-legend__swatch--pedido {
-  background: var(--color-warning, #d18426);
+  background: #e09a5a;
 }
 
 .exec-chart-gridline {
@@ -3246,9 +3254,9 @@
 }
 
 .exec-chart-zero {
-  stroke: color-mix(in srgb, var(--muted) 50%, transparent);
-  stroke-width: 1;
-  stroke-dasharray: 4 4;
+  stroke: color-mix(in srgb, #64748b 55%, transparent);
+  stroke-width: 1.25;
+  stroke-dasharray: 5 4;
 }
 
 .exec-chart-baseline {
@@ -3264,35 +3272,38 @@
 }
 
 .exec-chart-bar--acq {
-  fill: color-mix(in srgb, var(--foreground) 38%, transparent);
+  fill: #9ca3af;
+  opacity: 0.88;
 }
 
 .exec-chart-bar--churn {
-  fill: var(--primary);
-  opacity: 0.95;
+  fill: #e85d3a;
+  opacity: 0.96;
 }
 
 .exec-chart-bar--intention {
-  fill: #64748b;
+  fill: #94a3b8;
+  opacity: 0.9;
 }
 
 .exec-chart-bar--pedido {
-  fill: var(--color-warning, #d18426);
+  fill: #e09a5a;
+  opacity: 0.92;
 }
 
 .exec-chart-balance-line {
-  stroke: #64748b;
-  stroke-width: 1.75;
+  stroke: #475569;
+  stroke-width: 1.15;
   stroke-linejoin: round;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
-  opacity: 0.92;
+  opacity: 0.88;
 }
 
 .exec-chart-line-dot {
   fill: var(--surface);
-  stroke: #64748b;
-  stroke-width: 1.5;
+  stroke: #475569;
+  stroke-width: 1.15;
   vector-effect: non-scaling-stroke;
 }
 
@@ -3331,6 +3342,17 @@
   font-size: 0.75rem;
   color: var(--muted);
   line-height: 1.4;
+}
+
+.exec-chart-series-note {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+  border-radius: var(--radius);
 }
 
 @media (max-width: 1100px) {

@@ -17,6 +17,12 @@ test("cache key formato analytics:v2:{page}:{version}:{hash}", () => {
   assert.match(key, new RegExp(CALCULATION_VERSION.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 });
 
+test("executive cache key muda quando calculation version muda", () => {
+  const a = buildAnalyticsCacheKey("executive_summary", {}, { executive_churn: "canonical-archived-no" });
+  const b = buildAnalyticsCacheKey("executive_summary", {}, { executive_churn: "legacy-archived-all" });
+  assert.notEqual(a, b);
+});
+
 test("cache key distingue filtros de programa", () => {
   const all = buildAnalyticsCacheKey("executive_summary", { program: "all" });
   const pharus = buildAnalyticsCacheKey("executive_summary", { program: "pharus" });

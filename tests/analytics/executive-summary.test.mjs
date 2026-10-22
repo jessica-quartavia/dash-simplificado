@@ -301,6 +301,7 @@ test("top mecanismos agrupa Outros", () => {
 test("executive summary API url e filtros sem período", () => {
   assert.match(buildExecutiveSummaryApiUrl({ program: "pharus" }), /program=Pharus/);
   assert.match(buildExecutiveSummaryApiUrl({}, { force: true }), /force=1/);
+  assert.match(buildExecutiveSummaryApiUrl({}), /cv=v2\./);
   const contract = getPageFilterContract("executive_summary");
   assert.ok(contract);
   assert.equal(contract.period.required, false);

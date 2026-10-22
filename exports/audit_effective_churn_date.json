@@ -1,11 +1,11 @@
 {
   "summary": {
-    "canceladosComChurnDate": 1478,
-    "comDataFimCiclo": 1180,
+    "canceladosComChurnDate": 1486,
+    "comDataFimCiclo": 1188,
     "semDataFimCiclo": 298,
-    "churnAposFimCiclo": 894,
-    "churnAntesOuIgualFimCiclo": 286,
-    "clientesComDataAjustada": 894
+    "churnAposFimCiclo": 898,
+    "churnAntesOuIgualFimCiclo": 290,
+    "clientesComDataAjustada": 898
   },
   "rows": [
     {
@@ -385,6 +385,13 @@
       "data_fim_ciclo": "2026-01-13",
       "effective_churn_date": "2026-01-13",
       "adjusted": true
+    },
+    {
+      "client_id": "0aad1745-41a9-4076-b414-20f24a16aaf5",
+      "original_churn_date": "2026-10-21",
+      "data_fim_ciclo": "2027-01-29",
+      "effective_churn_date": "2026-10-21",
+      "adjusted": false
     },
     {
       "client_id": "0ac976f7-ce76-4459-94e6-a7816553891a",
@@ -2468,7 +2475,7 @@
     {
       "client_id": "3dfd7f5d-73f2-45a3-af0c-38838c786f89",
       "original_churn_date": "2026-05-11",
-      "data_fim_ciclo": null,
+      "data_fim_ciclo": "2027-10-20",
       "effective_churn_date": "2026-05-11",
       "adjusted": false
     },
@@ -2795,6 +2802,13 @@
       "adjusted": true
     },
     {
+      "client_id": "46a5bf41-60fe-47ff-9b53-48976978d879",
+      "original_churn_date": "2026-10-21",
+      "data_fim_ciclo": null,
+      "effective_churn_date": "2026-10-21",
+      "adjusted": false
+    },
+    {
       "client_id": "46f9c705-9eb0-4b03-bcee-05f8daf453ac",
       "original_churn_date": "2026-05-11",
       "data_fim_ciclo": "2025-08-10",
@@ -2884,6 +2898,13 @@
       "data_fim_ciclo": null,
       "effective_churn_date": "2026-05-11",
       "adjusted": false
+    },
+    {
+      "client_id": "489b4d5b-5088-4521-b0bb-c0036ad887dd",
+      "original_churn_date": "2026-10-19",
+      "data_fim_ciclo": "2026-10-14",
+      "effective_churn_date": "2026-10-14",
+      "adjusted": true
     },
     {
       "client_id": "48b3d29d-b8d1-47b9-8efa-deafec7712bb",
@@ -3258,9 +3279,9 @@
     },
     {
       "client_id": "517602f4-f54f-49b2-9cb4-29fbffdd74e5",
-      "original_churn_date": "2026-07-21",
+      "original_churn_date": "2026-10-21",
       "data_fim_ciclo": "2027-05-30",
-      "effective_churn_date": "2026-07-21",
+      "effective_churn_date": "2026-10-21",
       "adjusted": false
     },
     {
@@ -3849,6 +3870,13 @@
       "original_churn_date": "2026-08-26",
       "data_fim_ciclo": "2026-08-10",
       "effective_churn_date": "2026-08-10",
+      "adjusted": true
+    },
+    {
+      "client_id": "5f0c014f-717f-48ae-b6d1-ec8f74547890",
+      "original_churn_date": "2026-10-06",
+      "data_fim_ciclo": "2026-08-15",
+      "effective_churn_date": "2026-08-15",
       "adjusted": true
     },
     {
@@ -5018,6 +5046,13 @@
       "original_churn_date": "2026-05-11",
       "data_fim_ciclo": "2026-01-09",
       "effective_churn_date": "2026-01-09",
+      "adjusted": true
+    },
+    {
+      "client_id": "7cae6fc6-53e9-43c9-a810-2c8b64f01429",
+      "original_churn_date": "2026-10-20",
+      "data_fim_ciclo": "2026-06-07",
+      "effective_churn_date": "2026-06-07",
       "adjusted": true
     },
     {
@@ -8808,6 +8843,13 @@
       "adjusted": true
     },
     {
+      "client_id": "d86cea26-cc07-4885-ad5f-869827b75f20",
+      "original_churn_date": "2026-10-20",
+      "data_fim_ciclo": "2027-03-30",
+      "effective_churn_date": "2026-10-20",
+      "adjusted": false
+    },
+    {
       "client_id": "d87a283c-03f5-4c76-91c5-c3b0de736842",
       "original_churn_date": "2026-04-30",
       "data_fim_ciclo": "2026-03-15",
@@ -9379,6 +9421,13 @@
       "original_churn_date": "2026-08-24",
       "data_fim_ciclo": "2026-04-17",
       "effective_churn_date": "2026-04-17",
+      "adjusted": true
+    },
+    {
+      "client_id": "e681c5cc-9b01-4498-8c5c-99536a1afe28",
+      "original_churn_date": "2026-10-20",
+      "data_fim_ciclo": "2026-09-30",
+      "effective_churn_date": "2026-09-30",
       "adjusted": true
     },
     {
@@ -10254,6 +10303,13 @@
       "original_churn_date": "2026-09-29",
       "data_fim_ciclo": "2026-10-28",
       "effective_churn_date": "2026-09-29",
+      "adjusted": false
+    },
+    {
+      "client_id": "fd025e37-77bf-43fa-b732-8e8b861515d6",
+      "original_churn_date": "2026-10-21",
+      "data_fim_ciclo": "2027-08-05",
+      "effective_churn_date": "2026-10-21",
       "adjusted": false
     },
     {

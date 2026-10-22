@@ -23,6 +23,7 @@ test("churn mensal ignora intenção sem status cancelado confirmado", () => {
       { analyticalStatus: "Ativo", effectiveCancellationDate: "2026-01-15" },
       {
         analyticalStatus: "Cancelado confirmado",
+        analyticalCancellationDate: "2026-01-20",
         effectiveCancellationDate: "2026-01-20",
       },
     ],

@@ -1,0 +1,430 @@
+{
+  "generated_at": "2026-10-22T19:24:54.948Z",
+  "rule": "archived_at != null → registro ignorado; data_churn ignorada se só cancellations arquivados",
+  "audit": {
+    "clientes_com_algum_archived": 188,
+    "somente_archived": 168,
+    "archived_mais_cancelamento_valido": 17,
+    "somente_archived_status": {
+      "ativos": 32,
+      "congelados": 26,
+      "cancelados": 0,
+      "outros": 110
+    },
+    "somente_archived_com_data_churn": 109
+  },
+  "data_churn_policy": "clients.data_churn é evidência independente, exceto quando 100% dos registros em cancellations do cliente estão arquivados",
+  "only_archived_samples": [
+    {
+      "client_id": "9936340f-9dc6-458b-9061-fa43078f1dbf",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-05-13T18:14:19.124+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "b2877d6c-c4b4-4a3c-a7dc-615d20b56029",
+      "data_churn": "2026-06-05",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "1c7e023b-3892-4160-b9fc-c6c409832c29",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-05-13T16:46:44.595+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "408ad246-2a2a-4da5-b6b4-81923d91f98a",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-05-13T18:14:19.123+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "e9e885e8-efd8-4d0b-93bc-a53fa0c972f1",
+      "data_churn": "2026-07-13",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "41ccc991-ecdd-41ad-8ecb-d152543bae73",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "7e569f96-8d72-4a6a-9f2c-25a347d23bf7",
+      "data_churn": "2026-06-25",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "ee07693c-6675-434c-9245-825bd6ba4f9d",
+      "data_churn": "2026-05-27",
+      "archived_at": "2026-05-13T16:46:44.595+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "aa04bee7-ce12-43f9-8a5b-78fbfb4b79b8",
+      "data_churn": "2026-08-20",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "4b612496-ebeb-432a-8645-6931bd521336",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-05-13T16:46:44.595+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "52588d34-3370-4c71-8c07-1329400ae0a5",
+      "data_churn": "2026-06-25",
+      "archived_at": "2026-07-08T21:19:41.804243+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "9ee465c1-b87c-4331-8e85-065b034a8da8",
+      "data_churn": "2026-05-04",
+      "archived_at": "2026-05-13T16:46:44.595+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "24e3d05c-045a-4ab8-8e56-6b0e29aa7d4e",
+      "data_churn": "2026-05-27",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "f6afede3-6e1b-42fb-a96a-5a195e7c9dcf",
+      "data_churn": "2026-05-28",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "b9aeddb0-d671-4b35-8c2f-0624a83fcc2b",
+      "data_churn": "2026-08-21",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "98e6c423-57c8-4c8d-b9f3-0cf4d57b6e71",
+      "data_churn": "2026-06-03",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "d4b9a59a-4b10-4b50-83b8-0e80295f6862",
+      "data_churn": "2026-06-12",
+      "archived_at": "2026-05-13T16:46:44.594+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "ecb1b717-7ddb-4ad8-b9dd-d40923f2fe8b",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "af30b4bf-3937-4ea7-ae66-e3cfb0b21dfe",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-05-13T16:46:44.595+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "012009ec-95ab-44de-8531-7daaa146b300",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-05-13T16:46:44.595+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "3fd5bfcc-2c0f-4c7a-875e-fe386c6cf26f",
+      "data_churn": "2026-05-21",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "a0b0a63a-763d-4d7e-9f76-cd8c060e9d37",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "2de9aa5a-74ee-4d9b-b1a0-b7f835575290",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-05-13T16:46:44.595+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "eded695a-e9d2-46b8-81ef-f9496555d66c",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-05-13T18:14:19.123+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "db98ce22-d979-44b1-823a-ec251751dcc5",
+      "data_churn": "2026-04-28",
+      "archived_at": "2026-05-13T16:46:44.595+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "9df3c8c5-8042-4e69-a0b4-34e21c0d6317",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-05-13T16:46:44.595+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "9f21fe25-cb8b-497e-9fa9-7b0323e9394a",
+      "data_churn": "2026-06-03",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "86f0a784-bd75-4604-8c87-cdeb0019d279",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-05-13T18:14:19.123+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "00aeb03d-a153-40bc-811c-74f3356e9328",
+      "data_churn": "2026-05-11",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "74d07b93-0503-4881-8e2f-24aff9be95cb",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "be251e07-a637-4ff1-8a11-ace23b5a2e25",
+      "data_churn": "2026-05-19",
+      "archived_at": "2026-05-13T16:46:44.594+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "606d245f-e8ef-45dd-b95a-0d891da1b968",
+      "data_churn": "2026-08-26",
+      "archived_at": "2026-05-13T16:49:10.856+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "9f776936-357a-4c8f-a097-230044502863",
+      "data_churn": "2026-04-01",
+      "archived_at": "2026-05-13T16:46:44.595+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "5854fd18-90a5-4761-ac03-6842e057a40f",
+      "data_churn": "2026-03-18",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "42e96cc1-de54-4297-ae60-1409b639f11d",
+      "data_churn": "2026-09-15",
+      "archived_at": "2026-05-13T16:46:44.595+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "9f81946a-0b05-42d8-bc28-2c07c25ecdae",
+      "data_churn": "2026-05-12",
+      "archived_at": "2026-09-15T17:39:59.139751+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "59cfcd03-d793-4851-86f2-816c029c62a4",
+      "data_churn": "2026-03-30",
+      "archived_at": "2026-05-13T16:46:44.595+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "c32be747-3ad7-4f1b-9c58-63a803f80783",
+      "data_churn": "2026-03-27",
+      "archived_at": "2026-05-13T16:46:44.595+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "afda4a98-9a2c-490c-b0b7-fae19461920c",
+      "data_churn": "2026-01-05",
+      "archived_at": "2026-05-13T18:14:19.123+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    },
+    {
+      "client_id": "d0e7e20e-4833-4063-a83d-40784f99648e",
+      "data_churn": "2026-04-08",
+      "archived_at": "2026-05-13T16:46:44.595+00:00",
+      "outras_evidencias_validas": false,
+      "status_analitico": "Marcado como cancelado sem confirmação",
+      "data_churn_usada": false
+    }
+  ],
+  "executive_x_cancelamentos_by_month": [
+    {
+      "month": "2025-11",
+      "executive": 41,
+      "cancelamentos": 41,
+      "difference": 0
+    },
+    {
+      "month": "2025-12",
+      "executive": 21,
+      "cancelamentos": 21,
+      "difference": 0
+    },
+    {
+      "month": "2026-01",
+      "executive": 56,
+      "cancelamentos": 56,
+      "difference": 0
+    },
+    {
+      "month": "2026-02",
+      "executive": 41,
+      "cancelamentos": 41,
+      "difference": 0
+    },
+    {
+      "month": "2026-03",
+      "executive": 152,
+      "cancelamentos": 152,
+      "difference": 0
+    },
+    {
+      "month": "2026-04",
+      "executive": 61,
+      "cancelamentos": 61,
+      "difference": 0
+    },
+    {
+      "month": "2026-05",
+      "executive": 368,
+      "cancelamentos": 368,
+      "difference": 0
+    },
+    {
+      "month": "2026-06",
+      "executive": 163,
+      "cancelamentos": 163,
+      "difference": 0
+    },
+    {
+      "month": "2026-07",
+      "executive": 43,
+      "cancelamentos": 43,
+      "difference": 0
+    },
+    {
+      "month": "2026-08",
+      "executive": 60,
+      "cancelamentos": 60,
+      "difference": 0
+    },
+    {
+      "month": "2026-09",
+      "executive": 51,
+      "cancelamentos": 51,
+      "difference": 0
+    },
+    {
+      "month": "2026-10",
+      "executive": 21,
+      "cancelamentos": 21,
+      "difference": 0
+    }
+  ],
+  "churn_12m": {
+    "executive": 1078,
+    "cancelamentos": 1078
+  },
+  "active_clients": {
+    "canonico_dados_gerais": 1587,
+    "executive_summary": 1587,
+    "reunioes": 1587,
+    "mecanismos": 780,
+    "renovacao": 1587,
+    "delta_vs_canonico": {
+      "executive_summary": 0,
+      "reunioes": 0,
+      "mecanismos": -807,
+      "renovacao": 0
+    }
+  }
+}

@@ -196,6 +196,7 @@ function renderPageBootError(page, error) {
 }
 
 const PAGE_BOOT_RECOVER = {
+  executive_summary: () => import("./executive-summary.js").then((mod) => mod.bootExecutiveSummary()),
   satisfaction: () => import("./satisfaction.js").then((mod) => mod.bootSatisfaction()),
   internal_mechanisms_satisfaction: () =>
     import("./internal-mechanisms-satisfaction.js").then((mod) => mod.bootInternalMechanismsSatisfaction()),

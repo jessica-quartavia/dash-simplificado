@@ -23,3 +23,14 @@ test("access registry e rota do Executive apontam para o mesmo pageId", () => {
   assert.match(policy, /"\/api\/executive-summary": "executive_summary"/);
   assert.match(filters, /page=executive_summary/);
 });
+
+test("filtros Executive não importam analytics-cache (node:crypto quebra boot no browser)", () => {
+  const filters = readFileSync(join(ROOT, "lib/analytics/executive-summary-filters.mjs"), "utf8");
+  assert.doesNotMatch(filters, /analytics-cache\.mjs/);
+  assert.match(filters, /calculation-version\.mjs/);
+});
+
+test("Resumo Executivo está marcado como implementado no registry", () => {
+  const pages = readFileSync(join(ROOT, "js/pages.js"), "utf8");
+  assert.match(pages, /id: "executive_summary"[\s\S]*?implemented: true/);
+});
